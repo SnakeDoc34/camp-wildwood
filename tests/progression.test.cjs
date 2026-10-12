@@ -125,5 +125,7 @@ test('every demonstration is backed by a recorded Melody clip that resolves',()=
     assert.ok(t.audio,t.id+' has recorded narration');
     assert.ok(resolves(t.audio),t.id+' clip resolves: '+t.audio);
     if(t.demo2)assert.ok(resolves(t.demo2.audio),t.id+' demo2 clip resolves: '+t.demo2.audio);
+    assert.ok(t.controlsAudio,t.id+' has recorded instructions');
+    assert.ok(resolves(t.controlsAudio),t.id+' instructions clip resolves: '+t.controlsAudio);
   }
 });
