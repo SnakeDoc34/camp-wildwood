@@ -161,3 +161,10 @@ input#entry-display{width:150px;min-width:0;max-width:100%;font-size:2rem;font-w
 .pattern-missing{font-size:1.8rem;font-weight:800;color:#e8873a}
 .solid-art{font-size:4rem;line-height:1.2}
 .festival-cert{border:3px solid #b8860b;background:#fffbe8;text-align:center;margin-top:14px}
+
+/* Strategy vocabulary (dm2b-m4) */
+.strategy-banner{background:#fff7dd;border:2px solid #e3b505;border-radius:12px;padding:10px 14px;margin:10px 0;display:flex;flex-direction:column;gap:2px}
+.strategy-banner strong{color:#7a5b00}
+.strategy-chip{display:inline-block;background:#eef6e6;border:2px solid #7fb069;border-radius:999px;padding:4px 12px;margin:6px 0;font-size:.95rem}
+.strategy-chip strong{color:#35563e}
+.strategy-line{color:#46604c;margin:8px 0}
