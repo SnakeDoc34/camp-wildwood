@@ -6,14 +6,33 @@ const CHAPTERS = [
     blurb:'Add and subtract like a mental-math ranger.' },
   { id:'ch9', num:9, title:'Equal Groups', place:'Soccer Field', art:'⚽', soon:false,
     blurb:'Multiply and divide groups of 3 and 4.' },
-  { id:'ch10', num:10, title:'Money', place:'Trading Post', art:'🪙', soon:true, blurb:'Coming in the next release.' },
-  { id:'ch11', num:11, title:'Fractions', place:'Picnic Grove', art:'🍉', soon:true, blurb:'Coming in the next release.' },
+  { id:'ch10', num:10, title:'Money', place:'Trading Post', art:'🪙', soon:false, blurb:'Make $1, count money, and give change.' },
+  { id:'ch11', num:11, title:'Fractions', place:'Picnic Grove', art:'🍉', soon:false, blurb:'Halves, fourths, and parts of a whole.' },
   { id:'ch12', num:12, title:'Time', place:'Adventure Station', art:'⏰', soon:true, blurb:'Coming in the next release.' },
   { id:'ch13', num:13, title:'Capacity', place:'Water Works', art:'🪣', soon:true, blurb:'Coming in the next release.' },
   { id:'ch14', num:14, title:'Graphs', place:'Fishing Dock', art:'🎣', soon:true, blurb:'Coming in the next release.' },
   { id:'ch15', num:15, title:'Shapes', place:'Woodland Workshop', art:'🔷', soon:true, blurb:'Coming in the next release.' },
 ];
 const RESTORE_STAGES = ['🛖 run-down','🛖 tidy','🛖 cozy','🛖⭐ beautiful'];
+const CHAPTER_AREA = { ch8:'lodge', ch9:'field', ch10:'post', ch11:'grove' };
+const AREA_STAGE_LABELS = {
+  lodge: RESTORE_STAGES,
+  field: ['run-down','tidy','cozy','⭐ beautiful'],
+  post: ['bare ground','market stall','trading post','⭐ bustling market'],
+  grove: ['bare ground','clearing','picnic grove','⭐ picnic paradise']
+};
+const AREA_NAMES = { lodge:'Lodge', field:'Field', post:'Trading Post', grove:'Picnic Grove' };
+/* One woodland friend per mission — completing a mission befriends its critter. */
+const CRITTERS = {
+  'ch8-adding-ones':['🐇','Bunny'],'ch8-adding-tens':['🦉','Owl'],'ch8-making-100':['🦫','Beaver'],
+  'ch8-adding-98':['🦊','Fox'],'ch8-subtracting':['🐢','Turtle'],'ch8-subtracting-98':['🦝','Raccoon'],
+  'ch9-groups-3':['🐸','Frog'],'ch9-multiply-3':['🦋','Butterfly'],'ch9-divide-3':['🐝','Bee'],
+  'ch9-groups-4':['🦌','Deer'],'ch9-multiply-4':['🐦','Bluebird'],'ch9-divide-4':['🦔','Hedgehog'],
+  'ch10-making-1':['🐿️','Chipmunk'],'ch10-counting':['🦦','Otter'],'ch10-change':['🦡','Badger'],
+  'ch10-comparing':['🦆','Duck'],'ch10-adding':['🐻','Bear Cub'],'ch10-subtracting':['🐺','Wolf Pup'],
+  'ch11-halves':['🐭','Mouse'],'ch11-unit':['🐜','Ant'],'ch11-writing':['🦗','Cricket'],
+  'ch11-whole':['🦎','Lizard'],'ch11-comparing':['🐌','Snail']
+};
 const SHOP_ITEMS = [
   { id:'flag-red', name:'Red camp flag', art:'🚩', cost:3, place:'lodge-right', description:'Raise your flag beside the lodge or along the field.' },
   { id:'soccer-field', name:'Soccer field kit', art:'⚽', cost:4, description:'Build a marked field with two goals. Unlock the Goal kick activity!' },
@@ -53,13 +72,13 @@ const Camp = {
     const list=this.targetsFor(t.chapter),i=list.indexOf(t);
     return i>0?'Finish “'+list[i-1].title+'” first':'';
   },
-  /* restoration: lodge advances with ch8 targets done, field with ch9 */
+  /* restoration: each chapter's missions grow its own camp place */
   refreshStages(p){
-    const ch8done=this.targetsFor('ch8').filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
-    const ch9done=this.targetsFor('ch9').filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
-    const n8=this.targetsFor('ch8').length, n9=this.targetsFor('ch9').length;
-    p.camp.lodge = n8? Math.min(3, Math.ceil(ch8done/n8*3)):0;
-    p.camp.field = n9? Math.min(3, Math.ceil(ch9done/n9*3)):0;
+    for(const [chId,area] of Object.entries(CHAPTER_AREA)){
+      const targets=this.targetsFor(chId),n=targets.length;
+      const done=targets.filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
+      p.camp[area]=n?Math.min(3,Math.ceil(done/n*3)):0;
+    }
   },
   renderHub(p){
     document.getElementById('hub-greeting').textContent = 'Welcome back, '+p.name+'!';
@@ -70,11 +89,21 @@ const Camp = {
     Yard.renderGoal(document.getElementById('hub-goal'),p);Store.persist();
     const completed=window.TARGETS.filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
     document.getElementById('camp-completion').textContent=completed+' of '+window.TARGETS.length+' missions complete';
+    /* festival meter: every mission brings the Camp Festival closer */
+    const fm=document.getElementById('festival-meter');
+    if(fm)fm.innerHTML=(completed===window.TARGETS.length
+      ? '<b>🎉 Your camp is ready for the Camp Festival!</b><p class="fine">Every trail is complete. The Festival celebration arrives with the final chapters.</p>'
+      : '<b>🎪 Camp Festival readiness: '+completed+' of '+window.TARGETS.length+' missions</b><div class="festival-bar"><span style="width:'+Math.round(completed/window.TARGETS.length*100)+'%"></span></div><p class="fine">Finish missions to get the camp ready for the big Festival at the end of the trail.</p>');
+    /* woodland friends living at this camp */
+    const crow=document.getElementById('critter-row');
+    if(crow){ const found=this.critterList(p).filter(c=>c.found);
+      crow.innerHTML='<b>Woodland friends:</b> '+(found.length?found.map(c=>'<span title="'+esc(c.name)+'">'+c.emoji+'</span>').join(' '):'none yet — finish a mission to meet one! Open the Field Guide to see who is hiding.'); }
     CHAPTERS.forEach(ch=>{
       if(ch.soon){future.appendChild(el('div','future-chapter','<span aria-hidden="true">'+ch.art+'</span><span><strong>'+esc(ch.place)+'</strong><small>'+esc(ch.title)+'</small></span>'));return;}
       const card=el('button','card trail-card '+(ch.id==='ch8'?'lodge-trail':'field-trail'));
       const targets=this.targetsFor(ch.id),done=targets.filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
-      const stage = ch.id==='ch8'? 'Lodge '+RESTORE_STAGES[p.camp.lodge] : ch.id==='ch9'? 'Field '+['run-down','tidy','cozy','⭐ beautiful'][p.camp.field] : '';
+      const area=CHAPTER_AREA[ch.id];
+      const stage = area? AREA_NAMES[area]+' '+(AREA_STAGE_LABELS[area][p.camp[area]]||'') : '';
       const chapterLocked=!this.isChapterUnlocked(p,ch.id);
       if(chapterLocked)card.classList.add('trail-locked');
       card.innerHTML='<span class="trail-top"><span class="eyebrow">Chapter '+ch.num+'</span><span class="art" aria-hidden="true">'+ch.art+'</span></span><h3>'+esc(ch.place)+'</h3>'+
@@ -147,6 +176,23 @@ const Camp = {
     });
   },
   addReport(p, entry){ p.report.push(Object.assign({t:Date.now()},entry)); Store.persist(); },
+  critterList(p){
+    return window.TARGETS.map(t=>{ const c=CRITTERS[t.id]; if(!c) return null;
+      return { target:t, emoji:c[0], name:c[1], found:Boolean(p.targets[t.id]&&p.targets[t.id].done) }; }).filter(Boolean);
+  },
+
+  renderGuide(p){
+    const list=document.getElementById('guide-list'); if(!list) return; list.innerHTML='';
+    const critters=this.critterList(p),found=critters.filter(c=>c.found).length;
+    document.getElementById('guide-summary').textContent='You have met '+found+' of '+critters.length+' woodland friends. Finish a mission to meet its friend!';
+    for(const c of critters){
+      const card=el('div','critter-card'+(c.found?' found':''));
+      if(c.found) card.innerHTML='<span class="critter-art">'+c.emoji+'</span><b>'+c.name+'</b><span>Met at '+esc(c.target.title)+'</span>';
+      else card.innerHTML='<span class="critter-art hiding">❔</span><b>Still hiding</b><span>Finish '+esc(c.target.title)+' to meet it</span>';
+      list.appendChild(card);
+    }
+  },
+
   renderReport(p){
     const cb=document.getElementById('unlock-all-toggle');
     if(cb&&typeof Settings!=='undefined')cb.checked=Settings.unlockAll;
@@ -154,6 +200,7 @@ const Camp = {
     const rows=p.report.map(r=>'<tr><td>'+new Date(r.t).toLocaleTimeString()+'</td><td>'+esc(r.text)+'</td><td>'+(r.total? r.good+'/'+r.total : '—')+'</td></tr>').join('');
     const tg=p.report.reduce((a,r)=>a+(r.good||0),0), tt=p.report.reduce((a,r)=>a+(r.total||0),0);
     b.innerHTML='<h3>Report for '+esc(p.name)+' · 🪙 '+p.tokens+' tokens</h3>'+
+      '<p>🦉 Woodland friends met: '+this.critterList(p).filter(c=>c.found).length+' of '+window.TARGETS.length+' — see the Field Guide on the camp map.</p>'+
       (rows? '<table><tr><th>Time</th><th>Activity</th><th>First attempt</th></tr>'+rows+'</table>'
             : '<p class="hint">No missions yet today. Play a mission and it will show up here!</p>')+
       (tt? '<p><strong>Recorded first attempts: '+tg+' out of '+tt+'.</strong></p>':'')+
