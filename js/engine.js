@@ -22,20 +22,25 @@ const MathCheck={
 };
 
 const Engine={
-  VERSION:'dm2b-qa2',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
+  VERSION:'dm2b-qa3',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
   start(targetId){
     const t=window.TARGETS.find(x=>x.id===targetId);if(!t||!App.profile)return;
+    if(typeof Camp!=='undefined'&&Camp.isTargetUnlocked&&!Camp.isTargetUnlocked(App.profile,t)){
+      toast('🔒 Finish the mission before this one to unlock it!');return;
+    }
     this.suspend();this.target=t;this.profile=App.profile;this.active=true;
     const saved=(this.profile.activeMissions||{})[targetId];
     const resume=saved&&saved.version===this.VERSION&&Array.isArray(saved.steps)&&
       Number.isInteger(saved.idx)&&saved.idx>=0&&saved.idx<saved.steps.length&&
-      saved.steps.every(s=>s&&['demo','controls','guided','independent','adventure','adventure-problem','done'].includes(s.type)&&
+      saved.steps.every(s=>s&&['demo','demo2','controls','guided','independent','adventure','adventure-problem','done'].includes(s.type)&&
         (!['guided','independent','adventure-problem'].includes(s.type)||(s.problem&&window.FAMILIES[s.problem.fid]&&MathCheck.valid(s.problem))))&&
       saved.steps[saved.idx].type!=='done';
     if(resume){this.steps=saved.steps;this.idx=saved.idx;this.firstTry=saved.firstTry===true;this.visitId=saved.visitId;}
     else{
       this.idx=0;this.firstTry=true;this.visitId=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
-      this.steps=[{type:'demo'},{type:'controls'}];
+      this.steps=[{type:'demo'}];
+      if(t.demo2)this.steps.push({type:'demo2'});
+      this.steps.push({type:'controls'});
       for(let i=0;i<2;i++)this.steps.push({type:'guided',problem:this.freshProblem(t,[t.guidedFamilies[i%t.guidedFamilies.length]])});
       for(let i=0;i<4;i++)this.steps.push({type:'independent',problem:this.freshProblem(t,[t.families[i%t.families.length]])});
       this.steps.push({type:'adventure'},{type:'done'});
@@ -78,13 +83,14 @@ const Engine={
     const dots=document.getElementById('mission-progress');dots.innerHTML='';
     this.steps.forEach((s,i)=>dots.appendChild(el('span','pdot'+(i<this.idx?' done':i===this.idx?' now':''))));
     dots.setAttribute('aria-label','Step '+(this.idx+1)+' of '+this.steps.length);
-    const phases={demo:'Learn',controls:'How to play',guided:'Practice together',independent:'Your turn',adventure:'Adventure', 'adventure-problem':'Adventure',done:'Complete'};
+    const phases={demo:'Learn',demo2:'Learn',controls:'How to play',guided:'Practice together',independent:'Your turn',adventure:'Adventure', 'adventure-problem':'Adventure',done:'Complete'};
     const phase=document.getElementById('mission-phase');
     if(phase)phase.textContent=phases[this.steps[this.idx].type];
     body.setAttribute('data-phase',this.steps[this.idx].type);
     document.onkeydown=null;Audio2.stopNarration();
     const step=this.steps[this.idx];
-    if(step.type==='demo')this.renderDemo(body);
+    if(step.type==='demo')this.renderDemo(body,false);
+    else if(step.type==='demo2')this.renderDemo(body,true);
     else if(step.type==='controls')this.renderControls(body);
     else if(step.type==='adventure')this.renderAdventureGate(body);
     else if(step.type==='done')this.renderDone(body);
@@ -97,18 +103,20 @@ const Engine={
     if(this.idx>=this.steps.length-1)return;
     this.idx++;this.firstTry=true;this.checkpoint();this.render();
   },
-  renderDemo(body){
-    const t=this.target;body.appendChild(el('h2',null,'🔍 Demonstration: '+esc(t.title)));
-    const vis=el('div','demo-visual');body.appendChild(vis);this.demoVisual(vis,t);
-    body.appendChild(el('div','caption-box',esc(t.demoCaption)));
-    if(t.teachingNote){
+  renderDemo(body,second){
+    const t=this.target,d2=second&&t.demo2?t.demo2:null;
+    const caption=d2?d2.caption:t.demoCaption,audio=d2?d2.audio:t.audio;
+    body.appendChild(el('h2',null,(d2?'🔍 Another example: ':'🔍 Demonstration: ')+esc(t.title)));
+    const vis=el('div','demo-visual');body.appendChild(vis);this.demoVisual(vis,{demoVisual:d2?d2.visual:t.demoVisual});
+    body.appendChild(el('div','caption-box',esc(caption)));
+    if(!d2&&t.teachingNote){
       const note=el('details','strategy-note','<summary>More ways to think about it</summary><p>'+esc(t.teachingNote)+'</p>');
       body.appendChild(note);
     }
     const row=el('div','row'),play=el('button','mid-btn','🔊 Hear it'),next=el('button','big-btn','Next →');
-    play.onclick=()=>Audio2.narrate(t.audio,t.demoCaption);
+    play.onclick=()=>Audio2.narrate(audio,caption);
     next.onclick=()=>{next.disabled=true;Audio2.click();this.next();};
-    row.appendChild(play);row.appendChild(next);body.appendChild(row);Audio2.narrate(t.audio,t.demoCaption);
+    row.appendChild(play);row.appendChild(next);body.appendChild(row);Audio2.narrate(audio,caption);
   },
   renderControls(body){
     body.appendChild(el('h2',null,'🎮 How to play'));
