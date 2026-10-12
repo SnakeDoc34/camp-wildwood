@@ -31,7 +31,9 @@ function verifyEquations(text){
 
 test('120000 generated answers, choices, and explanation equations agree with displayed questions',()=>{
   const a=load();let count=0;
-  for(const[fid,f]of Object.entries(a.FAMILIES))for(let i=0;i<5000;i++){
+  // Chapters 8-9 families: integer answers parsed from the displayed question.
+  // Chapter 10-11 families have their own oracle in tests/m2.test.cjs.
+  for(const[fid,f]of Object.entries(a.FAMILIES).filter(([fid])=>fid.startsWith('ch8-')||fid.startsWith('ch9-')))for(let i=0;i<5000;i++){
     const p=f.gen(),expected=displayedAnswer(fid,p);count++;
     assert.equal(Number(p.answer),expected,fid);assert.ok(Number.isInteger(expected)&&expected>=0&&expected<=1000);
     assert.ok(a.MathCheck.valid(p),fid);if(p.choices){assert.equal(p.choices.length,4);assert.ok(p.choices.every(x=>Number(x)>=0));}
@@ -42,7 +44,7 @@ test('120000 generated answers, choices, and explanation equations agree with di
 });
 test('boundary random values preserve valid whole-number operations',()=>{
   const a=load();for(const f of [()=>0,()=>.999999999]){
-    a.R.rand=f;for(const[fid,fam]of Object.entries(a.FAMILIES)){const p=fam.gen();assert.equal(Number(p.answer),displayedAnswer(fid,p));assert.ok(a.MathCheck.valid(p),fid);}
+    a.R.rand=f;for(const[fid,fam]of Object.entries(a.FAMILIES).filter(([fid])=>fid.startsWith('ch8-')||fid.startsWith('ch9-'))){const p=fam.gen();assert.equal(Number(p.answer),displayedAnswer(fid,p));assert.ok(a.MathCheck.valid(p),fid);}
   }
 });
 test('adding ones uses varied bridges, not an always-add-one rule',()=>{
@@ -128,14 +130,14 @@ test('challenge pools do not introduce an uncompleted different skill',()=>{
   const a=load();for(const t of a.TARGETS){a.Engine.start(t.id);for(const fid of a.Engine.allowedAdventureFamilies())assert.equal(a.FAMILIES[fid].owner,t.id);}
   a.profile.targets['ch9-divide-3']={done:true};a.Engine.start('ch9-divide-4');assert.ok(a.Engine.allowedAdventureFamilies().includes('ch9-div3a'));
 });
-test('each of the twelve missions completes and pays both rewards exactly once',()=>{
+test('each mission completes and pays both rewards exactly once',()=>{
   const a=load();for(const t of a.TARGETS){
     a.Engine.start(t.id);while(!a.Engine.steps[a.Engine.idx].problem)a.Engine.next();
     for(let i=0;i<6;i++){const s=a.Engine.steps[a.Engine.idx];solve(a,s);a.Engine.next();}
     button(a.doc.getElementById('mission-body'),'Take the challenge').onclick();solve(a,a.Engine.steps[a.Engine.idx]);a.Engine.next();
     assert.ok(a.profile.targets[t.id].done);assert.equal(a.profile.missionsDone[t.id+':adventure'],true);
   }
-  assert.equal(a.profile.tokens,24);a.Engine.renderDone(a.doc.getElementById('mission-body'));assert.equal(a.profile.tokens,24);
+  assert.equal(a.profile.tokens,a.TARGETS.length*2);a.Engine.renderDone(a.doc.getElementById('mission-body'));assert.equal(a.profile.tokens,a.TARGETS.length*2);
 });
 test('a refresh resumes the same question, entered digits, and hint state',()=>{
   const a=load();a.Engine.start('ch8-adding-98');while(!a.Engine.steps[a.Engine.idx].problem)a.Engine.next();
@@ -167,12 +169,12 @@ test('repeated purchase callbacks charge only once',()=>{
   const b=a.doc.getElementById('shop-list').children[0].querySelector('button'),event={stopPropagation(){}};b.onclick(event);b.onclick(event);
   assert.equal(a.profile.tokens,9);assert.equal(a.profile.shop.filter(x=>x==='flag-red').length,1);
 });
-test('the camp offers only playable trails and exposes six planned trails separately',()=>{
+test('the camp offers only playable trails and exposes four planned trails separately',()=>{
   const a=load();a.Camp.renderHub(a.profile);
   const playable=a.doc.getElementById('camp-map').children;
-  assert.equal(playable.length,2);assert.ok(playable.every(e=>e.tagName==='BUTTON'));
-  assert.equal(a.doc.getElementById('future-trails-list').children.length,6);
-  assert.match(a.doc.getElementById('camp-completion').textContent,/0 of 12/);
+  assert.equal(playable.length,4);assert.ok(playable.every(e=>e.tagName==='BUTTON'));
+  assert.equal(a.doc.getElementById('future-trails-list').children.length,4);
+  assert.match(a.doc.getElementById('camp-completion').textContent,/0 of 23/);
   playable[0].onclick();
   const skills=a.doc.getElementById('target-list').children;
   assert.equal(skills.length,6);assert.ok(skills.every(e=>e.tagName==='BUTTON'));
