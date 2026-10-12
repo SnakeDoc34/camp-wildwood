@@ -230,22 +230,31 @@ const Engine={
   },
   renderDone(body){
     const t=this.target,p=this.profile,st=p.targets[t.id]||(p.targets[t.id]={attempts:[],done:false,badge:false});
-    st.done=true;let newToken=false,newBadge=false,newBonus=false;
+    const oldStages={lodge:p.camp.lodge,field:p.camp.field};
+    st.done=true;let newToken=false,newBadge=false,newBonus=false,newPractice=false;
+    const doneStep=this.steps.find(s=>s.type==='done');
     if(!p.missionsDone[t.id]){p.missionsDone[t.id]=true;p.tokens++;newToken=true;}
+    else if(doneStep&&!doneStep.rewardPaid&&this.steps.filter(s=>s.type==='guided'||s.type==='independent').length===6&&this.steps.filter(s=>s.type==='guided'||s.type==='independent').every(s=>s.solved)){
+      p.tokens++;newPractice=true;
+    }
     if(this.steps.some(s=>s.type==='adventure-problem'&&s.solved)&&!p.missionsDone[t.id+':adventure']){
       p.missionsDone[t.id+':adventure']=true;p.tokens++;newBonus=true;
     }
+    if(doneStep)doneStep.rewardPaid=true;
     const recent=(st.evidence||[]).slice(-5);
     if(!st.badge&&recent.length===5&&recent.filter(e=>e.correct).length>=4&&new Set(recent.map(e=>e.visit)).size>=2){st.badge=true;newBadge=true;}
     delete p.activeMissions[t.id];Camp.refreshStages(p);Store.persist();App.syncTop();
     this.active=false;Audio2.stopNarration();document.onkeydown=null;
     body.appendChild(el('h2',null,'🏁 Mission complete!'));confetti(50);Audio2.good();
     let html='<p>You finished <strong>'+esc(t.title)+'</strong>.</p>';
-    if(newToken)html+='<p>🪙 +1 camp token!</p>';if(newBonus)html+='<p>⛰️ +1 Adventure bonus token!</p>';
+    if(newPractice)html+='<p>Practice replay complete. You earned another camp token.</p>';
+    if(newBonus)html+='<p>First Adventure challenge complete. Bonus token earned!</p>';
     if(newBadge)html+='<p>🏅 Badge earned for independent practice across two visits.</p>';
     body.appendChild(el('div','caption-box',html));
+    const part=t.chapter==='ch8'?'lodge':'field',restored=p.camp[part]>oldStages[part]?(part==='lodge'?'Your lodge has a new look!':'Your meadow is looking greener!')+' Finish more skills to restore your camp.':null;
+    Yard.reward(body,p,Number(newToken)+Number(newPractice)+Number(newBonus),restored);
     const row=el('div','row'),again=el('button','mid-btn','🔁 Play again'),hub=el('button','big-btn','Back to camp 🗺️');
-    again.onclick=()=>this.start(t.id);hub.onclick=()=>App.showTargets(t.chapter);
+    again.onclick=()=>this.start(t.id);hub.onclick=()=>{App.show('screen-hub');Camp.renderHub(p);};
     row.appendChild(again);row.appendChild(hub);body.appendChild(row);
   },
   drawGroups(box,counts,labels){

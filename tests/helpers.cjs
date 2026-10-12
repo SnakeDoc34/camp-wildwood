@@ -27,8 +27,8 @@ function load(saved){
   const speechSynthesis={cancel(){},getVoices(){return [];},speak(u){speech.push(u.text);}};window.speechSynthesis=speechSynthesis;
   const c=vm.createContext({window,document:doc,localStorage:storage,Audio,speechSynthesis,SpeechSynthesisUtterance:class{constructor(t){this.text=t;}},console,confirm:()=>false,
     setTimeout(f,ms){const id=++timerId;timers.set(id,{f,ms});return id;},clearTimeout(id){timers.delete(id);}});
-  for(const f of ['core','camp','engine','chapters','app'])vm.runInContext(fs.readFileSync(ROOT+'/js/'+f+'.js','utf8'),c);
-  const api=vm.runInContext('({R,Store,Audio2,Engine,MathCheck,App,Camp,newProfileState,FAMILIES:window.FAMILIES,TARGETS:window.TARGETS,knownFact})',c);
+  for(const f of ['core','yard','camp','engine','chapters','app'])vm.runInContext(fs.readFileSync(ROOT+'/js/'+f+'.js','utf8'),c);
+  const api=vm.runInContext('({R,Store,Audio2,Engine,MathCheck,App,Camp,Yard,SHOP_ITEMS,YARD_SLOTS,newProfileState,FAMILIES:window.FAMILIES,TARGETS:window.TARGETS,knownFact})',c);
   api.Store.init();api.R.seed(20261012);const profile=api.newProfileState('QA','🦝');api.Store.saveProfile(profile);api.App.profile=profile;
   return {...api,doc,data,timers,speech,audios,profile,window};
 }

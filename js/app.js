@@ -20,6 +20,13 @@ const App = {
     document.getElementById('token-count').textContent=this.profile.tokens;
   },
   showTargets(chId){ this.show('screen-targets'); Camp.renderTargets(chId); },
+  showShop(){ Audio2.click();this.show('screen-shop');Camp.renderShop(this.profile); },
+  showDesign(itemId){
+    Audio2.click();this.show('screen-design');Yard.selected=itemId&&Yard.owns(this.profile,itemId)&&itemId!=='soccer-field'?itemId:null;
+    if(itemId==='soccer-field'&&Yard.owns(this.profile,itemId)){Yard.ensure(this.profile).pitch='soccer';Store.persist();}
+    Yard.soccer=null;Yard.message=Yard.selected?'Choose a place for '+Yard.item(Yard.selected).name+'.':'Pick an item, then choose a place. Your camp saves as you build.';
+    Yard.renderDesigner(this.profile);
+  },
   init(){
     Store.init(); R.seed(Date.now()%2147483647);
     if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); }catch(e){} }
@@ -34,7 +41,10 @@ const App = {
     document.getElementById('btn-start').onclick=()=>{ Audio2.click(); this.show('screen-profiles'); this.renderProfiles(); };
     document.getElementById('btn-add-profile').onclick=()=>this.addProfile();
     document.getElementById('new-profile-name').addEventListener('keydown',e=>{ if(e.key==='Enter') this.addProfile(); });
-    document.getElementById('btn-shop').onclick=()=>{ Audio2.click(); this.show('screen-shop'); Camp.renderShop(this.profile); };
+    document.getElementById('btn-shop').onclick=()=>this.showShop();
+    document.getElementById('btn-design').onclick=()=>this.showDesign();
+    document.getElementById('designer-shop').onclick=()=>this.showShop();
+    document.getElementById('shop-design').onclick=()=>this.showDesign();
     document.getElementById('btn-report').onclick=()=>{ Audio2.click(); this.show('screen-report'); Camp.renderReport(this.profile); };
     document.getElementById('btn-print').onclick=()=>window.print();
     document.getElementById('btn-quit-mission').onclick=()=>{ Audio2.stopNarration(); document.onkeydown=null; this.showTargets(this.targetChapter()); };

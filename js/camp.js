@@ -15,10 +15,13 @@ const CHAPTERS = [
 ];
 const RESTORE_STAGES = ['🛖 run-down','🛖 tidy','🛖 cozy','🛖⭐ beautiful'];
 const SHOP_ITEMS = [
-  { id:'flag-red',   name:'Red camp flag',   art:'🚩', cost:3 },
-  { id:'flowers',    name:'Flower beds',     art:'🌸', cost:5 },
-  { id:'lanterns',   name:'Paper lanterns',  art:'🏮', cost:8 },
-  { id:'sign',       name:'Carved camp sign', art:'🪧', cost:6 },
+  { id:'flag-red', name:'Red camp flag', art:'🚩', cost:3, place:'lodge-right', description:'Raise your flag beside the lodge or along the field.' },
+  { id:'soccer-field', name:'Soccer field kit', art:'⚽', cost:4, description:'Build a marked field with two goals. Unlock the Goal kick activity!' },
+  { id:'flowers', name:'Flower beds', art:'🌸', cost:5, place:'lodge-left', description:'Plant a bright flower bed anywhere in your camp.' },
+  { id:'bench', name:'Sideline bench', art:'🪑', cost:3, place:'field-left', description:'Give your field a place for the cheering section.' },
+  { id:'tent', name:'Adventure tent', art:'⛺', cost:5, place:'field-right', description:'Set up a tent for your woodland adventures.' },
+  { id:'lanterns', name:'Paper lanterns', art:'🏮', cost:8, place:'lodge-left', description:'Hang golden lanterns to brighten your camp.' },
+  { id:'sign', name:'Carved camp sign', art:'🪧', cost:6, place:'trail', description:'Give your trail a wooden welcome sign.' },
 ];
 
 const Camp = {
@@ -36,6 +39,8 @@ const Camp = {
     const map=document.getElementById('camp-map'); map.innerHTML='';
     const future=document.getElementById('future-trails-list');future.innerHTML='';
     this.refreshStages(p); Store.persist();
+    const yard=document.getElementById('hub-yard');yard.innerHTML='';yard.appendChild(Yard.scene(p,false));
+    Yard.renderGoal(document.getElementById('hub-goal'),p);Store.persist();
     const completed=window.TARGETS.filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
     document.getElementById('camp-completion').textContent=completed+' of '+window.TARGETS.length+' missions complete';
     CHAPTERS.forEach(ch=>{
@@ -50,13 +55,6 @@ const Camp = {
       card.onclick=()=>{ Audio2.click(); App.showTargets(ch.id); };
       map.appendChild(card);
     });
-    // owned decorations strip
-    if(p.shop.length){
-      const d=el('div','card'); d.style.gridColumn='1/-1';
-      d.innerHTML='<h3>Your camp decorations</h3><div style="font-size:2rem">'+p.shop.map(id=>{const s=SHOP_ITEMS.find(x=>x.id===id);return s?s.art:'';}).join(' ')+'</div>';
-      d.onclick=()=>{};
-      map.appendChild(d);
-    }
   },
   renderTargets(chId){
     const ch=CHAPTERS.find(c=>c.id===chId);
@@ -76,21 +74,40 @@ const Camp = {
     });
   },
   renderShop(p){
+    Yard.ensure(p);
     document.getElementById('shop-tokens').textContent=p.tokens;
+    Yard.renderGoal(document.getElementById('shop-goal'),p);
     const list=document.getElementById('shop-list'); list.innerHTML='';
     SHOP_ITEMS.forEach(it=>{
       const owned=p.shop.includes(it.id);
-      const card=el('div','card');
-      card.innerHTML='<div class="art">'+it.art+'</div><h3>'+esc(it.name)+'</h3>'+
-        '<p><strong>🪙 '+it.cost+'</strong></p>'+
-        (owned?'<span class="badge">Owned</span>':'<button class="mid-btn">Buy</button>');
+      const card=el('div','card shop-card'+(it.id==='soccer-field'?' featured-item':''));
+      card.setAttribute('data-item',it.id);
+      card.appendChild(el('div','shop-item-art',Yard.art(it.id)));
+      card.appendChild(el('h3',null,esc(it.name)));card.appendChild(el('p','hint',esc(it.description)));
+      card.appendChild(el('p','shop-price','🪙 '+it.cost+' tokens'));
+      const actions=el('div','shop-actions');
       if(!owned){
-        card.querySelector('button').onclick=(e)=>{ e.stopPropagation();
+        const buy=el('button','mid-btn',it.id==='soccer-field'?'Build field · 4 tokens':'Buy · '+it.cost+' tokens');buy.disabled=p.tokens<it.cost;
+        buy.onclick=(e)=>{ e.stopPropagation();
           if(p.shop.includes(it.id))return;
-          if(p.tokens>=it.cost){ p.tokens-=it.cost; p.shop.push(it.id); Store.persist(); Audio2.good(); confetti(30); toast(it.name+' added to your camp!'); this.renderShop(p); App.syncTop(); }
+          if(p.tokens>=it.cost){
+            p.tokens-=it.cost;p.shop.push(it.id);Yard.install(p,it.id);
+            if(p.camp.design.goal===it.id)p.camp.design.goal=null;
+            Store.persist();Audio2.good();confetti(30);
+            document.getElementById('shop-message').textContent=it.id==='soccer-field'?'Your soccer field is built! Choose Play in my camp to try goal kicks.':it.name+' is yours! Choose Arrange in my camp to move it.';
+            toast(it.name+' unlocked!');this.renderShop(p);App.syncTop();
+          }
           else { Audio2.bad(); toast('Not enough tokens yet — finish missions to earn more!'); }
         };
+        actions.appendChild(buy);
+        if(p.tokens<it.cost)actions.appendChild(el('small','fine',(it.cost-p.tokens)+' more token'+(it.cost-p.tokens===1?'':'s')+' needed'));
+        const save=el('button','hint-btn',Yard.goal(p)?.id===it.id?'My savings goal':'Save for this');save.setAttribute('aria-pressed',String(Yard.goal(p)?.id===it.id));
+        save.onclick=()=>{Yard.setGoal(p,it.id);this.renderShop(p);toast('Saving for '+it.name+'.');};actions.appendChild(save);
+      }else{
+        actions.appendChild(el('span','badge','✓ Yours'));
+        const use=el('button','mid-btn',it.id==='soccer-field'?'Play in my camp':'Arrange in my camp');use.onclick=()=>App.showDesign(it.id);actions.appendChild(use);
       }
+      card.appendChild(actions);
       list.appendChild(card);
     });
   },

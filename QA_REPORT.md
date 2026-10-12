@@ -152,3 +152,35 @@ live browser checks below; neither substitutes for physical iPad trials.
 
 The recovery patch includes only source changes, the QA report, and regression
 tests; it does not publish the supplied textbook scan or any camper's saved data.
+
+## Interactive camp release: camp-build1
+
+The math release and active mission version remain `dm2b-qa2`; this update changes
+the camp/reward interface and keeps paused mission data compatible.
+
+- Replaced the owned-icon strip with a live camp scene and six-place designer.
+  Native buttons support selecting, placing, moving, swapping, and putting items
+  away. Two starter gifts are free. Existing purchased decorations are migrated
+  into open places without changing the balance or earned learning records.
+- Added a four-token soccer kit, bench, and tent. The kit creates the field and
+  opens a three-kick aiming activity. Best score and total goals are saved. Play
+  has no effect on the token balance; choosing an open meadow retains the kit.
+- Shop cards explain each item's use, show affordability, let the camper choose
+  a savings goal, and offer Arrange/Play actions for owned items. Each purchase
+  checks ownership again before charging. Purchased items are never destroyed
+  when a place is reused; unplaced objects remain available in the backpack.
+- Completion shows the current camp and goal progress. A fully solved six-question
+  replay earns one practice token; a completion-step flag prevents another payout
+  from the same mission. The first Adventure reward stays once per skill. Hint
+  and independent-evidence rules are unchanged. No streak or timed incentive.
+- Recorded the three-stage future plan in ROADMAP.md. Chapters 10–15 remain
+  planned, with curriculum review required before they become playable.
+
+All 32 automated tests pass: the original 23 checks, including 120,000 generated
+math cases, and nine new tests for legacy item migration, placement/swapping,
+invalid/unowned items, purchase balance and duplicate protection, goal persistence,
+full versus incomplete replays, soccer limits/scoring, profile isolation, and
+the designer's native controls. Syntax and patch whitespace checks also pass.
+
+Live browser validation for this release is recorded after publication. Physical
+iPad Safari, touch behavior, on-device narration, and offline use remain unverified.

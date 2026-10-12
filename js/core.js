@@ -38,7 +38,7 @@ const Store = {
       p.id=p.id||id;p.name=typeof p.name==='string'?p.name:'Camper';p.avatar=p.avatar||'🦝';
       p.tokens=Number.isFinite(p.tokens)?Math.max(0,p.tokens):0;
       for(const field of ['targets','seen','missionsDone','activeMissions'])if(!p[field]||typeof p[field]!=='object'||Array.isArray(p[field]))p[field]={};
-      if(!p.camp||typeof p.camp!=='object')p.camp={lodge:0,field:0};
+      if(!p.camp||typeof p.camp!=='object'||Array.isArray(p.camp))p.camp={lodge:0,field:0};
       if(!Array.isArray(p.shop))p.shop=[];if(!Array.isArray(p.report))p.report=[];
     }
   },
@@ -64,7 +64,7 @@ function newProfileState(name, avatar){
     id:'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),
     name, avatar: avatar||'🦝', created:Date.now(),
     tokens:0,
-    camp:{ lodge:0, field:0 },           // restoration stages 0..3
+    camp:{ lodge:0, field:0 },           // restoration stages and saved camp design
     shop:[],                              // owned cosmetic ids
     targets:{},                           // targetId -> {attempts:[bool], done:bool, badge:bool}
     seen:{},                              // familyId -> [keys]
