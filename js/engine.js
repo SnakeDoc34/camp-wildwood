@@ -11,18 +11,42 @@ const MathCheck={
     if(m.type==='multiply')return m.a*m.b;
     if(m.type==='divide')return m.divisor>0?m.total/m.divisor:NaN;
     if(m.type==='difference')return m.c*m.d-m.a*m.b;
+    if(m.type==='money'){
+      if(m.op==='add')return m.a+m.b;
+      if(m.op==='sub'||m.op==='change')return m.a-m.b;
+      if(m.op==='compare')return m.pick==='less'?Math.min(m.a,m.b):Math.max(m.a,m.b);
+      return m.cents;
+    }
+    if(m.type==='fraction')return m.num+'/'+m.den;
+    if(m.type==='fraction-whole')return (m.den-m.num)+'/'+m.den;
+    if(m.type==='fraction-count')return m.num;
+    if(m.type==='fraction-shade')return m.num;
+    if(m.type==='fraction-compare'){
+      const left=m.aNum*m.bDen,right=m.bNum*m.aDen;
+      if(left===right)return m.aNum+'/'+m.aDen;
+      const aBigger=left>right;
+      return (m.pick==='smaller')!==aBigger? m.aNum+'/'+m.aDen : m.bNum+'/'+m.bDen;
+    }
     return NaN;
   },
   valid(pr){
+    const m=pr&&pr.math;if(!m)return false;
     const n=this.expected(pr);
-    return Number.isInteger(n)&&n>=0&&n<=1000&&String(n)===String(pr.answer)&&
+    let expectedText;
+    if(typeof n==='string'){ expectedText=n; }
+    else{
+      if(!Number.isInteger(n)||n<0)return false;
+      if(n>(m.type==='money'?2000:1000))return false;
+      expectedText=pr.moneyText?fmtMoney(n):String(n);
+    }
+    return expectedText===String(pr.answer)&&
       typeof pr.html==='string'&&typeof pr.key==='string'&&
-      (!pr.choices||(new Set(pr.choices.map(String)).size===pr.choices.length&&pr.choices.map(String).includes(String(n))));
+      (!pr.choices||(new Set(pr.choices.map(String)).size===pr.choices.length&&pr.choices.map(String).includes(expectedText)));
   }
 };
 
 const Engine={
-  VERSION:'dm2b-qa3',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
+  VERSION:'dm2b-m2',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
   start(targetId){
     const t=window.TARGETS.find(x=>x.id===targetId);if(!t||!App.profile)return;
     if(typeof Camp!=='undefined'&&Camp.isTargetUnlocked&&!Camp.isTargetUnlocked(App.profile,t)){
@@ -143,6 +167,7 @@ const Engine={
     workspace.appendChild(question);workspace.appendChild(answer);body.appendChild(workspace);
     const fb=el('div','feedback');fb.setAttribute('aria-live','polite');
     if(pr.kind==='deal'||pr.kind==='grouping')this.renderDeal(answer,pr,fb,step);
+    else if(pr.kind==='shade')this.renderShade(answer,pr,fb,step);
     else if(pr.choices)this.renderChoices(answer,pr,fb,step);
     else this.renderEntry(answer,pr,fb,step);
     body.appendChild(fb);
@@ -165,32 +190,56 @@ const Engine={
     });body.appendChild(wrap);
   },
   renderEntry(body,pr,fb,step){
+    const money=!!pr.moneyEntry;
     const row=el('div','entry-row'),disp=el('input',null);
-    disp.id='entry-display';disp.type='text';disp.inputMode='numeric';disp.maxLength=4;disp.autocomplete='off';
+    disp.id='entry-display';disp.type='text';disp.inputMode='numeric';disp.maxLength=money?7:4;disp.autocomplete='off';
     disp.setAttribute('aria-label','Your answer'+(pr.answerUnit?' in '+pr.answerUnit:''));
-    disp.value=step.entry||'';disp.disabled=Boolean(step.solved);
-    disp.oninput=()=>{disp.value=disp.value.replace(/\D/g,'').slice(0,4);step.entry=disp.value;this.checkpoint();};
+    const show=()=>{ disp.value=money?(step.entry?fmtMoney(Number(step.entry)):''):(step.entry||''); };
+    show();disp.disabled=Boolean(step.solved);
+    disp.oninput=()=>{ const raw=disp.value.replace(/\D/g,'').slice(0,4); step.entry=raw; show(); this.checkpoint(); };
     row.appendChild(disp);
     const check=el('button','big-btn','Check');check.disabled=Boolean(step.solved);
     check.onclick=()=>{
-      if(!disp.value.trim()){fb.textContent='Enter a number first.';return;}
-      this.answer(check,Number(disp.value)===Number(pr.answer),pr,fb,step,null,disp);
+      const raw=money?(step.entry||''):disp.value;
+      if(!raw.trim()){fb.textContent='Enter a number first.';return;}
+      this.answer(check,Number(raw)===Number(pr.answer),pr,fb,step,null,disp);
     };
     row.appendChild(check);body.appendChild(row);
-    const pad=el('div','numpad'),write=(value)=>{if(step.solved)return;disp.value=value.slice(0,4);step.entry=disp.value;this.checkpoint();};
+    const pad=el('div','numpad'),write=(value)=>{if(step.solved)return;step.entry=String(value).replace(/\D/g,'').slice(0,4);show();this.checkpoint();};
     '1234567890'.split('').forEach(d=>{
       const k=el('button','numkey',d);k.disabled=Boolean(step.solved);
-      k.onclick=()=>{Audio2.click();write(disp.value+d);};pad.appendChild(k);
+      k.onclick=()=>{Audio2.click();write((step.entry||'')+d);};pad.appendChild(k);
     });
     const back=el('button','numkey','⌫');back.setAttribute('aria-label','Delete last digit');back.disabled=Boolean(step.solved);
-    back.onclick=()=>write(disp.value.slice(0,-1));pad.appendChild(back);body.appendChild(pad);
-    if(pr.answerUnit)body.appendChild(el('p','answer-unit',esc(pr.answerUnit)));
+    back.onclick=()=>write((step.entry||'').slice(0,-1));pad.appendChild(back);body.appendChild(pad);
+    if(money)body.appendChild(el('p','answer-unit','Type the amount in cents — watch it become dollars and cents.'));
+    else if(pr.answerUnit)body.appendChild(el('p','answer-unit',esc(pr.answerUnit)));
     if(!step.solved)document.onkeydown=e=>{
       if(!this.active||document.getElementById('screen-mission').classList.contains('hidden'))return;
       if(e.key==='Enter'){e.preventDefault();check.onclick();}
-      else if(e.target!==disp&&/^[0-9]$/.test(e.key)){e.preventDefault();write(disp.value+e.key);}
-      else if(e.target!==disp&&e.key==='Backspace'){e.preventDefault();write(disp.value.slice(0,-1));}
+      else if(e.target!==disp&&/^[0-9]$/.test(e.key)){e.preventDefault();write((step.entry||'')+e.key);}
+      else if(e.target!==disp&&e.key==='Backspace'){e.preventDefault();write((step.entry||'').slice(0,-1));}
     };
+  },
+  renderShade(body,pr,fb,step){
+    if(!Array.isArray(step.shade)||step.shade.length!==pr.parts)step.shade=Array(pr.parts).fill(false);
+    const bar=el('div','frac-shade-bar');
+    bar.setAttribute('role','group');bar.setAttribute('aria-label','Tap parts to shade '+pr.shadeTarget+' of '+pr.parts+' equal parts');
+    step.shade.forEach((on,i)=>{
+      const seg=el('button','frac-seg'+(on?' on':''),on?'■':'□');
+      seg.disabled=Boolean(step.solved);
+      seg.setAttribute('aria-label','Part '+(i+1)+' of '+pr.parts+(on?', shaded':', not shaded'));
+      seg.setAttribute('aria-pressed',String(on));
+      seg.onclick=()=>{ if(step.solved)return; step.shade[i]=!step.shade[i]; Audio2.pop(); this.checkpoint(); this.render(); };
+      bar.appendChild(seg);
+    });
+    body.appendChild(bar);
+    const count=step.shade.filter(Boolean).length;
+    body.appendChild(el('p','hint',count+' of '+pr.parts+' parts shaded. Shade exactly '+pr.shadeTarget+'.'));
+    const check=el('button','big-btn','Check my coloring');
+    check.disabled=Boolean(step.solved);
+    check.onclick=()=>this.answer(check,count===pr.shadeTarget,pr,fb,step);
+    body.appendChild(check);
   },
   renderDeal(body,pr,fb,step){
     const sharing=pr.kind==='deal',divisor=pr.math.divisor;
@@ -231,14 +280,14 @@ const Engine={
     }
   },
   renderSolved(body,pr,fb){
-    fb.className='feedback good';fb.textContent='🎉 Correct! '+pr.answer+(pr.answerUnit?' '+pr.answerUnit:'');
+    fb.className='feedback good';fb.textContent='🎉 Correct! '+(pr.answerText||pr.answer)+(pr.answerUnit?' '+pr.answerUnit:'');
     if(pr.explain)body.appendChild(el('div','explain','📖 '+esc(pr.explain)));
     const next=el('button','big-btn','Continue →');
     next.onclick=()=>{next.disabled=true;this.next();};body.appendChild(next);document.onkeydown=null;
   },
   renderDone(body){
     const t=this.target,p=this.profile,st=p.targets[t.id]||(p.targets[t.id]={attempts:[],done:false,badge:false});
-    const oldStages={lodge:p.camp.lodge,field:p.camp.field};
+    const oldStages={lodge:p.camp.lodge,field:p.camp.field,post:p.camp.post||0,grove:p.camp.grove||0};
     st.done=true;let newToken=false,newBadge=false,newBonus=false,newPractice=false;
     const doneStep=this.steps.find(s=>s.type==='done');
     if(!p.missionsDone[t.id]){p.missionsDone[t.id]=true;p.tokens++;newToken=true;}
@@ -258,8 +307,11 @@ const Engine={
     if(newPractice)html+='<p>Practice replay complete. You earned another camp token.</p>';
     if(newBonus)html+='<p>First Adventure challenge complete. Bonus token earned!</p>';
     if(newBadge)html+='<p>🏅 Badge earned for independent practice across two visits.</p>';
+    const critter=(typeof CRITTERS!=='undefined')?CRITTERS[t.id]:null;
+    if(newToken&&critter)html+='<p>'+critter[0]+' <strong>'+esc(critter[1])+'</strong> moved into your camp! Meet all of your friends in the Field Guide on the camp map.</p>';
     body.appendChild(el('div','caption-box',html));
-    const part=t.chapter==='ch8'?'lodge':'field',restored=p.camp[part]>oldStages[part]?(part==='lodge'?'Your lodge has a new look!':'Your meadow is looking greener!')+' Finish more skills to restore your camp.':null;
+    const part={ch8:'lodge',ch9:'field',ch10:'post',ch11:'grove'}[t.chapter]||'lodge';
+    const restored=p.camp[part]>oldStages[part]?({lodge:'Your lodge has a new look!',field:'Your meadow is looking greener!',post:'Your Trading Post is growing!',grove:'Your Picnic Grove is blooming!'})[part]+' Finish more skills to restore your camp.':null;
     Yard.reward(body,p,Number(newToken)+Number(newPractice)+Number(newBonus),restored);
     const row=el('div','row'),again=el('button','mid-btn','🔁 Play again'),hub=el('button','big-btn','Back to camp 🗺️');
     again.onclick=()=>this.start(t.id);hub.onclick=()=>{App.show('screen-hub');Camp.renderHub(p);};
@@ -322,10 +374,75 @@ const Engine={
         panel.appendChild(el('div','math-equation',quotient+(sharing?' counters per group':' groups')));compare.appendChild(panel);
       }
       box.appendChild(compare);eq(v.total+' ÷ '+v.divisor+' = '+quotient);eq('Check: '+v.divisor+' × '+quotient+' = '+v.total);
+    }else if(v.kind==='money'){
+      const wrap=el('div','demo-visual-inner');wrap.innerHTML=moneyHTML(v.coins);box.appendChild(wrap);
+      eq('Count on from the biggest: '+(v.countBy||'')+' = '+fmtMoney(v.total));
+    }else if(v.kind==='fraction'){
+      const wrap=el('div','demo-visual-inner');wrap.innerHTML=fractionSVG(v);box.appendChild(wrap);
+      eq(v.shaded+' of '+v.parts+' equal parts are shaded: '+v.shaded+'/'+v.parts);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='fraction-compare'){
+      const compare=el('div','division-compare');
+      for(const side of [v.a,v.b]){
+        const panel=el('div','math-panel');panel.innerHTML=fractionSVG(side);
+        panel.appendChild(el('div','math-equation',side.shaded+'/'+side.parts));compare.appendChild(panel);
+      }
+      box.appendChild(compare);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='steps'){
+      (v.lines||[]).forEach(line=>eq(line));
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='money-compare'){
+      const compare=el('div','division-compare');
+      for(const side of [v.a,v.b]){
+        const panel=el('div','math-panel');panel.innerHTML=moneyHTML(side.coins);
+        panel.appendChild(el('div','math-equation',fmtMoney(side.total)));compare.appendChild(panel);
+      }
+      box.appendChild(compare);
+      if(v.note)box.appendChild(el('p','hint',v.note));
     }
   },
   problemVisual(body,pr){
-    const v=pr.visual,box=el('div','demo-visual'),grid=el('div','diagram-grid');
-    this.drawGroups(grid,Array(v.groups).fill(v.per));box.appendChild(grid);body.appendChild(box);
+    const v=pr.visual,box=el('div','demo-visual');
+    if(v.type==='groups'){
+      const grid=el('div','diagram-grid');
+      this.drawGroups(grid,Array(v.groups).fill(v.per));box.appendChild(grid);body.appendChild(box);
+    }else if(v.type==='money'){
+      box.innerHTML=moneyHTML(v.coins);body.appendChild(box);
+    }else if(v.type==='fraction'){
+      box.innerHTML=fractionSVG(v);body.appendChild(box);
+    }
   }
 };
+
+/* Exact money and fraction renderings shared by demos and problems. */
+function moneyHTML(coins){
+  const coinStyle={1:['coin penny','1¢'],5:['coin nickel','5¢'],10:['coin dime','10¢'],25:['coin quarter','25¢']};
+  let html='<div class="money-row" role="img" aria-label="Money: '+coins.map(c=>c>=100?fmtMoney(c):c+' cents').join(', ')+'">';
+  for(const c of coins){
+    if(c>=100)html+='<span class="bill">'+fmtMoney(c)+'</span>';
+    else{const s=coinStyle[c]||['coin',''+c+'¢'];html+='<span class="'+s[0]+'">'+s[1]+'</span>';}
+  }
+  return html+'</div>';
+}
+function fractionSVG(v){
+  const parts=v.parts,shaded=v.shaded||0,label=shaded+' of '+parts+' equal parts shaded';
+  if(v.shape==='bar'){
+    let cells='';
+    for(let i=0;i<parts;i++)cells+='<rect x="'+(i*44)+'" y="6" width="42" height="52" rx="4" fill="'+(i<shaded?'#e8873a':'#ffffff')+'" stroke="#35563e" stroke-width="2.5"/>';
+    return '<svg class="frac-svg" viewBox="0 0 '+(parts*44)+' 64" role="img" aria-label="'+label+'">'+cells+'</svg>';
+  }
+  const cx=70,cy=70,r=62;let slices='';
+  const weights=v.weights||Array(parts).fill(1),wTotal=weights.reduce((s,w)=>s+w,0);
+  let acc=0;
+  for(let i=0;i<parts;i++){
+    const a0=(acc/wTotal)*Math.PI*2-Math.PI/2;acc+=weights[i];const a1=(acc/wTotal)*Math.PI*2-Math.PI/2;
+    const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+    const large=parts===1?1:0;
+    const d=parts===1
+      ? 'M '+cx+' '+cy+' m -'+r+' 0 a '+r+' '+r+' 0 1 0 '+(2*r)+' 0 a '+r+' '+r+' 0 1 0 -'+(2*r)+' 0'
+      : 'M '+cx+' '+cy+' L '+x0.toFixed(1)+' '+y0.toFixed(1)+' A '+r+' '+r+' 0 '+large+' 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+' Z';
+    slices+='<path d="'+d+'" fill="'+(i<shaded?'#e8873a':'#ffffff')+'" stroke="#35563e" stroke-width="2.5"/>';
+  }
+  return '<svg class="frac-svg" viewBox="0 0 140 140" role="img" aria-label="'+label+'">'+slices+'</svg>';
+}
