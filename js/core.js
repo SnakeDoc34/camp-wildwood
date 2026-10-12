@@ -82,7 +82,10 @@ const Audio2 = {
   narrate(src, fallbackText, onend){
     this.stopNarration();
     if(!this.enabled){ if(onend) onend(); return; }
-    const el = new Audio(src);
+    // Prefer embedded Melody-voice clips (audio/a*.js); fall back to file URL, then speech.
+    const name = String(src).split('/').pop();
+    const embedded = (typeof window!=='undefined' && window.AUDIO_DATA && window.AUDIO_DATA[name]) || null;
+    const el = new Audio(embedded || src);
     let finished=false;
     const done=()=>{ if(!finished){ finished=true; if(onend) onend(); } };
     el.onended=done; el.onerror=()=>{ this.speak(fallbackText, done); };
