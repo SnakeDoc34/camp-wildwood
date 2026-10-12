@@ -23,17 +23,37 @@ const R = {
 /* ---------- Storage (localStorage, per-profile namespaced) ---------- */
 const Store = {
   KEY:'campWildwood.v1',
+  BACKUP_KEY:'campWildwood.v1.backup',
   _mem:{},
   _ls:false,
   init(){
     try{ localStorage.setItem('__cw_test','1'); localStorage.removeItem('__cw_test'); this._ls=true; }
     catch(e){ this._ls=false; }
     if(this._ls){
-      try{ this._mem = JSON.parse(localStorage.getItem(this.KEY)) || {}; }catch(e){ this._mem={}; }
+      const read=key=>{try{const v=JSON.parse(localStorage.getItem(key));return v&&typeof v==='object'&&!Array.isArray(v)?v:null;}catch(e){return null;}};
+      this._mem=read(this.KEY)||read(this.BACKUP_KEY)||{};
+    }
+    for(const [id,p] of Object.entries(this.profiles)){
+      if(!p||typeof p!=='object'||Array.isArray(p))continue;
+      p.id=p.id||id;p.name=typeof p.name==='string'?p.name:'Camper';p.avatar=p.avatar||'🦝';
+      p.tokens=Number.isFinite(p.tokens)?Math.max(0,p.tokens):0;
+      for(const field of ['targets','seen','missionsDone','activeMissions'])if(!p[field]||typeof p[field]!=='object'||Array.isArray(p[field]))p[field]={};
+      if(!p.camp||typeof p.camp!=='object')p.camp={lodge:0,field:0};
+      if(!Array.isArray(p.shop))p.shop=[];if(!Array.isArray(p.report))p.report=[];
     }
   },
-  _save(){ if(this._ls){ try{ localStorage.setItem(this.KEY, JSON.stringify(this._mem)); }catch(e){} } },
-  get profiles(){ return this._mem.profiles || (this._mem.profiles = {}); },
+  _save(){
+    if(!this._ls)return;
+    try{
+      const old=localStorage.getItem(this.KEY);
+      if(old){try{const v=JSON.parse(old);if(v&&typeof v==='object'&&!Array.isArray(v))localStorage.setItem(this.BACKUP_KEY,old);}catch(e){}}
+      localStorage.setItem(this.KEY,JSON.stringify(this._mem));
+    }catch(e){this._ls=false;if(typeof document!=='undefined'&&document.getElementById('toast'))toast('Progress is temporary: this browser cannot save right now.',6000);}
+  },
+  get profiles(){
+    if(!this._mem.profiles||typeof this._mem.profiles!=='object'||Array.isArray(this._mem.profiles))this._mem.profiles={};
+    return this._mem.profiles;
+  },
   profile(id){ return this.profiles[id]; },
   saveProfile(p){ this.profiles[p.id]=p; this._save(); },
   deleteProfile(id){ delete this.profiles[id]; this._save(); },
@@ -55,7 +75,7 @@ function newProfileState(name, avatar){
 
 /* ---------- Audio: sfx + narration + read-aloud ---------- */
 const Audio2 = {
-  ctx:null, enabled:true, current:null,
+  ctx:null, enabled:true, current:null, narrationEpoch:0, fallbackTimer:null,
   ac(){
     if(!this.ctx){ try{ this.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
     return this.ctx;
@@ -75,6 +95,7 @@ const Audio2 = {
   click(){ this.tone(440,.06,'square',.06); },
   pop(){ this.tone(880,.08,'sine',.12); this.tone(1174,.1,'sine',.1,.06); },
   stopNarration(){
+    this.narrationEpoch++;clearTimeout(this.fallbackTimer);this.fallbackTimer=null;
     if(this.current){ try{ this.current.pause(); this.current.currentTime=0; }catch(e){} this.current=null; }
     try{ speechSynthesis.cancel(); }catch(e){}
   },
@@ -82,26 +103,32 @@ const Audio2 = {
   narrate(src, fallbackText, onend){
     this.stopNarration();
     if(!this.enabled){ if(onend) onend(); return; }
+    if(!src){this.speak(fallbackText,onend);return;}
     // Prefer embedded Melody-voice clips (audio/a*.js); fall back to file URL, then speech.
     const name = String(src).split('/').pop();
-    const embedded = (typeof window!=='undefined' && window.AUDIO_DATA && window.AUDIO_DATA[name]) || null;
-    const el = new Audio(embedded || src);
-    let finished=false;
-    const done=()=>{ if(!finished){ finished=true; if(onend) onend(); } };
-    el.onended=done; el.onerror=()=>{ this.speak(fallbackText, done); };
-    el.oncanplaythrough=()=>{ try{ el.play().catch(()=>this.speak(fallbackText,done)); }catch(e){ this.speak(fallbackText,done); } };
-    setTimeout(()=>{ if(!finished && el.paused){ this.speak(fallbackText,done); } }, 4000);
-    this.current=el;
+    const data=window.AUDIO_DATA||{},embedded=data[name]||data['m1-'+name]||null;
+    const audio=new Audio(embedded||src),epoch=this.narrationEpoch;
+    let finished=false,started=false;
+    const valid=()=>!finished&&epoch===this.narrationEpoch;
+    const done=()=>{if(!valid())return;finished=true;clearTimeout(this.fallbackTimer);this.current=null;if(onend)onend();};
+    const fallback=()=>{if(!valid())return;finished=true;clearTimeout(this.fallbackTimer);audio.pause();this.current=null;this.speak(fallbackText,onend);};
+    audio.onended=done;audio.onerror=fallback;
+    audio.oncanplaythrough=()=>{if(!valid()||started)return;started=true;try{audio.play().then(()=>{if(valid())clearTimeout(this.fallbackTimer);}).catch(fallback);}catch(e){fallback();}};
+    this.fallbackTimer=setTimeout(()=>{if(valid()&&audio.paused)fallback();},4000);
+    this.current=audio;
   },
   speak(text, onend){
+    this.stopNarration();
+    if(!this.enabled){if(onend)onend();return;}
+    const epoch=this.narrationEpoch;
     try{
-      speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(text);
+      const spoken=String(text).replace(/×/g,' times ').replace(/÷/g,' divided by ').replace(/−/g,' minus ').replace(/→/g,' then ').replace(/\+/g,' plus ').replace(/=/g,' equals ');
+      const u=new SpeechSynthesisUtterance(spoken);
       u.rate=0.95; u.pitch=1.05;
       const vs=speechSynthesis.getVoices().filter(v=>v.lang&&v.lang.toLowerCase().startsWith('en'));
       const fem=vs.find(v=>/female|zira|samantha|google us english|tessa/i.test(v.name));
       if(fem) u.voice=fem;
-      u.onend=()=>{ if(onend) onend(); }; u.onerror=()=>{ if(onend) onend(); };
+      u.onend=()=>{ if(epoch===this.narrationEpoch&&onend) onend(); };u.onerror=u.onend;
       speechSynthesis.speak(u);
     }catch(e){ if(onend) onend(); }
   },

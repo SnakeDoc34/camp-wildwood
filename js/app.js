@@ -6,6 +6,7 @@ const AVATARS=['🦝','🦊','🐻','🦉','🐸','🐢','🦌','🐿️'];
 const App = {
   profile:null,
   show(id){
+    if(id!=='screen-mission')Engine.suspend();
     document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     document.getElementById('topbar').classList.toggle('hidden', id==='screen-title'||id==='screen-profiles');
@@ -24,6 +25,7 @@ const App = {
     if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); }catch(e){} }
     // topbar
     document.getElementById('btn-home').onclick=()=>{ Audio2.click(); this.show('screen-hub'); Camp.renderHub(this.profile); };
+    document.getElementById('profile-chip').onclick=()=>{ Audio2.click();this.show('screen-profiles');this.renderProfiles(); };
     document.getElementById('btn-sound').onclick=(e)=>{ const on=Audio2.toggle(); e.target.textContent=on?'🔊':'🔇'; };
     document.getElementById('btn-read').onclick=()=>{
       const txt=document.querySelector('.screen:not(.hidden)').innerText.slice(0,600);
@@ -38,6 +40,7 @@ const App = {
     document.getElementById('btn-quit-mission').onclick=()=>{ Audio2.stopNarration(); document.onkeydown=null; this.showTargets(this.targetChapter()); };
     document.querySelectorAll('[data-go="hub"]').forEach(b=>b.onclick=()=>{ Audio2.click(); this.show('screen-hub'); Camp.renderHub(this.profile); });
     this.show('screen-title');
+    if(!Store._ls)toast('Progress is temporary: this browser cannot save right now.',6000);
   },
   targetChapter(){ return (Engine.target&&Engine.target.chapter)||'ch8'; },
   renderProfiles(){
@@ -46,12 +49,13 @@ const App = {
     if(!ids.length) list.appendChild(el('p','hint','No campers yet — add one below!'));
     ids.forEach(id=>{
       const p=Store.profiles[id];
-      const card=el('div','card');
-      card.innerHTML='<div class="art">'+esc(p.avatar)+'</div><h3>'+esc(p.name)+'</h3><p class="hint">🪙 '+p.tokens+' tokens</p>';
+      const card=el('div','card profile-card');
+      const choose=el('button','profile-select','<span class="art">'+esc(p.avatar)+'</span><span><strong>'+esc(p.name)+'</strong><span class="fine">🪙 '+p.tokens+' camp tokens</span></span>');
+      choose.onclick=()=>{ Audio2.pop();this.profile=Store.profile(id);this.syncTop();this.show('screen-hub');Camp.renderHub(this.profile); };
+      card.appendChild(choose);
       const del=el('button','hint-btn','Remove');
       del.onclick=(e)=>{ e.stopPropagation(); if(confirm('Remove '+p.name+' and their whole camp?')){ Store.deleteProfile(id); this.renderProfiles(); } };
       card.appendChild(del);
-      card.onclick=()=>{ Audio2.pop(); this.profile=Store.profile(id); this.syncTop(); this.show('screen-hub'); Camp.renderHub(this.profile); };
       list.appendChild(card);
     });
   },

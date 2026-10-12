@@ -1,243 +1,314 @@
-/* Camp Wildwood — mission engine: demo → controls → guided → independent → adventure */
+/* Mission player: demonstration, controls, guided work, independent work, optional challenge. */
 'use strict';
 
-const Engine = {
-  target:null, steps:[], idx:0, firstTry:true, sessionGood:0, sessionTotal:0,
-
-  start(targetId){
-    const t = window.TARGETS.find(x=>x.id===targetId);
-    if(!t) return;
-    this.target=t; this.idx=0; this.firstTry=true; this.sessionGood=0; this.sessionTotal=0;
-    // build steps: demo, controls, 2 guided, 4 independent, 1 adventure, done
-    this.steps=[{type:'demo'},{type:'controls'}];
-    for(let i=0;i<2;i++) this.steps.push({type:'guided', problem:this.freshProblem(t, t.guidedFamilies)});
-    for(let i=0;i<4;i++) this.steps.push({type:'independent', problem:this.freshProblem(t, t.families)});
-    this.steps.push({type:'adventure'}); this.steps.push({type:'done'});
-    App.show('screen-mission'); mascotSay(true);
-    this.render();
+const MathCheck={
+  expected(pr){
+    const m=pr&&pr.math;if(!m)return NaN;
+    if(m.type==='add')return m.a+m.b;
+    if(m.type==='subtract')return m.a-m.b;
+    if(m.type==='equivalent-add')return m.a+m.b-m.known;
+    if(m.type==='missing-addend')return m.total-m.a;
+    if(m.type==='multiply')return m.a*m.b;
+    if(m.type==='divide')return m.divisor>0?m.total/m.divisor:NaN;
+    if(m.type==='difference')return m.c*m.d-m.a*m.b;
+    return NaN;
   },
+  valid(pr){
+    const n=this.expected(pr);
+    return Number.isInteger(n)&&n>=0&&n<=1000&&String(n)===String(pr.answer)&&
+      typeof pr.html==='string'&&typeof pr.key==='string'&&
+      (!pr.choices||(new Set(pr.choices.map(String)).size===pr.choices.length&&pr.choices.map(String).includes(String(n))));
+  }
+};
 
-  /* ---- no-repeat bank ---- */
-  freshProblem(t, familyIds){
-    const p=App.profile;
-    for(let tries=0; tries<40; tries++){
-      const fid=R.choice(familyIds);
-      const fam=window.FAMILIES[fid];
-      const inst=fam.gen();
+const Engine={
+  VERSION:'dm2b-qa2',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
+  start(targetId){
+    const t=window.TARGETS.find(x=>x.id===targetId);if(!t||!App.profile)return;
+    this.suspend();this.target=t;this.profile=App.profile;this.active=true;
+    const saved=(this.profile.activeMissions||{})[targetId];
+    const resume=saved&&saved.version===this.VERSION&&Array.isArray(saved.steps)&&
+      Number.isInteger(saved.idx)&&saved.idx>=0&&saved.idx<saved.steps.length&&
+      saved.steps.every(s=>s&&['demo','controls','guided','independent','adventure','adventure-problem','done'].includes(s.type)&&
+        (!['guided','independent','adventure-problem'].includes(s.type)||(s.problem&&window.FAMILIES[s.problem.fid]&&MathCheck.valid(s.problem))))&&
+      saved.steps[saved.idx].type!=='done';
+    if(resume){this.steps=saved.steps;this.idx=saved.idx;this.firstTry=saved.firstTry===true;this.visitId=saved.visitId;}
+    else{
+      this.idx=0;this.firstTry=true;this.visitId=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+      this.steps=[{type:'demo'},{type:'controls'}];
+      for(let i=0;i<2;i++)this.steps.push({type:'guided',problem:this.freshProblem(t,[t.guidedFamilies[i%t.guidedFamilies.length]])});
+      for(let i=0;i<4;i++)this.steps.push({type:'independent',problem:this.freshProblem(t,[t.families[i%t.families.length]])});
+      this.steps.push({type:'adventure'},{type:'done'});
+    }
+    App.show('screen-mission');mascotSay(true);this.checkpoint();this.render();
+  },
+  checkpoint(){
+    if(!this.active||!this.profile||!this.target)return;
+    this.profile.activeMissions=this.profile.activeMissions||{};
+    this.profile.activeMissions[this.target.id]={version:this.VERSION,visitId:this.visitId,idx:this.idx,firstTry:this.firstTry,steps:this.steps};
+    Store.persist();
+  },
+  suspend(){this.checkpoint();this.active=false;document.onkeydown=null;Audio2.stopNarration();},
+  freshProblem(t,familyIds){
+    const p=this.profile||App.profile;
+    for(let tries=0;tries<100;tries++){
+      const fid=R.choice(familyIds),inst=window.FAMILIES[fid].gen();
+      if(!MathCheck.valid(inst))throw new Error('Invalid generated problem: '+fid);
       const seen=p.seen[fid]||[];
       const inMission=this.steps.some(s=>s.problem&&s.problem.fid===fid&&s.problem.key===inst.key);
-      if(!seen.includes(inst.key) && !inMission) return Object.assign({fid},inst);
+      if(!seen.includes(inst.key)&&!inMission)return Object.assign({fid},inst);
     }
-    // bank exhausted for this profile: reshuffle this family pool
-    const fid=R.choice(familyIds); const fam=window.FAMILIES[fid];
-    p.seen[fid]=[]; Store.persist();
-    const inst=fam.gen(); return Object.assign({fid},inst);
+    // Finite fact pools eventually repeat; review is intentional, not infinite novelty.
+    const fid=R.choice(familyIds);p.seen[fid]=[];
+    const inst=window.FAMILIES[fid].gen();return Object.assign({fid},inst);
   },
-  markSeen(prob){ const p=App.profile; const k=prob.fid+':'+prob.key; const a=p.seen[prob.fid]||(p.seen[prob.fid]=[]); if(!a.includes(prob.key)) a.push(prob.key); },
-
-  /* ---- rendering ---- */
-  render(){
-    const body=document.getElementById('mission-body'); body.innerHTML='';
-    const dots=document.getElementById('mission-progress'); dots.innerHTML='';
-    this.steps.forEach((s,i)=>{
-      const d=el('span','pdot'+(i<this.idx?' done':i===this.idx?' now':''));
-      dots.appendChild(d);
+  allowedAdventureFamilies(){
+    return this.target.adventureFamilies.filter(fid=>{
+      const owner=window.FAMILIES[fid].owner;
+      return !owner||owner===this.target.id||Boolean(this.profile.targets[owner]&&this.profile.targets[owner].done);
     });
-    const step=this.steps[this.idx];
-    Audio2.stopNarration();
-    if(step.type==='demo') this.renderDemo(body);
-    else if(step.type==='controls') this.renderControls(body);
-    else if(step.type==='adventure') this.renderAdventureGate(body);
-    else if(step.type==='done') this.renderDone(body);
-    else this.renderProblem(body, step);
   },
-  next(){ this.idx++; this.firstTry=true; this.render(); },
-
+  markSeen(pr){
+    const a=this.profile.seen[pr.fid]||(this.profile.seen[pr.fid]=[]);
+    if(!a.includes(pr.key))a.push(pr.key);
+  },
+  render(){
+    if(!this.active)return;
+    const body=document.getElementById('mission-body');body.innerHTML='';
+    const dots=document.getElementById('mission-progress');dots.innerHTML='';
+    this.steps.forEach((s,i)=>dots.appendChild(el('span','pdot'+(i<this.idx?' done':i===this.idx?' now':''))));
+    dots.setAttribute('aria-label','Step '+(this.idx+1)+' of '+this.steps.length);
+    const phases={demo:'Learn',controls:'How to play',guided:'Practice together',independent:'Your turn',adventure:'Adventure', 'adventure-problem':'Adventure',done:'Complete'};
+    const phase=document.getElementById('mission-phase');
+    if(phase)phase.textContent=phases[this.steps[this.idx].type];
+    body.setAttribute('data-phase',this.steps[this.idx].type);
+    document.onkeydown=null;Audio2.stopNarration();
+    const step=this.steps[this.idx];
+    if(step.type==='demo')this.renderDemo(body);
+    else if(step.type==='controls')this.renderControls(body);
+    else if(step.type==='adventure')this.renderAdventureGate(body);
+    else if(step.type==='done')this.renderDone(body);
+    else this.renderProblem(body,step);
+  },
+  next(){
+    if(!this.active)return;
+    const s=this.steps[this.idx];
+    if(['guided','independent','adventure-problem'].includes(s.type)&&!s.solved)return;
+    if(this.idx>=this.steps.length-1)return;
+    this.idx++;this.firstTry=true;this.checkpoint();this.render();
+  },
   renderDemo(body){
-    const t=this.target;
-    body.appendChild(el('h2',null,'🔍 Demonstration: '+esc(t.title)));
-    const vis=el('div','demo-visual'); body.appendChild(vis);
-    this.demoVisual(vis, t);
-    const cap=el('div','caption-box', esc(t.demoCaption)); body.appendChild(cap);
-    const row=el('div','row');
-    const play=el('button','mid-btn','🔊 Hear it'); play.onclick=()=>Audio2.narrate(t.audio, t.demoCaption);
-    const next=el('button','big-btn','Next →'); next.onclick=()=>{Audio2.click(); this.next();};
-    row.appendChild(play); row.appendChild(next); body.appendChild(row);
-    Audio2.narrate(t.audio, t.demoCaption);
+    const t=this.target;body.appendChild(el('h2',null,'🔍 Demonstration: '+esc(t.title)));
+    const vis=el('div','demo-visual');body.appendChild(vis);this.demoVisual(vis,t);
+    body.appendChild(el('div','caption-box',esc(t.demoCaption)));
+    if(t.teachingNote){
+      const note=el('details','strategy-note','<summary>More ways to think about it</summary><p>'+esc(t.teachingNote)+'</p>');
+      body.appendChild(note);
+    }
+    const row=el('div','row'),play=el('button','mid-btn','🔊 Hear it'),next=el('button','big-btn','Next →');
+    play.onclick=()=>Audio2.narrate(t.audio,t.demoCaption);
+    next.onclick=()=>{next.disabled=true;Audio2.click();this.next();};
+    row.appendChild(play);row.appendChild(next);body.appendChild(row);Audio2.narrate(t.audio,t.demoCaption);
   },
   renderControls(body){
-    const t=this.target;
     body.appendChild(el('h2',null,'🎮 How to play'));
-    body.appendChild(el('div','caption-box', esc(t.controls)));
-    const row=el('div','row');
-    const next=el('button','big-btn','Got it — let\u2019s go!'); next.onclick=()=>{Audio2.click(); this.next();};
-    row.appendChild(next); body.appendChild(row);
-    Audio2.speak(t.controls);
+    body.appendChild(el('div','caption-box',esc(this.target.controls)));
+    const next=el('button','big-btn','Got it — let’s go!');
+    next.onclick=()=>{next.disabled=true;Audio2.click();this.next();};
+    body.appendChild(next);Audio2.speak(this.target.controls);
   },
   renderAdventureGate(body){
     body.appendChild(el('h2',null,'⛰️ Adventure challenge'));
-    body.appendChild(el('p','hint','A trickier mission mixing what you know. Optional — but it earns a bonus token!'));
-    const row=el('div','row');
-    const go=el('button','big-btn','Take the challenge'); go.onclick=()=>{ this.steps[this.idx]={type:'adventure-problem', problem:this.freshProblem(this.target,this.target.adventureFamilies)}; this.render(); };
-    const skip=el('button','big-btn secondary','Skip for now'); skip.onclick=()=>{ this.next(); };
-    row.appendChild(go); row.appendChild(skip); body.appendChild(row);
+    body.appendChild(el('p','hint','Use the skills you have practiced. Optional — earn one bonus token the first time you finish this challenge.'));
+    const row=el('div','row'),go=el('button','big-btn','Take the challenge'),skip=el('button','big-btn secondary','Skip for now');
+    go.onclick=()=>{go.disabled=true;this.steps[this.idx]={type:'adventure-problem',problem:this.freshProblem(this.target,this.allowedAdventureFamilies())};this.checkpoint();this.render();};
+    skip.onclick=()=>{skip.disabled=true;this.next();};
+    row.appendChild(go);row.appendChild(skip);body.appendChild(row);
   },
-  renderProblem(body, step){
-    const t=this.target, pr=step.problem;
-    const label={guided:'Guided practice', independent:'Your turn', 'adventure-problem':'Adventure!'}[step.type];
-    body.appendChild(el('h2',null, (step.type==='guided'?'🤝 ':'⭐ ')+label));
-    if(step.type==='guided' && pr.guide) body.appendChild(el('div','explain','🧭 '+esc(pr.guide)));
-    if(pr.visual) this.problemVisual(body, pr);
-    body.appendChild(el('div','problem', pr.html));
-    const fb=el('div','feedback'); 
-    if(pr.kind==='deal'){ this.renderDeal(body, pr, fb, step); }
-    else if(pr.choices){ this.renderChoices(body, pr, fb, step); }
-    else { this.renderEntry(body, pr, fb, step); }
+  renderProblem(body,step){
+    const pr=step.problem,label={guided:'Guided practice',independent:'Your turn','adventure-problem':'Adventure!'}[step.type];
+    body.appendChild(el('h2',null,(step.type==='guided'?'🤝 ':'⭐ ')+label));
+    const workspace=el('div','practice-workspace'),question=el('div','question-area'),answer=el('div','answer-area');
+    if(step.type==='guided'&&pr.guide)question.appendChild(el('div','coach-note','<span class="eyebrow">Ranger tip</span><p>'+esc(pr.guide)+'</p>'));
+    question.appendChild(el('div','problem',pr.html));
+    if(pr.visual)this.problemVisual(question,pr);
+    workspace.appendChild(question);workspace.appendChild(answer);body.appendChild(workspace);
+    const fb=el('div','feedback');fb.setAttribute('aria-live','polite');
+    if(pr.kind==='deal'||pr.kind==='grouping')this.renderDeal(answer,pr,fb,step);
+    else if(pr.choices)this.renderChoices(answer,pr,fb,step);
+    else this.renderEntry(answer,pr,fb,step);
     body.appendChild(fb);
-    const row=el('div','row');
-    const hear=el('button','hint-btn','🔊 Read aloud'); hear.onclick=()=>Audio2.speak(pr.speak||pr.html.replace(/<[^>]+>/g,' '));
-    const hint=el('button','hint-btn','💡 Hint'); hint.onclick=()=>{ Audio2.click(); fb.className='feedback retry'; fb.textContent='💡 '+pr.hint; };
-    row.appendChild(hear); row.appendChild(hint); body.appendChild(row);
+    if(step.solved)this.renderSolved(body,pr,fb,step);
+    else if(step.mistakes){fb.className='feedback retry';fb.textContent='Let’s try again. '+this.hintText(pr,Math.max(0,step.mistakes-1));}
+    else if(step.hintsUsed){fb.className='feedback retry';fb.textContent='💡 '+this.hintText(pr,step.hintsUsed-1);}
+    const row=el('div','row'),hear=el('button','hint-btn','🔊 Read aloud'),hint=el('button','hint-btn','💡 Hint');
+    hear.onclick=()=>Audio2.speak(pr.speak||pr.html.replace(/<[^>]+>/g,' '));
+    hint.disabled=Boolean(step.solved);
+    hint.onclick=()=>{this.firstTry=false;step.assisted=true;step.hintsUsed=(step.hintsUsed||0)+1;this.checkpoint();Audio2.click();fb.className='feedback retry';fb.textContent='💡 '+this.hintText(pr,step.hintsUsed-1);};
+    row.appendChild(hear);row.appendChild(hint);body.appendChild(row);
   },
-  renderChoices(body, pr, fb, step){
-    const wrap=el('div','choices');
-    R.shuffle(pr.choices).forEach(ch=>{
-      const b=el('button','choice-btn',esc(ch));
-      b.onclick=()=>this.answer(b, String(ch)===String(pr.answer), pr, fb, step, wrap);
-      wrap.appendChild(b);
-    });
-    body.appendChild(wrap);
+  hintText(pr,index){const hints=pr.hints||[pr.hint];return hints[Math.min(index,hints.length-1)];},
+  renderChoices(body,pr,fb,step){
+    const wrap=el('div','choices');step.choiceOrder=step.choiceOrder||R.shuffle(pr.choices);
+    step.choiceOrder.forEach(ch=>{
+      const b=el('button','choice-btn',esc(ch));b.disabled=Boolean(step.solved||(step.wrongChoices||[]).includes(String(ch)));
+      if(step.solved&&String(ch)===String(pr.answer))b.classList.add('correct');
+      b.onclick=()=>this.answer(b,String(ch)===String(pr.answer),pr,fb,step,wrap);wrap.appendChild(b);
+    });body.appendChild(wrap);
   },
-  renderEntry(body, pr, fb, step){
-    const row=el('div','entry-row');
-    const disp=el('div',null,''); disp.id='entry-display'; disp.textContent='';
+  renderEntry(body,pr,fb,step){
+    const row=el('div','entry-row'),disp=el('input',null);
+    disp.id='entry-display';disp.type='text';disp.inputMode='numeric';disp.maxLength=4;disp.autocomplete='off';
+    disp.setAttribute('aria-label','Your answer'+(pr.answerUnit?' in '+pr.answerUnit:''));
+    disp.value=step.entry||'';disp.disabled=Boolean(step.solved);
+    disp.oninput=()=>{disp.value=disp.value.replace(/\D/g,'').slice(0,4);step.entry=disp.value;this.checkpoint();};
     row.appendChild(disp);
-    const check=el('button','big-btn','Check'); check.onclick=()=>{
-      const v=disp.textContent.trim();
-      if(!v) return;
-      this.answer(check, v===String(pr.answer), pr, fb, step, null, disp);
+    const check=el('button','big-btn','Check');check.disabled=Boolean(step.solved);
+    check.onclick=()=>{
+      if(!disp.value.trim()){fb.textContent='Enter a number first.';return;}
+      this.answer(check,Number(disp.value)===Number(pr.answer),pr,fb,step,null,disp);
     };
-    row.appendChild(check); body.appendChild(row);
-    const pad=el('div','numpad');
+    row.appendChild(check);body.appendChild(row);
+    const pad=el('div','numpad'),write=(value)=>{if(step.solved)return;disp.value=value.slice(0,4);step.entry=disp.value;this.checkpoint();};
     '1234567890'.split('').forEach(d=>{
-      const k=el('button','numkey',d);
-      k.onclick=()=>{ Audio2.click(); if(disp.textContent.length<6) disp.textContent+=d; };
-      pad.appendChild(k);
+      const k=el('button','numkey',d);k.disabled=Boolean(step.solved);
+      k.onclick=()=>{Audio2.click();write(disp.value+d);};pad.appendChild(k);
     });
-    const back=el('button','numkey','⌫'); back.onclick=()=>{ disp.textContent=disp.textContent.slice(0,-1); };
-    pad.appendChild(back); body.appendChild(pad);
-    document.onkeydown=(e)=>{
-      if(document.getElementById('screen-mission').classList.contains('hidden')) return;
-      if(/^[0-9]$/.test(e.key)&&disp.textContent.length<6) disp.textContent+=e.key;
-      else if(e.key==='Backspace') disp.textContent=disp.textContent.slice(0,-1);
-      else if(e.key==='Enter') check.onclick();
+    const back=el('button','numkey','⌫');back.setAttribute('aria-label','Delete last digit');back.disabled=Boolean(step.solved);
+    back.onclick=()=>write(disp.value.slice(0,-1));pad.appendChild(back);body.appendChild(pad);
+    if(pr.answerUnit)body.appendChild(el('p','answer-unit',esc(pr.answerUnit)));
+    if(!step.solved)document.onkeydown=e=>{
+      if(!this.active||document.getElementById('screen-mission').classList.contains('hidden'))return;
+      if(e.key==='Enter'){e.preventDefault();check.onclick();}
+      else if(e.target!==disp&&/^[0-9]$/.test(e.key)){e.preventDefault();write(disp.value+e.key);}
+      else if(e.target!==disp&&e.key==='Backspace'){e.preventDefault();write(disp.value.slice(0,-1));}
     };
   },
-  renderDeal(body, pr, fb, step){
-    // tap-to-deal guided division: pile -> bins, then enter per-group count
-    let left=pr.total; const perBin=new Array(pr.groups).fill(0);
-    const pile=el('div','deal-pile','🍎'.repeat(Math.min(8,left))+'<br><small>Tap to deal one to each group ('+left+' left)</small>');
-    const bins=el('div','demo-visual');
-    const binEls=[];
-    for(let g=0; g<pr.groups; g++){ const b=el('div','group-bin','<div class="items"></div><div>Group '+(g+1)+'</div>'); bins.appendChild(b); binEls.push(b); }
-    body.appendChild(pile); body.appendChild(bins);
-    pile.onclick=()=>{
-      if(left<=0) return;
-      Audio2.pop();
-      for(let g=0; g<pr.groups && left>0; g++){ left--; perBin[g]++; binEls[g].querySelector('.items').textContent+='🍎'; }
-      pile.innerHTML='🍎'.repeat(Math.min(8,left))+'<br><small>'+(left>0? 'Tap to deal ('+left+' left)' : 'All dealt!')+'</small>';
-      if(left===0){
-        pile.innerHTML='✅ All dealt!<br><small>How many in each group?</small>';
-        const row=el('div','entry-row'); const disp=el('div',null,''); disp.id='entry-display';
-        row.appendChild(disp);
-        const check=el('button','big-btn','Check');
-        check.onclick=()=>this.answer(check, disp.textContent.trim()===String(pr.answer), pr, fb, {type:'guided'}, null, disp);
-        row.appendChild(check); body.appendChild(row);
-      }
+  renderDeal(body,pr,fb,step){
+    const sharing=pr.kind==='deal',divisor=pr.math.divisor;
+    step.deal=step.deal||{left:pr.total,counts:sharing?Array(divisor).fill(0):[]};
+    const deal=step.deal,btn=el('button','deal-pile',
+      (sharing?'Deal one round':'Make one group of '+divisor)+'<br><small>'+deal.left+' counters left</small>');
+    btn.disabled=deal.left===0||Boolean(step.solved);
+    body.appendChild(btn);
+    const bins=el('div','diagram-grid');this.drawGroups(bins,deal.counts);body.appendChild(bins);
+    btn.onclick=()=>{
+      if(!this.active||step.solved||deal.left===0)return;
+      if(sharing)deal.counts=deal.counts.map(n=>n+1);else deal.counts.push(divisor);
+      deal.left-=divisor;Audio2.pop();this.checkpoint();this.render();
     };
-  },
-  answer(btn, ok, pr, fb, step, wrap, disp){
-    const t=this.target, p=App.profile;
-    if(btn.disabled) return;
-    if(ok){
-      Audio2.good(); confetti(24);
-      fb.className='feedback good'; fb.textContent='🎉 '+R.choice(['Great work!','Exactly right!','You got it!','Super!']);
-      if(wrap) wrap.querySelectorAll('button').forEach(b=>{ b.disabled=true; if(String(b.textContent)===String(pr.answer)) b.classList.add('correct'); });
-      if(disp) disp.style.borderColor='var(--green-500)';
-      if(pr.explain) setTimeout(()=>{ const e=el('div','explain','📖 '+pr.explain); fb.after(e); },350);
-      this.markSeen(pr);
-      // independence evidence: only first-try correct counts
-      if(step.type==='independent'||step.type==='adventure-problem'){
-        const st=p.targets[t.id]||(p.targets[t.id]={attempts:[],done:false,badge:false});
-        st.attempts.push(this.firstTry); if(st.attempts.length>20) st.attempts.shift();
-        this.sessionGood++; this.sessionTotal++;
-        Camp.addReport(p,{text:t.title+' — '+(step.type==='adventure-problem'?'adventure':'practice'), good:this.firstTry?1:0, total:1});
-      }
-      document.onkeydown=null;
-      setTimeout(()=>this.next(), 1400);
-    }else{
-      Audio2.bad(); this.firstTry=false;
-      fb.className='feedback retry'; fb.textContent='❌ Not quite — '+pr.hint;
-      if(wrap){ btn.classList.add('wrong'); btn.disabled=true; }
-      if(disp){ disp.textContent=''; disp.style.borderColor='var(--red)'; setTimeout(()=>disp.style.borderColor='',900); }
+    if(deal.left===0){
+      body.appendChild(el('p','hint',sharing?'All shared equally. How many counters in each group?':'All grouped. How many groups did you make?'));
+      this.renderEntry(body,pr,fb,step);
     }
+  },
+  answer(btn,ok,pr,fb,step,wrap,disp){
+    if(!this.active||this.profile!==App.profile||this.steps[this.idx]!==step||btn.disabled||step.solved)return;
+    if(ok){
+      step.solved=true;step.entry=String(pr.answer);step.independent=this.firstTry&&!step.assisted;
+      this.markSeen(pr);
+      if(step.type==='independent'||step.type==='adventure-problem'){
+        const st=this.profile.targets[this.target.id]||(this.profile.targets[this.target.id]={attempts:[],done:false,badge:false});
+        st.attempts.push(step.independent);st.attempts=st.attempts.slice(-20);
+        st.evidence=st.evidence||[];st.evidence.push({correct:step.independent,visit:this.visitId,key:pr.fid+':'+pr.key});st.evidence=st.evidence.slice(-20);
+        Camp.addReport(this.profile,{text:this.target.title+' — '+(step.type==='adventure-problem'?'adventure':'practice'),good:step.independent?1:0,total:1,assisted:Boolean(step.assisted)});
+      }
+      this.checkpoint();this.render();Audio2.good();confetti(24);
+    }else{
+      this.firstTry=false;step.mistakes=(step.mistakes||0)+1;
+      if(wrap){step.wrongChoices=step.wrongChoices||[];step.wrongChoices.push(String(btn.textContent));btn.classList.add('wrong');btn.disabled=true;}
+      if(disp){disp.value='';step.entry='';}
+      fb.className='feedback retry';fb.textContent='Let’s try again. '+this.hintText(pr,step.mistakes-1);
+      this.checkpoint();Audio2.bad();
+    }
+  },
+  renderSolved(body,pr,fb){
+    fb.className='feedback good';fb.textContent='🎉 Correct! '+pr.answer+(pr.answerUnit?' '+pr.answerUnit:'');
+    if(pr.explain)body.appendChild(el('div','explain','📖 '+esc(pr.explain)));
+    const next=el('button','big-btn','Continue →');
+    next.onclick=()=>{next.disabled=true;this.next();};body.appendChild(next);document.onkeydown=null;
   },
   renderDone(body){
-    const t=this.target, p=App.profile;
-    const st=p.targets[t.id]||(p.targets[t.id]={attempts:[],done:false,badge:false});
-    st.done=true;
-    let newToken=false, newBadge=false;
-    if(!p.missionsDone[t.id]){ p.missionsDone[t.id]=true; p.tokens++; newToken=true; }
-    if(!st.badge && st.attempts.slice(-5).filter(Boolean).length>=4 && st.attempts.length>=4){ st.badge=true; newBadge=true; }
-    Camp.refreshStages(p); Store.persist();
-    body.appendChild(el('h2',null,'🏁 Mission complete!'));
-    confetti(70); Audio2.good(); setTimeout(()=>Audio2.good(),400);
-    let html='<p class="hint">You finished <strong>'+esc(t.title)+'</strong>.</p>';
-    if(newToken) html+='<p>🪙 <strong>+1 camp token!</strong> Spend it in the Camp Shop.</p>';
-    if(newBadge) html+='<p>🏅 <strong>Badge earned!</strong> You really know this skill.</p>';
+    const t=this.target,p=this.profile,st=p.targets[t.id]||(p.targets[t.id]={attempts:[],done:false,badge:false});
+    st.done=true;let newToken=false,newBadge=false,newBonus=false;
+    if(!p.missionsDone[t.id]){p.missionsDone[t.id]=true;p.tokens++;newToken=true;}
+    if(this.steps.some(s=>s.type==='adventure-problem'&&s.solved)&&!p.missionsDone[t.id+':adventure']){
+      p.missionsDone[t.id+':adventure']=true;p.tokens++;newBonus=true;
+    }
+    const recent=(st.evidence||[]).slice(-5);
+    if(!st.badge&&recent.length===5&&recent.filter(e=>e.correct).length>=4&&new Set(recent.map(e=>e.visit)).size>=2){st.badge=true;newBadge=true;}
+    delete p.activeMissions[t.id];Camp.refreshStages(p);Store.persist();App.syncTop();
+    this.active=false;Audio2.stopNarration();document.onkeydown=null;
+    body.appendChild(el('h2',null,'🏁 Mission complete!'));confetti(50);Audio2.good();
+    let html='<p>You finished <strong>'+esc(t.title)+'</strong>.</p>';
+    if(newToken)html+='<p>🪙 +1 camp token!</p>';if(newBonus)html+='<p>⛰️ +1 Adventure bonus token!</p>';
+    if(newBadge)html+='<p>🏅 Badge earned for independent practice across two visits.</p>';
     body.appendChild(el('div','caption-box',html));
-    const row=el('div','row');
-    const again=el('button','mid-btn','🔁 Play again'); again.onclick=()=>this.start(t.id);
-    const hub=el('button','big-btn','Back to camp 🗺️'); hub.onclick=()=>{ App.showTargets(t.chapter); };
-    row.appendChild(again); row.appendChild(hub); body.appendChild(row);
-    mascotSay(true);
+    const row=el('div','row'),again=el('button','mid-btn','🔁 Play again'),hub=el('button','big-btn','Back to camp 🗺️');
+    again.onclick=()=>this.start(t.id);hub.onclick=()=>App.showTargets(t.chapter);
+    row.appendChild(again);row.appendChild(hub);body.appendChild(row);
   },
-
-  /* ---- demo + problem visuals ---- */
-  demoVisual(box, t){
+  drawGroups(box,counts,labels){
+    counts.forEach((count,i)=>{
+      const group=el('div','math-group'),items=el('div','counter-grid');
+      group.setAttribute('aria-label','Group '+(i+1)+': '+count+' counters');
+      for(let n=0;n<count;n++){const dot=el('span','math-dot');dot.setAttribute('aria-hidden','true');items.appendChild(dot);}
+      group.appendChild(items);group.appendChild(el('div','group-label',esc(labels?labels[i]:'Group '+(i+1))));box.appendChild(group);
+    });
+  },
+  line(box,values,changes){
+    const min=Math.min(...values),max=Math.max(...values),x=v=>50+(v-min)/(max-min||1)*420;
+    let svg='<svg class="math-line" viewBox="0 0 520 130" role="img" aria-label="'+esc(values.join(', then '))+'"><path d="M30 90 H490" stroke="#2e7d4f" stroke-width="3"/>';
+    [...new Set(values)].forEach(v=>{const px=x(v);svg+='<path d="M'+px+' 82 V98" stroke="#2e7d4f" stroke-width="2"/><text x="'+px+'" y="120" text-anchor="middle">'+v+'</text>';});
+    for(let i=1;i<values.length;i++){const a=x(values[i-1]),b=x(values[i]),mid=(a+b)/2,dir=b>a?1:-1;svg+='<path d="M'+a+' 80 Q'+mid+' 8 '+b+' 80" fill="none" stroke="#2f7fd0" stroke-width="3"/><path d="M'+(b-dir*10)+' 69 L'+b+' 80 L'+(b+dir*3)+' 66" fill="none" stroke="#2f7fd0" stroke-width="3"/><text x="'+mid+'" y="34" text-anchor="middle">'+changes[i-1]+'</text>';}
+    box.appendChild(el('div','line-wrap',svg+'</svg>'));
+  },
+  demoVisual(box,t){
     const v=t.demoVisual||{};
-    if(v.kind==='bridge'){
-      box.innerHTML='<div style="font-size:2rem;font-weight:800">'+v.a+' + '+v.b+' = <span style="color:var(--blue)">'+(v.a+1)+'</span> + '+(v.b-1)+' = '+(v.a+v.b)+'</div><div class="hint">Make ten first: '+(v.a)+' needs 1 to reach '+(v.a+1)+'</div>';
+    const eq=text=>box.appendChild(el('div','math-equation',esc(text)));
+    if(v.kind==='bridge'||v.kind==='shift'){
+      const move=v.kind==='bridge'?10-v.a%10:v.move,land=v.a+move,rest=v.b-move;
+      this.line(box,[v.a,land,v.a+v.b],['+'+move,'+'+rest]);
+      eq('Split '+v.b+' into '+move+' and '+rest+'.');eq(v.a+' + '+v.b+' = '+land+' + '+rest+' = '+(v.a+v.b));
     }else if(v.kind==='comp'){
-      box.innerHTML='<div style="font-size:1.8rem;font-weight:800">'+v.a+' '+(v.op||'+')+' '+v.k+'<br>→ '+v.a+' '+(v.op||'+')+ ' 100 = '+(v.op==='-'? v.a-100 : v.a+100)+'<br>→ fix '+(v.fix)+' = <span style="color:var(--green-700)">'+v.result+'</span></div>';
-    }else if(v.kind==='groups'){
-      let h='<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">';
-      for(let g=0;g<v.groups;g++) h+='<div class="group-bin"><div class="items">'+'🍎'.repeat(Math.min(6,v.per))+(v.per>6?'…':'')+'</div><div>'+v.per+' each</div></div>';
-      box.innerHTML=h+'</div><div style="font-size:1.6rem;font-weight:800">'+v.groups+' × '+v.per+' = '+(v.groups*v.per)+'</div>';
-    }else if(v.kind==='numberline'){
-      box.innerHTML='<div style="font-size:1.8rem;font-weight:800">'+v.a+' − '+v.b+' = '+(v.a-v.b)+'</div><div class="hint">Jump back to friendly numbers first.</div>';
-    }else if(v.kind==='shift'){
-      box.innerHTML='<div style="font-size:1.8rem;font-weight:800">'+v.a+' + '+v.b+'<br>= '+(v.a+v.move)+' + '+(v.b-v.move)+' = <span style="color:var(--green-700)">'+(v.a+v.b)+'</span></div><div class="hint">Slide '+v.move+' over to make a friendly hundred.</div>';
+      const extra=100-v.k,first=v.op==='-'?v.a-100:v.a+100,result=v.op==='-'?v.a-v.k:v.a+v.k,correction=v.op==='-'?'+':'−';
+      eq(v.a+' '+v.op+' '+v.k);
+      eq('1. '+v.a+' '+v.op+' 100 = '+first);
+      eq('2. '+first+' '+correction+' '+extra+' = '+result);
+      box.appendChild(el('p','hint',v.op==='-'?'100 removes too much. Put back '+extra+'.':'100 adds too much. Remove the extra '+extra+'.'));
     }else if(v.kind==='hundred'){
-      box.innerHTML='<div style="font-size:2rem;font-weight:800">'+v.a+' + <span style="color:var(--blue)">'+(100-v.a)+'</span> = 100</div><div class="hint">Hundred-pairs are best friends!</div>';
-    }else if(v.kind==='skip'){
-      box.innerHTML='<div style="font-size:1.5rem;font-weight:800">'+v.seq.join(' → ')+' = <span style="color:var(--green-700)">'+v.result+'</span></div><div class="hint">'+esc(v.label||'')+' — skip-count to the answer.</div>';
-    }else if(v.kind==='share'){
-      let h='<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">';
-      for(let g=0;g<v.groups;g++) h+='<div class="group-bin"><div class="items">'+'🍎'.repeat(Math.min(6,v.per))+(v.per>6?'…':'')+'</div><div>'+v.per+' each</div></div>';
-      box.innerHTML=h+'</div><div style="font-size:1.6rem;font-weight:800">'+v.total+' ÷ '+v.groups+' = <span style="color:var(--green-700)">'+v.per+'</span></div>';
-    }else{
-      box.innerHTML='<div style="font-size:3rem">🔍</div>';
+      const bond=el('div','number-bond','<div class="bond-whole">100</div><svg class="bond-links" viewBox="0 0 240 44" aria-hidden="true"><path d="M120 0 L44 44 M120 0 L196 44" fill="none" stroke="#256853" stroke-width="3"/></svg><div class="bond-parts"><span>'+v.a+'</span><span>'+(100-v.a)+'</span></div>');
+      bond.setAttribute('aria-label','The whole is 100. The parts are '+v.a+' and '+(100-v.a)+'.');
+      box.appendChild(bond);eq(v.a+' + '+(100-v.a)+' = 100');
+    }else if(v.kind==='subtraction'){
+      v.examples.forEach(e=>{
+        const panel=el('div','math-panel'),move=e.a%e.unit,land=e.a-move,rest=e.b-move;
+        panel.appendChild(el('h3',null,e.a+' − '+e.b));this.line(panel,[e.a,land,e.a-e.b],['−'+move,'−'+rest]);
+        panel.appendChild(el('div','math-equation',e.a+' − '+move+' = '+land+'. '+land+' − '+rest+' = '+(e.a-e.b)+'.'));box.appendChild(panel);
+      });
+    }else if(v.kind==='groups'){
+      const grid=el('div','diagram-grid');this.drawGroups(grid,Array(v.groups).fill(v.per),Array(v.groups).fill(v.per+' in each'));box.appendChild(grid);eq(v.groups+' groups of '+v.per+': '+v.groups+' × '+v.per+' = '+v.groups*v.per);
+    }else if(v.kind==='fact'){
+      const array=el('div','math-array');array.style.gridTemplateColumns='repeat('+v.per+', 24px)';
+      for(let r=0;r<v.groups;r++)for(let c=0;c<v.per;c++)array.appendChild(el('span','math-dot'+(r>=v.base?' extra-group':'')));
+      array.setAttribute('aria-label',v.groups+' rows of '+v.per+', or '+v.per+' columns of '+v.groups);box.appendChild(array);
+      box.appendChild(el('div','array-legend','<span class="known-rows">'+v.base+' known groups</span><span class="new-rows">'+(v.groups-v.base)+' more group</span>'));
+      eq(v.base+' × '+v.per+' = '+v.base*v.per);eq(v.base*v.per+' + '+(v.groups-v.base)*v.per+' = '+v.groups*v.per);
+      eq(v.groups+' × '+v.per+' = '+v.per+' × '+v.groups+' = '+v.groups*v.per);
+    }else if(v.kind==='division'){
+      const quotient=v.total/v.divisor,compare=el('div','division-compare');
+      for(const sharing of [true,false]){
+        const panel=el('div','math-panel'),grid=el('div','diagram-grid'),count=sharing?v.divisor:quotient,per=sharing?quotient:v.divisor;
+        panel.appendChild(el('h3',null,sharing?'Sharing '+v.total:'Grouping the same '+v.total));
+        panel.appendChild(el('p','hint',sharing?'Make '+v.divisor+' equal groups.':'Put '+v.divisor+' in every group.'));
+        this.drawGroups(grid,Array(count).fill(per));panel.appendChild(grid);
+        panel.appendChild(el('div','math-equation',quotient+(sharing?' counters per group':' groups')));compare.appendChild(panel);
+      }
+      box.appendChild(compare);eq(v.total+' ÷ '+v.divisor+' = '+quotient);eq('Check: '+v.divisor+' × '+quotient+' = '+v.total);
     }
   },
-  problemVisual(body, pr){
-    const v=pr.visual; if(!v) return;
-    const box=el('div','demo-visual');
-    if(v.type==='groups'){
-      let h='';
-      for(let g=0;g<v.groups;g++) h+='<div class="group-bin"><div class="items">'+'🍎'.repeat(Math.min(8,v.per))+'</div><div>group</div></div>';
-      box.innerHTML=h;
-    }
-    body.appendChild(box);
+  problemVisual(body,pr){
+    const v=pr.visual,box=el('div','demo-visual'),grid=el('div','diagram-grid');
+    this.drawGroups(grid,Array(v.groups).fill(v.per));box.appendChild(grid);body.appendChild(box);
   }
 };

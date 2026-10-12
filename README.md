@@ -9,18 +9,52 @@ Built for classroom use — share the site URL; each player keeps their own camp
   All saves live in the browser's localStorage — per device, per browser.
 - **Milestone 1** includes the camp shell plus Chapter 8 (Mental Calculation) and
   Chapter 9 (Equal Groups: multiplication and division of 3 and 4).
-- Every skill follows **teach → guided → independent → adventure**:
-  an animated demonstration with narration, a controls demo, scaffolded practice,
-  independent missions, and an optional challenge.
-- **Problems never repeat**: every problem family is a parameterized generator, and
-  each profile tracks which variants it has seen.
+- Every skill follows **teach → controls → guided → independent → adventure**:
+  mathematical diagrams and narration, controls instructions, scaffolded practice,
+  independent missions, and an optional challenge. Correct answers include a worked
+  explanation that stays visible until the player chooses Continue.
+- **Varied practice**: generators avoid recent variants where possible. Finite fact
+  pools eventually repeat for review. Challenges introduce only the current skill
+  or a different skill already completed by that camper.
+- **Learning evidence**: hints and retries preserve mission rewards. New skill
+  badges require four of the last five unassisted first attempts across two visits.
+- Unfinished missions resume with the same numbers and entered work. The existing
+  save key and target IDs are retained, with a local backup for recovery.
 - **Session Report** (📋) gives teachers a printable summary of work done.
+- The illustrated camp shows two playable trails with progress. Planned chapters
+  are grouped under Future trails. Select the camper name to switch profiles;
+  unfinished missions remain with the original camper.
+- Lessons separate the question from answer controls, show the current phase,
+  and include optional strategy notes where the curriculum offers another method.
 
 ## Files
 
 - `index.html`, `css/`, `js/` — the game (no build step, no external dependencies)
-- `audio/` — narration clips (Melody voice) for the teaching demonstrations;
-  the game falls back to on-device speech synthesis if a clip is missing
+- `assets/` — original camp scenery; decorative art never replaces math diagrams
+- `audio/` — existing Melody narration clips. Corrected lessons use their updated
+  captions through on-device speech rather than playing an outdated recording.
+  Unchanged lessons retain recorded clips; all lessons remain readable with sound off.
+- `tests/` — deterministic mathematical and mission-flow regression checks
+- `QA_REPORT.md` — findings, curriculum sources, changes, and verification limits
+
+## Verification
+
+Run with Node.js (no dependencies):
+
+```sh
+node --test tests/math-qa.test.cjs
+```
+
+The suite checks 120,000 generated cases, explanation equations, exact diagram
+counts, both meanings of division, entry controls, hint-aware learning evidence,
+profile isolation, resumed work, rewards, legacy saves, narration cancellation,
+missing-factor division coaching, paused hints, playable trails, and camper switching.
+
+All 23 automated tests pass in qa2. These use a lightweight DOM adapter; browser
+layout and physical iPad checks are still pending while GitHub writes are blocked.
+
+This release implements Chapters 8 and 9 only. It supplements the textbook and
+does not certify mastery of the entire Dimensions Math 2B curriculum.
 
 ## Hosting
 

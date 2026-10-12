@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2e7d4f">
 <title>Camp Wildwood</title>
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=dm2b-qa2">
 </head>
-<body>
+<body data-math-release="dm2b-qa2">
 <div id="app">
   <header id="topbar" class="hidden">
     <button id="btn-home" class="icon-btn" aria-label="Back to camp map">🏕️</button>
-    <div id="profile-chip" class="chip"><span id="profile-avatar">🦝</span><span id="profile-name">Camper</span></div>
+    <button id="profile-chip" class="chip" aria-label="Switch camper"><span id="profile-avatar">🦝</span><span id="profile-name">Camper</span></button>
     <div class="spacer"></div>
     <div id="token-chip" class="chip" title="Camp tokens">🪙 <span id="token-count">0</span></div>
     <button id="btn-sound" class="icon-btn" aria-label="Toggle sound">🔊</button>
@@ -22,11 +22,15 @@
     <!-- TITLE -->
     <section id="screen-title" class="screen">
       <div class="title-card">
-        <div class="title-art">🏕️🌲🏔️</div>
-        <h1>Camp Wildwood</h1>
-        <p class="subtitle">A math adventure in the woods.<br>Restore the camp, one mission at a time!</p>
-        <button id="btn-start" class="big-btn">Start</button>
-        <p class="fine">2nd-grade math · Dimensions Math 2B</p>
+        <img class="title-scene" src="assets/camp-landscape.webp" alt="A sunny woodland camp with a cozy lodge, tents, a creek, and a playing field" fetchpriority="high">
+        <div class="title-content">
+          <p class="eyebrow">A little practice. A big adventure.</p>
+          <h1>Camp <br>Wildwood</h1>
+          <p class="subtitle">Learn the math.<br>Restore your woodland camp.</p>
+          <button id="btn-start" class="big-btn">Start adventure <span aria-hidden="true">→</span></button>
+          <p class="fine">Dimensions Math 2B · Chapters 8 and 9</p>
+          <div class="learning-path"><span>Learn</span><span>Practice</span><span>Explore</span></div>
+        </div>
       </div>
     </section>
 
@@ -44,12 +48,16 @@
 
     <!-- HUB / CAMP MAP -->
     <section id="screen-hub" class="screen hidden">
+      <p class="eyebrow">Your woodland adventure</p>
       <h2 id="hub-greeting">Welcome back!</h2>
+      <div class="camp-landscape"><img src="assets/camp-landscape.webp" alt="" loading="lazy"><div class="landscape-caption"><span class="eyebrow">Camp Wildwood</span><p>One mission at a time.</p></div></div>
+      <div class="section-heading"><h3>Choose a trail</h3><span id="camp-completion" class="fine"></span></div>
       <div id="camp-map" class="card-grid"></div>
       <div class="row">
         <button id="btn-shop" class="mid-btn">🎨 Camp Shop</button>
         <button id="btn-report" class="mid-btn">📋 My Report</button>
       </div>
+      <details class="future-trails"><summary>Future trails</summary><p class="fine">More chapters are planned. The Lodge and Soccer Field are ready to explore.</p><div id="future-trails-list" class="future-trails-grid"></div></details>
     </section>
 
     <!-- TARGET PICKER -->
@@ -64,6 +72,7 @@
     <section id="screen-mission" class="screen hidden">
       <div id="mission-head">
         <button class="back-btn" id="btn-quit-mission">← Leave</button>
+        <span id="mission-phase" class="phase-label"></span>
         <div id="mission-progress" aria-label="Mission progress"></div>
       </div>
       <div id="mission-body"></div>
@@ -102,10 +111,10 @@
 <script src="audio/a8.js"></script>
 <script src="audio/a9.js"></script>
 <script src="audio/a10.js"></script>
-<script src="js/core.js"></script>
-<script src="js/camp.js"></script>
-<script src="js/engine.js"></script>
-<script src="js/chapters.js"></script>
-<script src="js/app.js"></script>
+<script src="js/core.js?v=dm2b-qa2"></script>
+<script src="js/camp.js?v=dm2b-qa2"></script>
+<script src="js/engine.js?v=dm2b-qa2"></script>
+<script src="js/chapters.js?v=dm2b-qa2"></script>
+<script src="js/app.js?v=dm2b-qa2"></script>
 </body>
 </html>
