@@ -14,7 +14,7 @@ const STARTER_ITEMS=[
   {id:'stones',name:'Trail stones',art:'🪨',cost:0,description:'A welcome gift. Make a path beside the lodge.'}
 ];
 const Yard={
-  selected:null,message:'',soccer:null,
+  selected:null,message:'',soccer:null,checkout:null,picnic:null,
   item(id){return [...STARTER_ITEMS,...SHOP_ITEMS].find(it=>it.id===id);},
   owns(p,id){return STARTER_ITEMS.some(it=>it.id===id)||p.shop.includes(id);},
   ensure(p){
@@ -131,6 +131,7 @@ const Yard={
       for(const value of ['soccer','meadow']){const b=el('button','hint-btn',value==='soccer'?'Soccer field':'Open meadow');b.setAttribute('aria-pressed',String(d.pitch===value));b.onclick=()=>{d.pitch=value;this.soccer=null;Store.persist();this.message=value==='soccer'?'Soccer field ready. Try a few goal kicks below!':'Open meadow ready. Your soccer kit stays yours.';this.renderDesigner(p);};mode.appendChild(b);}inv.appendChild(mode);
     }
     this.renderSoccer(p);
+    this.renderActivities(p);
   },
   kick(p,aim){
     if(!this.owns(p,'soccer-field')||this.ensure(p).pitch!=='soccer'||!['left','center','right'].includes(aim)||!this.soccer||this.soccer.shots>=3)return false;
@@ -161,6 +162,62 @@ const Yard={
     }
     card.appendChild(el('p','fine','Personal best: '+d.best+' / 3 · Total goals: '+d.goals+'. Camp play does not spend or earn tokens.'));
     box.appendChild(card);
+  },
+  /* Chapter-completion activities: the working Trading Post and the picnic sharing board. */
+  renderActivities(p){
+    const box=document.getElementById('chapter-activities');if(!box)return;box.innerHTML='';
+    const chDone=ch=>window.TARGETS.filter(t=>t.chapter===ch).every(t=>p.targets[t.id]&&p.targets[t.id].done);
+    /* Trading Post checkout */
+    const post=el('div','soccer-game');
+    post.appendChild(el('span','eyebrow','Trading Post activity'));
+    post.appendChild(el('h3',null,'🧾 Trading Post checkout'));
+    if(!chDone('ch10')){
+      post.appendChild(el('p','hint','Finish every Money mission to open the Trading Post! Then you can run the checkout and make change for customers.'));
+    }else{
+      const c=this.checkout||(this.checkout={price:65,paid:100,made:0,served:0,message:'A customer is waiting!'});
+      post.appendChild(el('p','hint','The customer buys something for '+fmtMoney(c.price)+' and pays with '+fmtMoney(c.paid)+'. Tap coins and bills to make the change: '+fmtMoney(c.paid-c.price)+'.'));
+      post.appendChild(el('p','hint','Your change so far: <b>'+fmtMoney(c.made)+'</b>'+(c.message?' · '+esc(c.message):'')));
+      const row=el('div','row');
+      for(const v of [25,10,5,1]){ const b=el('button','mid-btn',v+'¢'); b.onclick=()=>{ c.made+=v; c.message=''; this.renderActivities(p); }; row.appendChild(b); }
+      const clear=el('button','mid-btn','Start over'); clear.onclick=()=>{ c.made=0; c.message=''; this.renderActivities(p); }; row.appendChild(clear);
+      const give=el('button','big-btn','Give change'); give.onclick=()=>{
+        if(c.made===c.paid-c.price){ c.served++; const items=[['a sticker',65,100],['a juice box',85,100],['a muffin',145,500],['a cap',375,500],['a whistle',230,500],['a postcard',55,100],['a kite',690,1000],['a ball',425,500]];
+          const next=items[Math.floor(Math.random()*items.length)]; c.price=next[1]; c.paid=next[2]; c.made=0; c.message='Correct change! 🎉 Customer '+(c.served)+' served. Next customer: '+next[0]+'.'; Audio2.good(); }
+        else c.message='That is '+fmtMoney(c.made)+' — the change should be '+fmtMoney(c.paid-c.price)+'. Try again!';
+        this.renderActivities(p);
+      }; row.appendChild(give);
+      post.appendChild(row);
+      post.appendChild(el('p','fine','Customers served this visit: '+c.served+'. Camp play does not spend or earn tokens.'));
+    }
+    box.appendChild(post);
+    /* Picnic sharing board */
+    const grove=el('div','soccer-game');
+    grove.appendChild(el('span','eyebrow','Picnic Grove activity'));
+    grove.appendChild(el('h3',null,'🍉 Picnic sharing board'));
+    if(!chDone('ch11')){
+      grove.appendChild(el('p','hint','Finish every Fractions mission to open the sharing board! Then you can cut picnic pies into equal parts and share them fairly.'));
+    }else{
+      const s=this.picnic||(this.picnic={parts:4,shaded:1,target:null,message:'Cut the pie and shade a share!'});
+      const view=el('div','demo-visual');view.innerHTML=fractionSVG({parts:s.parts,shaded:s.shaded,shape:'circle'});grove.appendChild(view);
+      grove.appendChild(el('p','hint','The pie is cut into '+s.parts+' equal parts, and '+s.shaded+' of them are shaded: <b>'+s.shaded+'/'+s.parts+'</b>'+(s.message?' · '+esc(s.message):'')));
+      const row=el('div','row');
+      const mk=(label,fn)=>{ const b=el('button','mid-btn',label); b.onclick=()=>{ fn(); s.message=''; this.renderActivities(p); }; return b; };
+      row.appendChild(mk('Parts −',()=>{ s.parts=Math.max(2,s.parts-1); s.shaded=Math.min(s.shaded,s.parts); }));
+      row.appendChild(mk('Parts +',()=>{ s.parts=Math.min(10,s.parts+1); }));
+      row.appendChild(mk('Shade −',()=>{ s.shaded=Math.max(0,s.shaded-1); }));
+      row.appendChild(mk('Shade +',()=>{ s.shaded=Math.min(s.parts,s.shaded+1); }));
+      const challenge=el('button','big-btn',s.target?'Check my share':'Give me a challenge');
+      challenge.onclick=()=>{
+        if(!s.target){ const den=[3,4,5,6,7,8,9,10][Math.floor(Math.random()*8)]; s.target={num:1+Math.floor(Math.random()*(den-1)),den}; s.message='Your challenge: show '+s.target.num+'/'+s.target.den+'.'; }
+        else if(s.parts===s.target.den&&s.shaded===s.target.num){ s.message='That is exactly '+s.target.num+'/'+s.target.den+'! 🎉'; s.target=null; Audio2.good(); }
+        else s.message='Not yet — the challenge is '+s.target.num+'/'+s.target.den+'. You are showing '+s.shaded+'/'+s.parts+'.';
+        this.renderActivities(p);
+      };
+      row.appendChild(challenge);
+      grove.appendChild(row);
+      grove.appendChild(el('p','fine','Equal parts make fair shares. Camp play does not spend or earn tokens.'));
+    }
+    box.appendChild(grove);
   },
   reward(body,p,earned,restored){
     const card=el('div','camp-reward');card.appendChild(el('span','eyebrow','Your work grows your camp'));
