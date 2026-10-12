@@ -46,7 +46,7 @@ const MathCheck={
 };
 
 const Engine={
-  VERSION:'dm2b-m2',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
+  VERSION:'dm2b-m2b',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
   start(targetId){
     const t=window.TARGETS.find(x=>x.id===targetId);if(!t||!App.profile)return;
     if(typeof Camp!=='undefined'&&Camp.isTargetUnlocked&&!Camp.isTargetUnlocked(App.profile,t)){
@@ -145,9 +145,11 @@ const Engine={
   renderControls(body){
     body.appendChild(el('h2',null,'🎮 How to play'));
     body.appendChild(el('div','caption-box',esc(this.target.controls)));
-    const next=el('button','big-btn','Got it — let’s go!');
+    const row=el('div','row'),play=el('button','mid-btn','🔊 Hear it'),next=el('button','big-btn','Got it — let’s go!');
+    play.onclick=()=>Audio2.narrate(this.target.controlsAudio,this.target.controls);
     next.onclick=()=>{next.disabled=true;Audio2.click();this.next();};
-    body.appendChild(next);Audio2.speak(this.target.controls);
+    row.appendChild(play);row.appendChild(next);body.appendChild(row);
+    Audio2.narrate(this.target.controlsAudio,this.target.controls);
   },
   renderAdventureGate(body){
     body.appendChild(el('h2',null,'⛰️ Adventure challenge'));
