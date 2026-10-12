@@ -8,20 +8,24 @@ const CHAPTERS = [
     blurb:'Multiply and divide groups of 3 and 4.' },
   { id:'ch10', num:10, title:'Money', place:'Trading Post', art:'🪙', soon:false, blurb:'Make $1, count money, and give change.' },
   { id:'ch11', num:11, title:'Fractions', place:'Picnic Grove', art:'🍉', soon:false, blurb:'Halves, fourths, and parts of a whole.' },
-  { id:'ch12', num:12, title:'Time', place:'Adventure Station', art:'⏰', soon:true, blurb:'Coming in the next release.' },
-  { id:'ch13', num:13, title:'Capacity', place:'Water Works', art:'🪣', soon:true, blurb:'Coming in the next release.' },
-  { id:'ch14', num:14, title:'Graphs', place:'Fishing Dock', art:'🎣', soon:true, blurb:'Coming in the next release.' },
-  { id:'ch15', num:15, title:'Shapes', place:'Woodland Workshop', art:'🔷', soon:true, blurb:'Coming in the next release.' },
+  { id:'ch12', num:12, title:'Time', place:'Adventure Station', art:'⏰', soon:false, blurb:'Tell time, measure intervals, a.m. and p.m.' },
+  { id:'ch13', num:13, title:'Capacity', place:'Water Works', art:'🪣', soon:false, blurb:'Compare, measure, and convert liters, quarts, and gallons.' },
+  { id:'ch14', num:14, title:'Graphs', place:'Fishing Dock', art:'🎣', soon:false, blurb:'Read picture graphs and bar graphs.' },
+  { id:'ch15', num:15, title:'Shapes', place:'Woodland Workshop', art:'🔷', soon:false, blurb:'Sides, polygons, patterns, and solid shapes.' },
 ];
 const RESTORE_STAGES = ['🛖 run-down','🛖 tidy','🛖 cozy','🛖⭐ beautiful'];
-const CHAPTER_AREA = { ch8:'lodge', ch9:'field', ch10:'post', ch11:'grove' };
+const CHAPTER_AREA = { ch8:'lodge', ch9:'field', ch10:'post', ch11:'grove', ch12:'station', ch13:'water', ch14:'dock', ch15:'workshop' };
 const AREA_STAGE_LABELS = {
   lodge: RESTORE_STAGES,
   field: ['run-down','tidy','cozy','⭐ beautiful'],
   post: ['bare ground','market stall','trading post','⭐ bustling market'],
-  grove: ['bare ground','clearing','picnic grove','⭐ picnic paradise']
+  grove: ['bare ground','clearing','picnic grove','⭐ picnic paradise'],
+  station: ['bare ground','trail post','adventure station','⭐ expedition base'],
+  water: ['dry ground','pump','water works','⭐ splash station'],
+  dock: ['bare shore','small dock','fishing dock','⭐ angler’s wharf'],
+  workshop: ['bare ground','tool bench','woodland workshop','⭐ master craftsman’s shop']
 };
-const AREA_NAMES = { lodge:'Lodge', field:'Field', post:'Trading Post', grove:'Picnic Grove' };
+const AREA_NAMES = { lodge:'Lodge', field:'Field', post:'Trading Post', grove:'Picnic Grove', station:'Adventure Station', water:'Water Works', dock:'Fishing Dock', workshop:'Workshop' };
 /* One woodland friend per mission — completing a mission befriends its critter. */
 const CRITTERS = {
   'ch8-adding-ones':['🐇','Bunny'],'ch8-adding-tens':['🦉','Owl'],'ch8-making-100':['🦫','Beaver'],
@@ -31,8 +35,14 @@ const CRITTERS = {
   'ch10-making-1':['🐿️','Chipmunk'],'ch10-counting':['🦦','Otter'],'ch10-change':['🦡','Badger'],
   'ch10-comparing':['🦆','Duck'],'ch10-adding':['🐻','Bear Cub'],'ch10-subtracting':['🐺','Wolf Pup'],
   'ch11-halves':['🐭','Mouse'],'ch11-unit':['🐜','Ant'],'ch11-writing':['🦗','Cricket'],
-  'ch11-whole':['🦎','Lizard'],'ch11-comparing':['🐌','Snail']
+  'ch11-whole':['🦎','Lizard'],'ch11-comparing':['🐌','Snail'],
+  'ch12-telling':['🦜','Parrot'],'ch12-intervals':['🐞','Ladybug'],'ch12-ampm':['🦇','Bat'],
+  'ch13-comparing':['🦢','Swan'],'ch13-units':['🐟','Trout'],'ch13-measuring':['🦀','Crab'],
+  'ch14-picture':['🦐','Shrimp'],'ch14-bar':['🐡','Pufferfish'],'ch14-questions':['🐙','Octopus'],
+  'ch15-sides':['🐛','Caterpillar'],'ch15-polygons':['🪲','Beetle'],'ch15-circles':['🐚','Hermit Crab'],
+  'ch15-patterns':['🦚','Peacock'],'ch15-solids':['🦨','Skunk']
 };
+const FESTIVAL_TEXT='Welcome to the Camp Wildwood Festival! You did it, camper. You learned to add and subtract the smart way, to multiply and divide, to count money and make change, to share fairly with fractions, to tell time, to measure water, to read graphs, and to build with shapes. Every lodge beam, every dock plank, every picnic blanket is here because of your hard work. All your woodland friends are here to celebrate with you. Camp Wildwood is restored — and you are a true Camp Wildwood Ranger!';
 const SHOP_ITEMS = [
   { id:'flag-red', name:'Red camp flag', art:'🚩', cost:3, place:'lodge-right', description:'Raise your flag beside the lodge or along the field.' },
   { id:'soccer-field', name:'Soccer field kit', art:'⚽', cost:4, description:'Build a marked field with two goals. Unlock the Goal kick activity!' },
@@ -91,9 +101,16 @@ const Camp = {
     document.getElementById('camp-completion').textContent=completed+' of '+window.TARGETS.length+' missions complete';
     /* festival meter: every mission brings the Camp Festival closer */
     const fm=document.getElementById('festival-meter');
-    if(fm)fm.innerHTML=(completed===window.TARGETS.length
-      ? '<b>🎉 Your camp is ready for the Camp Festival!</b><p class="fine">Every trail is complete. The Festival celebration arrives with the final chapters.</p>'
-      : '<b>🎪 Camp Festival readiness: '+completed+' of '+window.TARGETS.length+' missions</b><div class="festival-bar"><span style="width:'+Math.round(completed/window.TARGETS.length*100)+'%"></span></div><p class="fine">Finish missions to get the camp ready for the big Festival at the end of the trail.</p>');
+    if(fm){
+      if(completed===window.TARGETS.length){
+        fm.innerHTML='<b>🎉 Your camp is ready for the Camp Festival!</b><p class="fine">Every trail is complete. The Festival is open!</p>';
+        const go=el('button','big-btn','🎪 Enter the Camp Festival');
+        go.onclick=()=>{ Audio2.click(); App.show('screen-festival'); Camp.renderFestival(p); };
+        fm.appendChild(go);
+      }else{
+        fm.innerHTML='<b>🎪 Camp Festival readiness: '+completed+' of '+window.TARGETS.length+' missions</b><div class="festival-bar"><span style="width:'+Math.round(completed/window.TARGETS.length*100)+'%"></span></div><p class="fine">Finish missions to get the camp ready for the big Festival at the end of the trail.</p>';
+      }
+    }
     /* woodland friends living at this camp */
     const crow=document.getElementById('critter-row');
     if(crow){ const found=this.critterList(p).filter(c=>c.found);
@@ -193,6 +210,26 @@ const Camp = {
     }
   },
 
+  renderFestival(p){
+    const b=document.getElementById('festival-body'); if(!b) return; b.innerHTML='';
+    b.appendChild(el('h2',null,'🎪 The Camp Wildwood Festival!'));
+    b.appendChild(Yard.scene(p,false));
+    b.appendChild(el('div','caption-box',esc(FESTIVAL_TEXT)));
+    const badges=window.TARGETS.filter(t=>p.targets[t.id]&&p.targets[t.id].badge).length;
+    const friends=this.critterList(p).filter(c=>c.found).length;
+    const cert=el('div','card festival-cert');
+    cert.innerHTML='<h3>🏅 Camp Wildwood Ranger Certificate</h3>'
+      +'<p>This certifies that <strong>'+esc(p.name)+'</strong> completed all '+window.TARGETS.length+' Dimensions Math 2B missions at Camp Wildwood.</p>'
+      +'<p>🪙 '+p.tokens+' camp tokens · 🏅 '+badges+' skill badges · 🦉 '+friends+' woodland friends</p>'
+      +'<p class="critter-row">'+this.critterList(p).filter(c=>c.found).map(c=>c.emoji).join(' ')+'</p>';
+    b.appendChild(cert);
+    const row=el('div','row');
+    const hear=el('button','mid-btn','🔊 Hear it'); hear.onclick=()=>Audio2.narrate('audio/m5-festival.mp3',FESTIVAL_TEXT);
+    const print=el('button','mid-btn','🖨️ Print certificate'); print.onclick=()=>window.print();
+    row.appendChild(hear); row.appendChild(print); b.appendChild(row);
+    confetti(80); Audio2.good(); Audio2.narrate('audio/m5-festival.mp3',FESTIVAL_TEXT);
+  },
+
   renderReport(p){
     const cb=document.getElementById('unlock-all-toggle');
     if(cb&&typeof Settings!=='undefined')cb.checked=Settings.unlockAll;
@@ -200,6 +237,7 @@ const Camp = {
     const rows=p.report.map(r=>'<tr><td>'+new Date(r.t).toLocaleTimeString()+'</td><td>'+esc(r.text)+'</td><td>'+(r.total? r.good+'/'+r.total : '—')+'</td></tr>').join('');
     const tg=p.report.reduce((a,r)=>a+(r.good||0),0), tt=p.report.reduce((a,r)=>a+(r.total||0),0);
     b.innerHTML='<h3>Report for '+esc(p.name)+' · 🪙 '+p.tokens+' tokens</h3>'+
+      (window.TARGETS.every(t=>p.targets[t.id]&&p.targets[t.id].done)?'<p>🎪 <strong>Camp Festival complete!</strong> All '+window.TARGETS.length+' missions finished — this camper is a Camp Wildwood Ranger.</p>':'')+
       '<p>🦉 Woodland friends met: '+this.critterList(p).filter(c=>c.found).length+' of '+window.TARGETS.length+' — see the Field Guide on the camp map.</p>'+
       (rows? '<table><tr><th>Time</th><th>Activity</th><th>First attempt</th></tr>'+rows+'</table>'
             : '<p class="hint">No missions yet today. Play a mission and it will show up here!</p>')+
