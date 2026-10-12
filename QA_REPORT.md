@@ -278,3 +278,21 @@ mission that was mid-flight under qa2 (progress and rewards are kept).
   override and its persistence, second-demonstration presence and math,
   and recorded-clip coverage for all 17 demonstrations.
 - Physical iPad Safari verification remains outstanding, as before.
+
+# Milestone 2 (dm2b-m2) — Money, Fractions, and camp rewards
+
+## Curriculum mapping (verified before building)
+Chapter 10 and Chapter 11 targets follow the publisher's 2B lesson order exactly. Money: Making $1 -> Counting Money -> Making Change (with conversions) -> Comparing Money -> Adding Money -> Subtracting Money (the book's two Practice lessons fold into Adventure pools). Fractions: Halves and Fourths -> Unit Fractions -> Writing Fractions -> Making 1 Whole -> Comparing Fractions. Problem structures were cross-checked against the parent-supplied assessment's printed item types (notation traps like $0.03 = 3 cents, ordering/comparing amounts, make-1-whole partners, unit-fraction comparison, shade-a-fraction) using parallel original problems — no assessment items were copied, and handwritten responses in the scan belong to another student and were not used.
+
+## What shipped
+- 11 new missions (23 total), 20 new parameterized families, sequential locks extended across chapters (Chapter 10 opens after Chapter 9; Chapter 11 after Chapter 10), teacher override unchanged.
+- Exact money and fraction models: pictured bills/coins counted on from the largest value; equal-part circle and bar diagrams; an interactive "shade it yourself" bar for writing fractions.
+- Amounts are computed in cents; entry answers type cents and display as dollars and cents ($4.60), matching the book's notation teaching.
+- Four more second demonstrations (Making Change with $5, Subtracting Money by counting up, Writing Fractions on a circle, Comparing unit fractions) — nine total across the game.
+- 15 new Melody narration clips (audio/c1-c15.js); all 32 demonstrations in the game now use the recorded voice. Audio scripts speak fractions as words ("three tenths") while captions keep numeric notation.
+- Rewards and theme: a Woodland Field Guide — one critter friend per mission (23), shown in the guide, on the camp map, and in the session report; a Camp Festival readiness meter on the map; the Trading Post and Picnic Grove grow through restoration stages; finishing Chapter 10 unlocks a working checkout activity (make change for customers) and finishing Chapter 11 unlocks a picnic sharing board (cut and shade equal parts, with challenges) in Build My Camp.
+
+## QA evidence
+- 48/48 tests pass, including new independent oracles: 30,000 generated money problems and 30,000 generated fraction problems re-derived from the displayed question/picture (coin sums, price differences, shaded/total counts, cross-multiplied comparisons), plus the existing 120,000-problem Chapter 8-9 oracle.
+- Money scope guards: counting to $20, adding/subtracting within $10, change answers never negative.
+- Mission-completion test now covers all 23 missions; lock tests cover the Chapter 9->10 and 10->11 boundaries; the shade interaction test taps real segments and checks the exact-count rule.
