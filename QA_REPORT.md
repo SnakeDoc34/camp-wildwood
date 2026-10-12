@@ -296,3 +296,6 @@ Chapter 10 and Chapter 11 targets follow the publisher's 2B lesson order exactly
 - 48/48 tests pass, including new independent oracles: 30,000 generated money problems and 30,000 generated fraction problems re-derived from the displayed question/picture (coin sums, price differences, shaded/total counts, cross-multiplied comparisons), plus the existing 120,000-problem Chapter 8-9 oracle.
 - Money scope guards: counting to $20, adding/subtracting within $10, change answers never negative.
 - Mission-completion test now covers all 23 missions; lock tests cover the Chapter 9->10 and 10->11 boundaries; the shade interaction test taps real segments and checks the exact-count rule.
+
+## Addendum (dm2b-m2b): Melody reads the instructions too
+The "How to play" step previously read the mission instructions with the device voice. All 23 missions now carry a recorded Melody instruction clip (audio/d1-d8.js, three clips per file), played automatically on the instructions step with a "Hear it" replay button — the same pattern as the demonstrations. Problem read-aloud remains device speech by necessity: problems are generated fresh for every camper (the no-repeat design), so there is no fixed text to record, and a static site cannot call a voice service without exposing a key in a public repository.
