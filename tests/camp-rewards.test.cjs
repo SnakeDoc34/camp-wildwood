@@ -65,6 +65,8 @@ test('campers retain separate layouts, savings goals, soccer scores, and purchas
   a.Yard.soccer={shots:0,goals:0};a.Yard.kick(p,'center');
   const d=a.Yard.ensure(other);assert.equal(d.pitch,'meadow');assert.equal(d.goals,0);assert.ok(!Object.values(d.slots).includes('flag-red'));assert.equal(a.Yard.goal(other).id,'soccer-field');
   a.Yard.place(other,'sapling','lodge-left');assert.equal(p.camp.design.slots['field-right'],'flag-red');assert.equal(p.camp.design.goal,'lanterns');
+  a.doc.getElementById('shop-message').textContent='Your soccer field is built!';a.App.profile=other;a.App.showShop();
+  assert.equal(a.doc.getElementById('shop-message').textContent,'');assert.match(a.doc.getElementById('shop-goal').textContent,/Soccer field kit/);
 });
 test('the designer uses native item and plot buttons and supports putting items away',()=>{
   const a=load();a.App.showDesign();const inv=a.doc.getElementById('design-inventory');

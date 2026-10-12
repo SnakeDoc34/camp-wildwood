@@ -182,5 +182,30 @@ invalid/unowned items, purchase balance and duplicate protection, goal persisten
 full versus incomplete replays, soccer limits/scoring, profile isolation, and
 the designer's native controls. Syntax and patch whitespace checks also pass.
 
-Live browser validation for this release is recorded after publication. Physical
-iPad Safari, touch behavior, on-device narration, and offline use remain unverified.
+Live desktop Chrome validation passed for this release:
+
+- Pages run `38280199385` successfully published commit
+  `e575dd075668f2e75e8c18db3481263a7c90b91e`. The public game shows the new camp UI.
+- A mission begun in qa2 retained its original question and entered digit after
+  the new code loaded. Completed three first missions with their challenges
+  and one full replay with its challenge: 28 visible questions answered using
+  independent arithmetic. Rewards totaled seven tokens, with no repeated bonus.
+- The soccer goal progressed from four needed tokens to two, then Ready to build.
+  Buying the kit charged four tokens, built the pitch, and exposed Play in my camp.
+  A later three-token flag purchase appeared in the scene and could be moved.
+- Placed a starter tree using Enter, swapped tree/stones, put an item away, and
+  restored it from the backpack. The purchased flag moved to the Right sideline.
+- Played one soccer round with two correct aims and one missed cone. The round
+  ended at 2/3, best score and lifetime goals were 2, and no tokens changed.
+- Selected an Adventure tent savings goal, refreshed, and retained the goal,
+  field, and placed items. Reopened the designer and retained soccer scores.
+- A second camper had their own meadow, starter items, zero progress, and soccer
+  savings goal. The original camper retained the field, flag, and chosen goal.
+- Switched between Soccer field and Open meadow without losing the purchased kit.
+  The whole soccer activity is optional and immediately available once purchased.
+- A small follow-up clears purchase messages when entering the shop and makes
+  the shop's goal button find and focus its item. Profile-isolation tests include
+  the stale-message case. Item-count wording also handles one placed item.
+
+Physical iPad Safari, touch behavior, narrow device layouts, on-device narration,
+and offline use remain unverified.

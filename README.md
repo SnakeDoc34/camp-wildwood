@@ -69,6 +69,10 @@ demonstrations and four complete missions, both division keypads, hint/retry
 scoring, refresh recovery, camper switching, and rewards. Physical iPad Safari
 and narrow-screen device checks remain pending; see QA_REPORT.md for evidence.
 
+The camp-building live pass also covers four mission completions (28 questions),
+the one-token replay, savings goals, two purchases, keyboard placement, swapping,
+putting items away, soccer scoring, refresh, and separate camper camps.
+
 This release implements Chapters 8 and 9 only. It supplements the textbook and
 does not certify mastery of the entire Dimensions Math 2B curriculum.
 

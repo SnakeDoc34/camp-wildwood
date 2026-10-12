@@ -68,7 +68,8 @@ const Yard={
   },
   scene(p,editable){
     const d=this.ensure(p),scene=el('div','camp-yard'+(editable?' editable-yard':''));
-    scene.setAttribute('aria-label','Your camp: '+(d.pitch==='soccer'?'soccer field':'open meadow')+' and '+Object.keys(d.slots).length+' placed items');
+    const count=Object.keys(d.slots).length;
+    scene.setAttribute('aria-label','Your camp: '+(d.pitch==='soccer'?'soccer field':'open meadow')+' and '+count+' placed item'+(count===1?'':'s'));
     const trees=[25,100,182,270,725,810,895,977].map((x,i)=>'<path d="m'+x+' 8-27 52h15l-30 46h84l-30-46h15Z" fill="'+(i%2?'#386d51':'#4d805b')+'"/>').join('');
     const grass=['#c1c89d','#c6d49c','#cbdca7','#d0e2af'][p.camp.field]||'#c1c89d';
     scene.appendChild(el('div','yard-ground','<svg viewBox="0 0 1000 650" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect width="1000" height="650" fill="'+grass+'"/><path d="M0 480Q120 420 115 650H0Z" fill="#93c6c8"/><path d="M0 468Q142 420 128 650" fill="none" stroke="#f2e9cb" stroke-width="18"/><path d="M510 180Q610 300 850 610" fill="none" stroke="#e7d6ae" stroke-width="35"/><ellipse cx="500" cy="425" rx="290" ry="175" fill="'+grass+'"/>'+trees+'</svg>'));
@@ -103,7 +104,12 @@ const Yard={
     const needed=Math.max(0,it.cost-p.tokens);
     details.appendChild(el('p','fine',needed?needed+' more token'+(needed===1?'':'s')+' to '+(it.id==='soccer-field'?'build your field.':'bring it to camp.'):'You have enough tokens. Ready to build!'));
     const progress=el('div','goal-progress','<span style="width:'+Math.min(100,p.tokens/it.cost*100)+'%"></span>');progress.setAttribute('role','progressbar');progress.setAttribute('aria-label','Tokens saved for '+it.name);progress.setAttribute('aria-valuemin','0');progress.setAttribute('aria-valuemax',String(it.cost));progress.setAttribute('aria-valuenow',String(Math.min(it.cost,p.tokens)));details.appendChild(progress);
-    const btn=el('button','mid-btn',needed?'See my goal':'Get it in the shop →');btn.onclick=()=>App.showShop();
+    const inShop=box.id==='shop-goal',btn=el('button','mid-btn',inShop?'Find this item ↓':needed?'See my goal':'Get it in the shop →');
+    btn.onclick=()=>{
+      if(!inShop){App.showShop();return;}
+      const card=[...document.getElementById('shop-list').children].find(c=>c.getAttribute('data-item')===it.id);
+      card?.scrollIntoView?.({block:'center'});const buttons=card?.querySelectorAll('button');if(buttons)[...buttons].find(b=>!b.disabled)?.focus?.();
+    };
     card.appendChild(art);card.appendChild(details);card.appendChild(btn);box.appendChild(card);
   },
   renderDesigner(p){

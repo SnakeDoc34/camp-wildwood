@@ -20,7 +20,7 @@ const App = {
     document.getElementById('token-count').textContent=this.profile.tokens;
   },
   showTargets(chId){ this.show('screen-targets'); Camp.renderTargets(chId); },
-  showShop(){ Audio2.click();this.show('screen-shop');Camp.renderShop(this.profile); },
+  showShop(){ Audio2.click();document.getElementById('shop-message').textContent='';this.show('screen-shop');Camp.renderShop(this.profile); },
   showDesign(itemId){
     Audio2.click();this.show('screen-design');Yard.selected=itemId&&Yard.owns(this.profile,itemId)&&itemId!=='soccer-field'?itemId:null;
     if(itemId==='soccer-field'&&Yard.owns(this.profile,itemId)){Yard.ensure(this.profile).pitch='soccer';Store.persist();}
