@@ -43,9 +43,10 @@ Built for classroom use — share the site URL; each player keeps their own camp
 
 - `index.html`, `css/`, `js/` — the game (no build step, no external dependencies)
 - `assets/` — original camp scenery; decorative art never replaces math diagrams
-- `audio/` — existing Melody narration clips. Corrected lessons use their updated
-  captions through on-device speech rather than playing an outdated recording.
-  Unchanged lessons retain recorded clips; all lessons remain readable with sound off.
+- `audio/` — recorded Melody narration clips for every demonstration,
+  including the second demonstrations added in `dm2b-qa3`. Clips are embedded
+  as data URIs in chunked `.js` files; the player resolves each clip by file
+  name and falls back to on-device speech if a clip cannot load.
 - `tests/` — deterministic mathematical and mission-flow regression checks
 - `QA_REPORT.md` — findings, curriculum sources, changes, and verification limits
 - `ROADMAP.md` — staged chapter and camp-activity plan, with acceptance checks

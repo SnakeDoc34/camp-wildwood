@@ -209,3 +209,72 @@ Live desktop Chrome validation passed for this release:
 
 Physical iPad Safari, touch behavior, narrow device layouts, on-device narration,
 and offline use remain unverified.
+
+## Follow-up release: dm2b-qa3 (October 12, 2026)
+
+Requested by the parent after the qa2/build1 releases: confirm the math
+progression against the publisher's sequence, teach each principle before its
+section, add a second demonstration for the harder skills, lock later areas
+until earlier ones are completed, and restore recorded narration where the
+qa2 caption revisions had replaced it with on-device speech.
+
+### Progression audit (verified, no reordering needed)
+
+- Chapter 8 target order matches the publisher's Chapter 8 overview lesson
+  list exactly: Adding Ones, Adding Tens, Making 100, Adding 97/98/99,
+  Subtracting Ones, Subtracting Tens, Subtracting 97/98/99 (the game merges
+  the two subtraction lessons into one mission, in the same position).
+- Chapter 9 target order matches the Teacher's Guide 2B lesson list:
+  Multiplication Table of 3, Multiplication Facts of 3, Dividing by 3,
+  Multiplication Table of 4, Multiplication Facts of 4, Dividing by 4
+  (the game's "Groups of" missions are the table-building lessons).
+- Every mission still runs demonstration → controls → guided → independent →
+  optional Adventure, and Adventure pools remain limited to the current and
+  completed skills. A regression test now pins the target order.
+
+### Trail-order locks with a teacher override
+
+- A mission unlocks when the previous mission in its chapter is complete;
+  Chapter 9 opens when all six Chapter 8 missions are complete. Completed
+  and in-progress missions are always available (resume is never blocked).
+- Locked skills show a lock and the reason ("Finish … first"); the locked
+  chapter card explains the requirement. Engine.start refuses locked
+  missions as a backstop.
+- The Report screen gains a Teacher tools card: "Unlock all missions"
+  restores free navigation for the whole device. The setting is stored
+  separately (`campWildwood.settings`) and applies to every camper profile.
+- Default for new devices is locked (the lesson order). Existing progress,
+  purchases, and camp layouts are untouched; no save data migrates.
+
+### Second demonstrations
+
+Adding Tens, Adding 97/98/99, Subtracting 97/98/99, Division by 3, and
+Division by 4 each gained a second worked demonstration (new numbers, same
+strategy, rendered with the same exact diagrams) between the first
+demonstration and the controls screen. Subtracting Ones & Tens already
+demonstrates two worked examples (ones, then tens) and keeps its alternate
+"subtract from 100" strategy note. Mission step validation, resume, and
+progress dots handle the extra step; the engine version bump restarts any
+mission that was mid-flight under qa2 (progress and rewards are kept).
+
+### Narration restored in the recorded voice
+
+- Eleven new Melody clips were recorded: the six revised qa2 demonstration
+  captions (Adding Tens; Subtracting Ones & Tens; Multiplication Facts of 3
+  and 4; Division by 3 and 4) and the five new second demonstrations.
+- All twelve demonstrations and all five second demonstrations now play the
+  recorded voice; on-device speech remains the fallback. New clips live in
+  `audio/b1–b11.js` with exact file-name keys (no prefix aliasing needed).
+  The six superseded qa1 recordings remain in the `a` chunks, unreferenced.
+- A regression test resolves every referenced clip through the player's own
+  lookup rule, so a future caption or file change cannot silently drop the
+  recorded voice again.
+
+### Verification
+
+- 41 automated tests pass: the 32 qa2/build1 tests (updated only where the
+  intended step layout or narration design changed) plus 9 new tests for
+  lesson order, lock rules, chapter gating, resume-under-lock, the teacher
+  override and its persistence, second-demonstration presence and math,
+  and recorded-clip coverage for all 17 demonstrations.
+- Physical iPad Safari verification remains outstanding, as before.
