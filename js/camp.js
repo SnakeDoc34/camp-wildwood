@@ -26,6 +26,33 @@ const SHOP_ITEMS = [
 
 const Camp = {
   targetsFor(chId){ return (window.TARGETS||[]).filter(t=>t.chapter===chId); },
+  /* Trail order follows the Dimensions Math lesson sequence. A teacher can
+     open every mission from the Report screen (Settings.unlockAll). */
+  isChapterUnlocked(p,chId){
+    if(typeof Settings!=='undefined'&&Settings.unlockAll)return true;
+    const order=CHAPTERS.filter(c=>!c.soon).map(c=>c.id),i=order.indexOf(chId);
+    if(i<=0)return true;
+    const prev=this.targetsFor(order[i-1]);
+    return prev.length>0&&prev.every(t=>p.targets[t.id]&&p.targets[t.id].done);
+  },
+  isTargetUnlocked(p,t){
+    if(typeof Settings!=='undefined'&&Settings.unlockAll)return true;
+    if(p.targets[t.id]&&p.targets[t.id].done)return true;
+    if((p.activeMissions||{})[t.id])return true;
+    if(!this.isChapterUnlocked(p,t.chapter))return false;
+    const list=this.targetsFor(t.chapter),i=list.indexOf(t);
+    if(i<=0)return true;
+    const prev=list[i-1];
+    return Boolean(p.targets[prev.id]&&p.targets[prev.id].done);
+  },
+  lockReason(p,t){
+    if(!this.isChapterUnlocked(p,t.chapter)){
+      const prev=CHAPTERS[CHAPTERS.findIndex(c=>c.id===t.chapter)-1];
+      return 'Finish Chapter '+(prev?prev.num:'')+' first';
+    }
+    const list=this.targetsFor(t.chapter),i=list.indexOf(t);
+    return i>0?'Finish “'+list[i-1].title+'” first':'';
+  },
   /* restoration: lodge advances with ch8 targets done, field with ch9 */
   refreshStages(p){
     const ch8done=this.targetsFor('ch8').filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
@@ -48,11 +75,15 @@ const Camp = {
       const card=el('button','card trail-card '+(ch.id==='ch8'?'lodge-trail':'field-trail'));
       const targets=this.targetsFor(ch.id),done=targets.filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
       const stage = ch.id==='ch8'? 'Lodge '+RESTORE_STAGES[p.camp.lodge] : ch.id==='ch9'? 'Field '+['run-down','tidy','cozy','⭐ beautiful'][p.camp.field] : '';
+      const chapterLocked=!this.isChapterUnlocked(p,ch.id);
+      if(chapterLocked)card.classList.add('trail-locked');
       card.innerHTML='<span class="trail-top"><span class="eyebrow">Chapter '+ch.num+'</span><span class="art" aria-hidden="true">'+ch.art+'</span></span><h3>'+esc(ch.place)+'</h3>'+
         '<p class="trail-subtitle">'+esc(ch.title)+'</p><p class="hint">'+esc(ch.blurb)+'</p>'+
         '<span class="trail-progress" aria-label="'+done+' of '+targets.length+' missions complete"><span style="width:'+done/targets.length*100+'%"></span></span>'+
-        '<span class="trail-bottom"><span class="fine">'+done+' / '+targets.length+' missions · '+esc(stage)+'</span><span class="trail-arrow" aria-hidden="true">→</span></span>';
-      card.onclick=()=>{ Audio2.click(); App.showTargets(ch.id); };
+        (chapterLocked
+          ? '<span class="trail-bottom"><span class="lock-note">🔒 Finish the Chapter '+(ch.num-1)+' missions to open this trail</span></span>'
+          : '<span class="trail-bottom"><span class="fine">'+done+' / '+targets.length+' missions · '+esc(stage)+'</span><span class="trail-arrow" aria-hidden="true">→</span></span>');
+      card.onclick=()=>{ Audio2.click(); if(chapterLocked){ toast('🔒 Finish the Chapter '+(ch.num-1)+' missions first — or ask a teacher to unlock all missions in the Report.'); return; } App.showTargets(ch.id); };
       map.appendChild(card);
     });
   },
@@ -63,13 +94,17 @@ const Camp = {
     const list=document.getElementById('target-list'); list.innerHTML='';
     this.targetsFor(chId).forEach((t,index)=>{
       const st=App.profile.targets[t.id]||{};
-      const card=el('button','card skill-card'+(st.done?' skill-complete':''));
-      card.innerHTML='<span class="skill-top"><span class="mission-number">'+String(index+1).padStart(2,'0')+'</span><span class="art" aria-hidden="true">'+t.art+'</span></span><h3>'+esc(t.title)+'</h3>'+
+      const unlocked=this.isTargetUnlocked(App.profile,t);
+      const card=el('button','card skill-card'+(st.done?' skill-complete':'')+(unlocked?'':' skill-locked'));
+      card.innerHTML='<span class="skill-top"><span class="mission-number">'+String(index+1).padStart(2,'0')+'</span><span class="art" aria-hidden="true">'+(unlocked?t.art:'🔒')+'</span></span><h3>'+esc(t.title)+'</h3>'+
         '<p class="hint">'+esc(t.blurb)+'</p>'+
-        (st.badge?'<span class="badge">🏅 Badge earned</span>':(st.done?'<span class="badge">✅ Done</span>':''))+
-        (st.attempts&&st.attempts.length?'<p class="fine">Recent: '+st.attempts.slice(-5).map(a=>a?'⭐ independent':'🌱 with support').join(' · ')+'</p>':'')+
-        ((App.profile.activeMissions||{})[t.id]?'<span class="badge">Resume mission</span>':'');
-      card.onclick=()=>{ Audio2.click(); Engine.start(t.id); };
+        (unlocked
+          ? (st.badge?'<span class="badge">🏅 Badge earned</span>':(st.done?'<span class="badge">✅ Done</span>':''))
+            +(st.attempts&&st.attempts.length?'<p class="fine">Recent: '+st.attempts.slice(-5).map(a=>a?'⭐ independent':'🌱 with support').join(' · ')+'</p>':'')
+            +((App.profile.activeMissions||{})[t.id]?'<span class="badge">Resume mission</span>':'')
+          : '<span class="lock-note">🔒 '+esc(this.lockReason(App.profile,t))+'</span>');
+      if(unlocked){ card.onclick=()=>{ Audio2.click(); Engine.start(t.id); }; }
+      else { card.disabled=true; card.setAttribute('aria-label',t.title+' (locked). '+this.lockReason(App.profile,t)); }
       list.appendChild(card);
     });
   },
@@ -113,6 +148,8 @@ const Camp = {
   },
   addReport(p, entry){ p.report.push(Object.assign({t:Date.now()},entry)); Store.persist(); },
   renderReport(p){
+    const cb=document.getElementById('unlock-all-toggle');
+    if(cb&&typeof Settings!=='undefined')cb.checked=Settings.unlockAll;
     const b=document.getElementById('report-body');
     const rows=p.report.map(r=>'<tr><td>'+new Date(r.t).toLocaleTimeString()+'</td><td>'+esc(r.text)+'</td><td>'+(r.total? r.good+'/'+r.total : '—')+'</td></tr>').join('');
     const tg=p.report.reduce((a,r)=>a+(r.good||0),0), tt=p.report.reduce((a,r)=>a+(r.total||0),0);

@@ -41,6 +41,7 @@ const Store = {
       if(!p.camp||typeof p.camp!=='object'||Array.isArray(p.camp))p.camp={lodge:0,field:0};
       if(!Array.isArray(p.shop))p.shop=[];if(!Array.isArray(p.report))p.report=[];
     }
+    if(typeof Settings!=='undefined')Settings.init();
   },
   _save(){
     if(!this._ls)return;
@@ -58,6 +59,17 @@ const Store = {
   saveProfile(p){ this.profiles[p.id]=p; this._save(); },
   deleteProfile(id){ delete this.profiles[id]; this._save(); },
   persist(){ this._save(); }
+};
+
+/* ---------- Teacher settings (device-level, shared by all campers on this device) ---------- */
+const Settings = {
+  KEY:'campWildwood.settings',
+  unlockAll:false,
+  init(){
+    try{ const v=JSON.parse(localStorage.getItem(this.KEY)); if(v&&typeof v==='object'&&!Array.isArray(v)) this.unlockAll=!!v.unlockAll; }catch(e){}
+  },
+  save(){ try{ localStorage.setItem(this.KEY,JSON.stringify({unlockAll:this.unlockAll})); }catch(e){} },
+  setUnlockAll(v){ this.unlockAll=!!v; this.save(); }
 };
 function newProfileState(name, avatar){
   return {

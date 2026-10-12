@@ -46,6 +46,8 @@ const App = {
     document.getElementById('designer-shop').onclick=()=>this.showShop();
     document.getElementById('shop-design').onclick=()=>this.showDesign();
     document.getElementById('btn-report').onclick=()=>{ Audio2.click(); this.show('screen-report'); Camp.renderReport(this.profile); };
+    const unlockToggle=document.getElementById('unlock-all-toggle');
+    if(unlockToggle){ unlockToggle.checked=Settings.unlockAll; unlockToggle.onchange=e=>{ Settings.setUnlockAll(e.target.checked); toast(e.target.checked?'🔓 All missions unlocked.':'🔒 Trail order on — missions unlock in order.'); }; }
     document.getElementById('btn-print').onclick=()=>window.print();
     document.getElementById('btn-quit-mission').onclick=()=>{ Audio2.stopNarration(); document.onkeydown=null; this.showTargets(this.targetChapter()); };
     document.querySelectorAll('[data-go="hub"]').forEach(b=>b.onclick=()=>{ Audio2.click(); this.show('screen-hub'); Camp.renderHub(this.profile); });
