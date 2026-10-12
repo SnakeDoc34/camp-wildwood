@@ -128,3 +128,28 @@ input#entry-display{width:150px;min-width:0;max-width:100%;font-size:2rem;font-w
 #teacher-tools{margin-top:18px;text-align:left}
 .teacher-toggle{display:flex;gap:10px;align-items:center;font-weight:700;font-size:1.05rem;cursor:pointer}
 .teacher-toggle input{width:22px;height:22px;accent-color:#2e7d4f}
+
+/* M2: money and fraction visuals */
+.money-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:10px}
+.coin{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:800;border:2px solid #00000033;box-shadow:inset 0 0 0 3px #ffffff55}
+.coin.penny{width:44px;height:44px;background:#c98a5a;color:#5f3418}
+.coin.nickel{width:50px;height:50px;background:#cfd4d9;color:#3c4650}
+.coin.dime{width:40px;height:40px;background:#cfd4d9;color:#3c4650}
+.coin.quarter{width:58px;height:58px;background:#dde2e7;color:#3c4650}
+.bill{display:inline-flex;align-items:center;justify-content:center;min-width:92px;height:48px;padding:0 12px;background:#7fb069;border:2px solid #4c7a3f;border-radius:8px;font-weight:800;color:#1e3d1a}
+.frac-svg{max-width:100%;height:auto}
+.frac-shade-bar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px}
+.frac-seg{width:64px;height:64px;font-size:1.6rem;border:3px solid #35563e;border-radius:10px;background:#fff;color:#e8873a;cursor:pointer}
+.frac-seg.on{background:#e8873a;color:#fff}
+.demo-visual-inner{display:flex;justify-content:center}
+
+/* M2: field guide, festival meter, critter row */
+.critter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px}
+.critter-card{background:#fff;border:2px solid #d9e4d0;border-radius:14px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center}
+.critter-card .critter-art{font-size:2.4rem;line-height:1}
+.critter-card .critter-art.hiding{opacity:.45}
+.critter-card span{color:#46604c;font-size:.9rem}
+.critter-row{margin:10px 0;font-size:1.15rem}
+.critter-row span{font-size:1.5rem}
+.festival-bar{height:16px;background:#e5edda;border-radius:99px;overflow:hidden;margin:8px 0}
+.festival-bar span{display:block;height:100%;background:linear-gradient(90deg,#e8873a,#f2b33d);border-radius:99px}
