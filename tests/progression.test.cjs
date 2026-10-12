@@ -11,10 +11,14 @@ const EXPECTED_ORDER=[
   'ch9-groups-3','ch9-multiply-3','ch9-divide-3',
   'ch9-groups-4','ch9-multiply-4','ch9-divide-4',
   'ch10-making-1','ch10-counting','ch10-change','ch10-comparing','ch10-adding','ch10-subtracting',
-  'ch11-halves','ch11-unit','ch11-writing','ch11-whole','ch11-comparing'
+  'ch11-halves','ch11-unit','ch11-writing','ch11-whole','ch11-comparing',
+  'ch12-telling','ch12-intervals','ch12-ampm',
+  'ch13-comparing','ch13-units','ch13-measuring',
+  'ch14-picture','ch14-bar','ch14-questions',
+  'ch15-sides','ch15-polygons','ch15-circles','ch15-patterns','ch15-solids'
 ];
 const DEMO2=['ch8-adding-tens','ch8-adding-98','ch8-subtracting-98','ch9-divide-3','ch9-divide-4',
-  'ch10-change','ch10-subtracting','ch11-writing','ch11-comparing'];
+  'ch10-change','ch10-subtracting','ch11-writing','ch11-comparing','ch12-intervals'];
 
 function locked(){ const a=load(); a.Settings.unlockAll=false; return a; }
 function markDone(a,id){ a.profile.targets[id]={attempts:[],done:true,badge:false}; }

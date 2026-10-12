@@ -169,12 +169,12 @@ test('repeated purchase callbacks charge only once',()=>{
   const b=a.doc.getElementById('shop-list').children[0].querySelector('button'),event={stopPropagation(){}};b.onclick(event);b.onclick(event);
   assert.equal(a.profile.tokens,9);assert.equal(a.profile.shop.filter(x=>x==='flag-red').length,1);
 });
-test('the camp offers only playable trails and exposes four planned trails separately',()=>{
+test('the camp offers only playable trails and exposes no planned trails separately',()=>{
   const a=load();a.Camp.renderHub(a.profile);
   const playable=a.doc.getElementById('camp-map').children;
-  assert.equal(playable.length,4);assert.ok(playable.every(e=>e.tagName==='BUTTON'));
-  assert.equal(a.doc.getElementById('future-trails-list').children.length,4);
-  assert.match(a.doc.getElementById('camp-completion').textContent,/0 of 23/);
+  assert.equal(playable.length,8);assert.ok(playable.every(e=>e.tagName==='BUTTON'));
+  assert.equal(a.doc.getElementById('future-trails-list').children.length,0);
+  assert.match(a.doc.getElementById('camp-completion').textContent,/0 of 37/);
   playable[0].onclick();
   const skills=a.doc.getElementById('target-list').children;
   assert.equal(skills.length,6);assert.ok(skills.every(e=>e.tagName==='BUTTON'));
