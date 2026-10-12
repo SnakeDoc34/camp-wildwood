@@ -50,7 +50,7 @@ const MathCheck={
 };
 
 const Engine={
-  VERSION:'dm2b-m3',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
+  VERSION:'dm2b-m4',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
   start(targetId){
     const t=window.TARGETS.find(x=>x.id===targetId);if(!t||!App.profile)return;
     if(typeof Camp!=='undefined'&&Camp.isTargetUnlocked&&!Camp.isTargetUnlocked(App.profile,t)){
@@ -135,6 +135,10 @@ const Engine={
     const t=this.target,d2=second&&t.demo2?t.demo2:null;
     const caption=d2?d2.caption:t.demoCaption,audio=d2?d2.audio:t.audio;
     body.appendChild(el('h2',null,(d2?'🔍 Another example: ':'🔍 Demonstration: ')+esc(t.title)));
+    if(!d2&&t.strategyName){
+      const banner=el('div','strategy-banner','🧭 <strong>Strategy: '+esc(t.strategyName)+'</strong><span>'+esc(t.strategyBlurb||'')+'</span>');
+      body.appendChild(banner);
+    }
     const vis=el('div','demo-visual');body.appendChild(vis);this.demoVisual(vis,{demoVisual:d2?d2.visual:t.demoVisual});
     body.appendChild(el('div','caption-box',esc(caption)));
     if(!d2&&t.teachingNote){
@@ -142,13 +146,18 @@ const Engine={
       body.appendChild(note);
     }
     const row=el('div','row'),play=el('button','mid-btn','🔊 Hear it'),next=el('button','big-btn','Next →');
-    play.onclick=()=>Audio2.narrate(audio,caption);
+    const playAll=()=>{
+      if(!d2&&t.strategyIntro)Audio2.narrate(t.strategyIntro,'The strategy is called '+t.strategyName+'. '+(t.strategyBlurb||''),()=>Audio2.narrate(audio,caption));
+      else Audio2.narrate(audio,caption);
+    };
+    play.onclick=playAll;
     next.onclick=()=>{next.disabled=true;Audio2.click();this.next();};
-    row.appendChild(play);row.appendChild(next);body.appendChild(row);Audio2.narrate(audio,caption);
+    row.appendChild(play);row.appendChild(next);body.appendChild(row);playAll();
   },
   renderControls(body){
     body.appendChild(el('h2',null,'🎮 How to play'));
     body.appendChild(el('div','caption-box',esc(this.target.controls)));
+    if(this.target.strategyName)body.appendChild(el('p','strategy-line','🧭 Strategy for this mission: <strong>'+esc(this.target.strategyName)+'</strong>'));
     const row=el('div','row'),play=el('button','mid-btn','🔊 Hear it'),next=el('button','big-btn','Got it — let’s go!');
     play.onclick=()=>Audio2.narrate(this.target.controlsAudio,this.target.controls);
     next.onclick=()=>{next.disabled=true;Audio2.click();this.next();};
@@ -168,6 +177,8 @@ const Engine={
     body.appendChild(el('h2',null,(step.type==='guided'?'🤝 ':'⭐ ')+label));
     const workspace=el('div','practice-workspace'),question=el('div','question-area'),answer=el('div','answer-area');
     if(step.type==='guided'&&pr.guide)question.appendChild(el('div','coach-note','<span class="eyebrow">Ranger tip</span><p>'+esc(pr.guide)+'</p>'));
+    const strat=window.strategyForProblem?window.strategyForProblem(pr):null;
+    if(strat)question.appendChild(el('div','strategy-chip','🧭 Strategy: <strong>'+esc(strat.name)+'</strong>'));
     question.appendChild(el('div','problem',pr.html));
     if(pr.visual)this.problemVisual(question,pr);
     workspace.appendChild(question);workspace.appendChild(answer);body.appendChild(workspace);
@@ -285,9 +296,11 @@ const Engine={
       this.checkpoint();Audio2.bad();
     }
   },
-  renderSolved(body,pr,fb){
-    fb.className='feedback good';fb.textContent='🎉 Correct! '+(pr.answerText||pr.answer)+(pr.answerUnit?' '+pr.answerUnit:'');
-    if(pr.explain)body.appendChild(el('div','explain','📖 '+esc(pr.explain)));
+  renderSolved(body,pr,fb,step){
+    const strat=window.strategyForProblem?window.strategyForProblem(pr):null;
+    fb.className='feedback good';
+    fb.textContent='🎉 Correct! '+(pr.answerText||pr.answer)+(pr.answerUnit?' '+pr.answerUnit:'')+(strat?'. Strategy: '+strat.name:'');
+    if(pr.explain)body.appendChild(el('div','explain',(strat?'🧭 <strong>'+esc(strat.name)+'</strong> — ':'📖 ')+esc(pr.explain)));
     const next=el('button','big-btn','Continue →');
     next.onclick=()=>{next.disabled=true;this.next();};body.appendChild(next);document.onkeydown=null;
   },
