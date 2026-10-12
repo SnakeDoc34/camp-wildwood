@@ -27,6 +27,10 @@ const MathCheck={
       const aBigger=left>right;
       return (m.pick==='smaller')!==aBigger? m.aNum+'/'+m.aDen : m.bNum+'/'+m.bDen;
     }
+    if(m.type==='text')return m.answer;
+    if(m.type==='clock')return m.h+':'+String(m.min).padStart(2,'0');
+    if(m.type==='minutes')return m.to-m.from;
+    if(m.type==='value')return m.value;
     return NaN;
   },
   valid(pr){
@@ -46,7 +50,7 @@ const MathCheck={
 };
 
 const Engine={
-  VERSION:'dm2b-m2b',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
+  VERSION:'dm2b-m3',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
   start(targetId){
     const t=window.TARGETS.find(x=>x.id===targetId);if(!t||!App.profile)return;
     if(typeof Camp!=='undefined'&&Camp.isTargetUnlocked&&!Camp.isTargetUnlocked(App.profile,t)){
@@ -289,7 +293,7 @@ const Engine={
   },
   renderDone(body){
     const t=this.target,p=this.profile,st=p.targets[t.id]||(p.targets[t.id]={attempts:[],done:false,badge:false});
-    const oldStages={lodge:p.camp.lodge,field:p.camp.field,post:p.camp.post||0,grove:p.camp.grove||0};
+    const oldStages={lodge:p.camp.lodge,field:p.camp.field,post:p.camp.post||0,grove:p.camp.grove||0,station:p.camp.station||0,water:p.camp.water||0,dock:p.camp.dock||0,workshop:p.camp.workshop||0};
     st.done=true;let newToken=false,newBadge=false,newBonus=false,newPractice=false;
     const doneStep=this.steps.find(s=>s.type==='done');
     if(!p.missionsDone[t.id]){p.missionsDone[t.id]=true;p.tokens++;newToken=true;}
@@ -312,8 +316,8 @@ const Engine={
     const critter=(typeof CRITTERS!=='undefined')?CRITTERS[t.id]:null;
     if(newToken&&critter)html+='<p>'+critter[0]+' <strong>'+esc(critter[1])+'</strong> moved into your camp! Meet all of your friends in the Field Guide on the camp map.</p>';
     body.appendChild(el('div','caption-box',html));
-    const part={ch8:'lodge',ch9:'field',ch10:'post',ch11:'grove'}[t.chapter]||'lodge';
-    const restored=p.camp[part]>oldStages[part]?({lodge:'Your lodge has a new look!',field:'Your meadow is looking greener!',post:'Your Trading Post is growing!',grove:'Your Picnic Grove is blooming!'})[part]+' Finish more skills to restore your camp.':null;
+    const part={ch8:'lodge',ch9:'field',ch10:'post',ch11:'grove',ch12:'station',ch13:'water',ch14:'dock',ch15:'workshop'}[t.chapter]||'lodge';
+    const restored=p.camp[part]>oldStages[part]?({lodge:'Your lodge has a new look!',field:'Your meadow is looking greener!',post:'Your Trading Post is growing!',grove:'Your Picnic Grove is blooming!',station:'Your Adventure Station is outfitted!',water:'Your Water Works is flowing!',dock:'Your Fishing Dock is bustling!',workshop:'Your Woodland Workshop is humming!'})[part]+' Finish more skills to restore your camp.':null;
     Yard.reward(body,p,Number(newToken)+Number(newPractice)+Number(newBonus),restored);
     const row=el('div','row'),again=el('button','mid-btn','🔁 Play again'),hub=el('button','big-btn','Back to camp 🗺️');
     again.onclick=()=>this.start(t.id);hub.onclick=()=>{App.show('screen-hub');Camp.renderHub(p);};
@@ -402,6 +406,43 @@ const Engine={
       }
       box.appendChild(compare);
       if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='clock'){
+      const wrap=el('div','demo-visual-inner');wrap.innerHTML=clockSVG(v.h,v.min);box.appendChild(wrap);
+      eq('The clock shows '+v.h+':'+String(v.min).padStart(2,'0'));
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='clock-pair'){
+      const compare=el('div','division-compare');
+      for(const side of [v.a,v.b]){
+        const panel=el('div','math-panel');panel.innerHTML=clockSVG(side.h,side.min);
+        panel.appendChild(el('div','math-equation',side.h+':'+String(side.min).padStart(2,'0')));compare.appendChild(panel);
+      }
+      box.appendChild(compare);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='bargraph'){
+      const wrap=el('div','demo-visual-inner');wrap.innerHTML=barGraphSVG(v.data,v.max);box.appendChild(wrap);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='picto'){
+      const wrap=el('div','demo-visual-inner');wrap.innerHTML=pictoSVG(v.data,v.symbol,v.per);box.appendChild(wrap);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='shape'){
+      const wrap=el('div','demo-visual-inner');wrap.innerHTML=shapeSVG(v);box.appendChild(wrap);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='shapes-row'){
+      const row=el('div','division-compare');
+      for(const s of v.shapes){ const panel=el('div','math-panel');panel.innerHTML=shapeSVG(s);panel.appendChild(el('div','math-equation',s.label||''));row.appendChild(panel); }
+      box.appendChild(row);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='pattern'){
+      const wrap=el('div','demo-visual-inner');wrap.innerHTML=patternSVG(v.items,-1);box.appendChild(wrap);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='container'){
+      const wrap=el('div','demo-visual-inner');wrap.innerHTML=containerSVG(v);box.appendChild(wrap);
+      if(v.note)box.appendChild(el('p','hint',v.note));
+    }else if(v.kind==='containers2'){
+      const row=el('div','division-compare');
+      for(const side of [v.a,v.b]){ const panel=el('div','math-panel');panel.innerHTML=containerSVG(side);panel.appendChild(el('div','math-equation',side.caption||''));row.appendChild(panel); }
+      box.appendChild(row);
+      if(v.note)box.appendChild(el('p','hint',v.note));
     }
   },
   problemVisual(body,pr){
@@ -413,6 +454,22 @@ const Engine={
       box.innerHTML=moneyHTML(v.coins);body.appendChild(box);
     }else if(v.type==='fraction'){
       box.innerHTML=fractionSVG(v);body.appendChild(box);
+    }else if(v.type==='clock'){
+      box.innerHTML=clockSVG(v.h,v.min);body.appendChild(box);
+    }else if(v.type==='bargraph'){
+      box.innerHTML=barGraphSVG(v.data,v.max);body.appendChild(box);
+    }else if(v.type==='picto'){
+      box.innerHTML=pictoSVG(v.data,v.symbol,v.per);body.appendChild(box);
+    }else if(v.type==='shape'){
+      box.innerHTML=shapeSVG(v);body.appendChild(box);
+    }else if(v.type==='pattern'){
+      box.innerHTML=patternSVG(v.items,v.missing);body.appendChild(box);
+    }else if(v.type==='container'){
+      box.innerHTML=containerSVG(v);body.appendChild(box);
+    }else if(v.type==='containers2'){
+      const row=el('div','division-compare');
+      for(const side of [v.a,v.b]){ const panel=el('div','math-panel');panel.innerHTML=containerSVG(side);panel.appendChild(el('div','math-equation',side.caption||''));row.appendChild(panel); }
+      box.appendChild(row);body.appendChild(box);
     }
   }
 };
@@ -448,3 +505,76 @@ function fractionSVG(v){
   }
   return '<svg class="frac-svg" viewBox="0 0 140 140" role="img" aria-label="'+label+'">'+slices+'</svg>';
 }
+
+/* ---- Milestone 3 renderers: exact clock, graphs, shapes, containers ---- */
+function clockSVG(h,min){
+  const cx=80,cy=80,r=72,ma=min*6,ha=((h%12)*30+min*0.5);
+  const rad=a=>(a-90)*Math.PI/180;
+  const mx=cx+52*Math.cos(rad(ma)),my=cy+52*Math.sin(rad(ma)),hx=cx+36*Math.cos(rad(ha)),hy=cy+36*Math.sin(rad(ha));
+  let ticks='';
+  for(let i=0;i<12;i++){ const a=rad(i*30),x=cx+62*Math.cos(a),y=cy+62*Math.sin(a);
+    ticks+='<text x="'+x.toFixed(1)+'" y="'+(y+5).toFixed(1)+'" text-anchor="middle" font-size="15" font-weight="700" fill="#35563e">'+(i===0?12:i)+'</text>'; }
+  return '<svg class="frac-svg" viewBox="0 0 160 160" role="img" aria-label="Clock showing '+h+':'+String(min).padStart(2,'0')+'">'
+    +'<circle cx="80" cy="80" r="74" fill="#fffdf5" stroke="#35563e" stroke-width="4"/>'+ticks
+    +'<line x1="80" y1="80" x2="'+hx.toFixed(1)+'" y2="'+hy.toFixed(1)+'" stroke="#35563e" stroke-width="7" stroke-linecap="round"/>'
+    +'<line x1="80" y1="80" x2="'+mx.toFixed(1)+'" y2="'+my.toFixed(1)+'" stroke="#e8873a" stroke-width="4" stroke-linecap="round"/>'
+    +'<circle cx="80" cy="80" r="5" fill="#35563e"/></svg>';
+}
+function barGraphSVG(data,max){
+  const top=max||Math.max(...data.map(d=>d.value));
+  const W=90+data.length*64,H=190,base=150,unit=(base-20)/top;
+  let grid='';
+  for(let v=0;v<=top;v++){ const y=base-v*unit; grid+='<line x1="44" y1="'+y+'" x2="'+(W-8)+'" y2="'+y+'" stroke="#d9e4d0" stroke-width="1"/><text x="38" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#46604c">'+v+'</text>'; }
+  let bars='';
+  data.forEach((d,i)=>{ const x=58+i*64,h=d.value*unit;
+    bars+='<rect x="'+x+'" y="'+(base-h)+'" width="40" height="'+h+'" rx="3" fill="'+(d.color||'#7fb069')+'" stroke="#35563e" stroke-width="2"/>'
+      +'<text x="'+(x+20)+'" y="'+(base-h-5)+'" text-anchor="middle" font-size="13" font-weight="700" fill="#24382a">'+d.value+'</text>'
+      +'<text x="'+(x+20)+'" y="'+(base+16)+'" text-anchor="middle" font-size="11" fill="#24382a">'+d.label+'</text>'; });
+  return '<svg class="frac-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Bar graph: '+data.map(d=>d.label+' '+d.value).join(', ')+'">'+grid
+    +'<line x1="44" y1="20" x2="44" y2="'+base+'" stroke="#35563e" stroke-width="2"/><line x1="44" y1="'+base+'" x2="'+(W-8)+'" y2="'+base+'" stroke="#35563e" stroke-width="2"/>'+bars+'</svg>';
+}
+function pictoSVG(data,symbol,per){
+  let rows='';
+  data.forEach((d,i)=>{ const n=d.value/per; let syms='';
+    for(let k=0;k<n;k++)syms+='<text x="'+(118+k*30)+'" y="'+(34+i*36)+'" font-size="24">'+symbol+'</text>';
+    rows+='<text x="110" y="'+(34+i*36)+'" text-anchor="end" font-size="14" font-weight="700" fill="#24382a">'+d.label+'</text>'+syms; });
+  const w=130+Math.max(...data.map(d=>d.value/per))*30;
+  return '<svg class="frac-svg" viewBox="0 0 '+w+' '+(data.length*36+16)+'" role="img" aria-label="Picture graph where each '+symbol+' stands for '+per+': '+data.map(d=>d.label+' '+d.value).join(', ')+'">'+rows
+    +'<text x="8" y="'+(data.length*36+12)+'" font-size="12" fill="#46604c">Each '+symbol+' = '+per+'</text></svg>';
+}
+function shapeSVG(v){
+  const fill=v.fill||'#a8d5a2',stroke='#35563e';
+  if(v.kind==='polygon'){
+    const n=v.sides,cx=70,cy=70,r=56;let pts=[];
+    for(let i=0;i<n;i++){ const a=(i/n)*Math.PI*2-Math.PI/2; pts.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1)); }
+    return '<svg class="frac-svg" viewBox="0 0 140 140" role="img" aria-label="Shape with '+n+' sides"><polygon points="'+pts.join(' ')+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="3"/></svg>';
+  }
+  if(v.kind==='semicircle')
+    return '<svg class="frac-svg" viewBox="0 0 140 110" role="img" aria-label="Semicircle"><path d="M 14 84 A 56 56 0 0 1 126 84 Z" fill="'+fill+'" stroke="'+stroke+'" stroke-width="3"/></svg>';
+  if(v.kind==='quarter')
+    return '<svg class="frac-svg" viewBox="0 0 120 120" role="img" aria-label="Quarter-circle"><path d="M 16 104 L 16 16 A 88 88 0 0 1 104 104 Z" fill="'+fill+'" stroke="'+stroke+'" stroke-width="3"/></svg>';
+  if(v.kind==='circle')
+    return '<svg class="frac-svg" viewBox="0 0 140 140" role="img" aria-label="Circle"><circle cx="70" cy="70" r="56" fill="'+fill+'" stroke="'+stroke+'" stroke-width="3"/></svg>';
+  if(v.kind==='open')
+    return '<svg class="frac-svg" viewBox="0 0 140 140" role="img" aria-label="Open shape"><path d="M 24 110 L 24 30 L 116 30 L 116 78" fill="none" stroke="'+stroke+'" stroke-width="4"/></svg>';
+  if(v.kind==='curved-sides')
+    return '<svg class="frac-svg" viewBox="0 0 140 140" role="img" aria-label="Shape with curved sides"><path d="M 70 14 Q 126 70 70 126 Q 14 70 70 14 Z" fill="'+fill+'" stroke="'+stroke+'" stroke-width="3"/></svg>';
+  if(v.kind==='solid'){
+    const art={cube:'🧊',sphere:'🔮',cylinder:'🥫',cone:'🎉',pyramid:'🔺',prism:'🧱'}[v.solid]||'📦';
+    return '<span class="solid-art" role="img" aria-label="'+v.solid+'">'+art+'</span>';
+  }
+  return '';
+}
+function patternSVG(items,missing){
+  const cells=items.map((it,i)=>'<span class="pattern-cell">'+(missing===i?'<span class="pattern-missing">?</span>':shapeSVG(it))+'</span>').join('');
+  return '<span class="pattern-row" role="img" aria-label="Pattern of shapes">'+cells+'</span>';
+}
+function containerSVG(v){
+  const pct=Math.max(0,Math.min(100,v.level));
+  const y=110-(pct/100)*84;
+  return '<svg class="frac-svg" viewBox="0 0 120 140" role="img" aria-label="Container filled to '+pct+' percent">'
+    +'<path d="M 30 14 L 38 126 L 82 126 L 90 14 Z" fill="#eef6ff" stroke="#35563e" stroke-width="3"/>'
+    +'<path d="M '+(30+(90-30)*( (126-y)/112 )*0+ (34+ (y-14)*0.07)).toFixed(1)+' '+y+' L '+(86-(y-14)*0.07).toFixed(1)+' '+y+' L 82 126 L 38 126 Z" fill="#7ec4e8" opacity="0.85"/>'
+    +'<text x="60" y="138" text-anchor="middle" font-size="11" fill="#46604c">'+(v.caption||'')+'</text></svg>';
+}
+Object.assign(window,{clockSVG,barGraphSVG,pictoSVG,shapeSVG,patternSVG,containerSVG});
