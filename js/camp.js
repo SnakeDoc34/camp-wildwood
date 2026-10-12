@@ -144,6 +144,7 @@ const Camp = {
       const card=el('button','card skill-card'+(st.done?' skill-complete':'')+(unlocked?'':' skill-locked'));
       card.innerHTML='<span class="skill-top"><span class="mission-number">'+String(index+1).padStart(2,'0')+'</span><span class="art" aria-hidden="true">'+(unlocked?t.art:'🔒')+'</span></span><h3>'+esc(t.title)+'</h3>'+
         '<p class="hint">'+esc(t.blurb)+'</p>'+
+        (t.strategyName?'<p class="fine">🧭 Strategy: '+esc(t.strategyName)+'</p>':'')+
         (unlocked
           ? (st.badge?'<span class="badge">🏅 Badge earned</span>':(st.done?'<span class="badge">✅ Done</span>':''))
             +(st.attempts&&st.attempts.length?'<p class="fine">Recent: '+st.attempts.slice(-5).map(a=>a?'⭐ independent':'🌱 with support').join(' · ')+'</p>':'')
@@ -239,6 +240,10 @@ const Camp = {
     b.innerHTML='<h3>Report for '+esc(p.name)+' · 🪙 '+p.tokens+' tokens</h3>'+
       (window.TARGETS.every(t=>p.targets[t.id]&&p.targets[t.id].done)?'<p>🎪 <strong>Camp Festival complete!</strong> All '+window.TARGETS.length+' missions finished — this camper is a Camp Wildwood Ranger.</p>':'')+
       '<p>🦉 Woodland friends met: '+this.critterList(p).filter(c=>c.found).length+' of '+window.TARGETS.length+' — see the Field Guide on the camp map.</p>'+
+      (()=>{
+        const learned=[...new Set(window.TARGETS.filter(t=>p.targets[t.id]&&p.targets[t.id].done&&t.strategyName).map(t=>t.strategyName))];
+        return learned.length? '<p>🧭 <strong>Strategies learned:</strong> '+learned.map(esc).join(' · ')+'</p>' : '';
+      })()+
       (rows? '<table><tr><th>Time</th><th>Activity</th><th>First attempt</th></tr>'+rows+'</table>'
             : '<p class="hint">No missions yet today. Play a mission and it will show up here!</p>')+
       (tt? '<p><strong>Recorded first attempts: '+tg+' out of '+tt+'.</strong></p>':'')+
