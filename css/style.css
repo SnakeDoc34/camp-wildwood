@@ -153,3 +153,11 @@ input#entry-display{width:150px;min-width:0;max-width:100%;font-size:2rem;font-w
 .critter-row span{font-size:1.5rem}
 .festival-bar{height:16px;background:#e5edda;border-radius:99px;overflow:hidden;margin:8px 0}
 .festival-bar span{display:block;height:100%;background:linear-gradient(90deg,#e8873a,#f2b33d);border-radius:99px}
+
+/* M3: clocks, graphs, shapes, patterns */
+.pattern-row{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pattern-cell{display:inline-flex;width:64px;height:64px;align-items:center;justify-content:center;background:#fff;border:2px solid #d9e4d0;border-radius:10px}
+.pattern-cell svg{width:56px;height:56px}
+.pattern-missing{font-size:1.8rem;font-weight:800;color:#e8873a}
+.solid-art{font-size:4rem;line-height:1.2}
+.festival-cert{border:3px solid #b8860b;background:#fffbe8;text-align:center;margin-top:14px}
