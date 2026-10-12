@@ -3,7 +3,8 @@ const {load,button,solve}=require('./helpers.cjs');
 const clickEvent={stopPropagation(){}};
 const buy=(a,id)=>a.doc.getElementById('shop-list').children.find(c=>c.getAttribute('data-item')===id).querySelector('button');
 function complete(a,id,challenge=false){
-  a.Engine.start(id);a.Engine.next();a.Engine.next();
+  a.Engine.start(id);
+  while(a.Engine.steps[a.Engine.idx]&&!a.Engine.steps[a.Engine.idx].problem)a.Engine.next();
   for(let i=0;i<6;i++){solve(a,a.Engine.steps[a.Engine.idx]);a.Engine.next();}
   button(a.doc.getElementById('mission-body'),challenge?'Take the challenge':'Skip for now').onclick();
   if(challenge){solve(a,a.Engine.steps[a.Engine.idx]);a.Engine.next();}

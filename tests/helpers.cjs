@@ -28,8 +28,11 @@ function load(saved){
   const c=vm.createContext({window,document:doc,localStorage:storage,Audio,speechSynthesis,SpeechSynthesisUtterance:class{constructor(t){this.text=t;}},console,confirm:()=>false,
     setTimeout(f,ms){const id=++timerId;timers.set(id,{f,ms});return id;},clearTimeout(id){timers.delete(id);}});
   for(const f of ['core','yard','camp','engine','chapters','app'])vm.runInContext(fs.readFileSync(ROOT+'/js/'+f+'.js','utf8'),c);
-  const api=vm.runInContext('({R,Store,Audio2,Engine,MathCheck,App,Camp,Yard,SHOP_ITEMS,YARD_SLOTS,newProfileState,FAMILIES:window.FAMILIES,TARGETS:window.TARGETS,knownFact})',c);
-  api.Store.init();api.R.seed(20261012);const profile=api.newProfileState('QA','🦝');api.Store.saveProfile(profile);api.App.profile=profile;
+  const api=vm.runInContext('({R,Store,Settings,Audio2,Engine,MathCheck,App,Camp,Yard,SHOP_ITEMS,YARD_SLOTS,newProfileState,FAMILIES:window.FAMILIES,TARGETS:window.TARGETS,knownFact})',c);
+  api.Store.init();api.R.seed(20261012);
+  // Mechanics tests run as if a teacher opened every trail from the Report
+  // screen; progression.test.cjs opts back into the locked default.
+  api.Settings.unlockAll=true;const profile=api.newProfileState('QA','🦝');api.Store.saveProfile(profile);api.App.profile=profile;
   return {...api,doc,data,timers,speech,audios,profile,window};
 }
 function button(root,text){return root.querySelectorAll('button').find(b=>b.textContent===text);}

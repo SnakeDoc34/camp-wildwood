@@ -94,7 +94,7 @@ test('every tutorial displays correct equations and exact counters',()=>{
 });
 test('guided sharing and grouping expose a usable answer keypad',()=>{
   for(const divisor of [3,4]){
-    const a=load();a.Engine.start('ch9-divide-'+divisor);a.Engine.next();a.Engine.next();
+    const a=load();a.Engine.start('ch9-divide-'+divisor);while(!a.Engine.steps[a.Engine.idx].problem)a.Engine.next();
     for(let i=0;i<2;i++){
       const step=a.Engine.steps[a.Engine.idx],pr=step.problem;
       while(step.deal.left>0){const pile=a.doc.getElementById('mission-body').querySelector('.deal-pile');pile.onclick();}
@@ -130,7 +130,7 @@ test('challenge pools do not introduce an uncompleted different skill',()=>{
 });
 test('each of the twelve missions completes and pays both rewards exactly once',()=>{
   const a=load();for(const t of a.TARGETS){
-    a.Engine.start(t.id);a.Engine.next();a.Engine.next();
+    a.Engine.start(t.id);while(!a.Engine.steps[a.Engine.idx].problem)a.Engine.next();
     for(let i=0;i<6;i++){const s=a.Engine.steps[a.Engine.idx];solve(a,s);a.Engine.next();}
     button(a.doc.getElementById('mission-body'),'Take the challenge').onclick();solve(a,a.Engine.steps[a.Engine.idx]);a.Engine.next();
     assert.ok(a.profile.targets[t.id].done);assert.equal(a.profile.missionsDone[t.id+':adventure'],true);
@@ -138,10 +138,10 @@ test('each of the twelve missions completes and pays both rewards exactly once',
   assert.equal(a.profile.tokens,24);a.Engine.renderDone(a.doc.getElementById('mission-body'));assert.equal(a.profile.tokens,24);
 });
 test('a refresh resumes the same question, entered digits, and hint state',()=>{
-  const a=load();a.Engine.start('ch8-adding-98');a.Engine.next();a.Engine.next();
-  const step=a.Engine.steps[2];button(a.doc.getElementById('mission-body'),'1').onclick();button(a.doc.getElementById('mission-body'),'💡 Hint').onclick();a.Engine.suspend();
+  const a=load();a.Engine.start('ch8-adding-98');while(!a.Engine.steps[a.Engine.idx].problem)a.Engine.next();
+  const at=a.Engine.idx,step=a.Engine.steps[at];button(a.doc.getElementById('mission-body'),'1').onclick();button(a.doc.getElementById('mission-body'),'💡 Hint').onclick();a.Engine.suspend();
   const saved=Object.fromEntries(a.data),b=load(saved);b.App.profile=b.Store.profile(a.profile.id);b.Engine.start('ch8-adding-98');
-  assert.equal(b.Engine.idx,2);assert.equal(b.Engine.steps[2].problem.key,step.problem.key);assert.equal(b.doc.getElementById('entry-display').value,'1');assert.equal(b.Engine.firstTry,false);
+  assert.equal(b.Engine.idx,at);assert.equal(b.Engine.steps[at].problem.key,step.problem.key);assert.equal(b.doc.getElementById('entry-display').value,'1');assert.equal(b.Engine.firstTry,false);
 });
 test('multiple profiles and multiple paused skills retain separate progress',()=>{
   const a=load();a.profile.tokens=8;a.profile.shop=['flag-red'];a.Engine.start('ch8-adding-ones');a.Engine.next();
@@ -160,7 +160,7 @@ test('recorded audio keys resolve; old narration cannot restart after navigation
   a.Audio2.narrate('audio/m1-ch8-adding-ones.mp3','old');const audio=a.audios[0],timer=[...a.timers.values()].find(x=>x.ms===4000);
   assert.equal(audio.src,'data:audio/mpeg;base64,TEST');a.Audio2.stopNarration();timer.f();audio.oncanplaythrough();audio.onerror();assert.equal(a.speech.length,0);
   a.Audio2.enabled=false;a.Audio2.speak('muted');assert.equal(a.speech.length,0);
-  for(const id of ['ch9-multiply-3','ch9-multiply-4','ch9-divide-3','ch9-divide-4'])assert.equal(a.TARGETS.find(t=>t.id===id).audio,null);
+  for(const id of ['ch8-adding-tens','ch8-subtracting','ch9-multiply-3','ch9-multiply-4','ch9-divide-3','ch9-divide-4'])assert.match(a.TARGETS.find(t=>t.id===id).audio,/^audio\/m2-.*\.mp3$/);
 });
 test('repeated purchase callbacks charge only once',()=>{
   const a=load();a.profile.tokens=12;a.Camp.renderShop(a.profile);
@@ -180,11 +180,11 @@ test('the camp offers only playable trails and exposes six planned trails separa
 });
 test('switching campers through the header saves paused work to the original camper',()=>{
   const a=load();const other=a.newProfileState('Second','🦊');a.Store.saveProfile(other);
-  a.App.init();a.App.profile=a.Store.profile(a.profile.id);a.Engine.start('ch8-adding-98');a.Engine.next();a.Engine.next();
+  a.App.init();a.App.profile=a.Store.profile(a.profile.id);a.Engine.start('ch8-adding-98');while(!a.Engine.steps[a.Engine.idx].problem)a.Engine.next();const at=a.Engine.idx;
   button(a.doc.getElementById('mission-body'),'7').onclick();
   a.doc.getElementById('profile-chip').onclick();
   assert.equal(a.Engine.active,false);assert.equal(a.doc.onkeydown,null);
-  assert.equal(a.App.profile.activeMissions['ch8-adding-98'].steps[2].entry,'7');
+  assert.equal(a.App.profile.activeMissions['ch8-adding-98'].steps[at].entry,'7');
   const select=a.doc.getElementById('profile-list').children[1].querySelector('.profile-select');select.onclick();
   assert.equal(a.App.profile.id,other.id);assert.equal(a.App.profile.activeMissions['ch8-adding-98'],undefined);
 });
