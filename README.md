@@ -50,8 +50,10 @@ counts, both meanings of division, entry controls, hint-aware learning evidence,
 profile isolation, resumed work, rewards, legacy saves, narration cancellation,
 missing-factor division coaching, paused hints, playable trails, and camper switching.
 
-All 23 automated tests pass in qa2. These use a lightweight DOM adapter; browser
-layout and physical iPad checks are still pending while GitHub writes are blocked.
+All 23 automated tests pass in qa2. Desktop Chrome checks also cover all 12
+demonstrations and four complete missions, both division keypads, hint/retry
+scoring, refresh recovery, camper switching, and rewards. Physical iPad Safari
+and narrow-screen device checks remain pending; see QA_REPORT.md for evidence.
 
 This release implements Chapters 8 and 9 only. It supplements the textbook and
 does not certify mastery of the entire Dimensions Math 2B curriculum.

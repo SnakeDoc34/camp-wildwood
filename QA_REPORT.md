@@ -38,8 +38,9 @@ Chapters 8 and 9. Chapters 10 through 15 are still placeholders.
 - Visible keyboard focus and reduced-motion rules. Artwork has alternative text;
   mathematical counter quantities remain generated from the actual numbers.
 
-These changes are prepared locally. Browser-rendered layout and physical iPad
-verification remain pending; static source checks are not visual certification.
+These changes are published. Desktop Chrome rendering and representative live
+mission flows have been checked. Physical iPad Safari and narrow-screen device
+verification remain pending; desktop checks do not certify other devices.
 
 ## Curriculum alignment
 
@@ -87,17 +88,45 @@ restored hints, playable versus planned trails, switching campers with paused wo
 and the question/control layout structure. JavaScript syntax, unique HTML IDs,
 local asset existence, illustration dimensions, and patch whitespace also pass.
 
-The mission tests use a lightweight DOM adapter. Live browser checks are recorded
-separately after deployment; they are not a substitute for physical iPad trials.
+The mission tests use a lightweight DOM adapter. They are supplemented by the
+live browser checks below; neither substitutes for physical iPad trials.
+
+## Live release verification, October 12
+
+- GitHub reauthorization restored file writes. Released commit
+  `3c204a2417a8e7ab888a1cfaa9f90a3f1f2ba5bc`; its tree exactly matches the tested
+  checkout, including the binary illustration. The update used the previous
+  branch head as a guard and did not force-push.
+- GitHub Pages run `38269279042` completed successfully. The public site displays
+  `dm2b-qa2` at https://snakedoc34.github.io/camp-wildwood/.
+- All 12 demonstration screens were inspected in desktop Chrome. Number lines,
+  number bonds, compensation, arrays, and both division models rendered. Sampled
+  page widths of 1,348–1,363 CSS pixels had no horizontal document overflow.
+- Completed Adding Tens, Division by 3, Division by 4, and Subtracting 97–99,
+  including the challenges: 28 live questions answered using independent
+  arithmetic, both a tapped keypad and keyboard entry, and the expected eight
+  tokens awarded across four first completions and their challenges.
+- Division demonstrations each contain exactly 24 counters. Threes show 3 groups
+  of 8 for sharing and 8 groups of 3 for grouping; fours show 4 groups of 6 and
+  6 groups of 4. Answer units match the question.
+- A wrong division answer could be retried. The next hints displayed the correct
+  missing-factor multiplication fact. Correct explanations remained visible
+  until Continue, with completed answer controls disabled.
+- A refreshed mission resumed the same adding-tens question and requested hint.
+  Switching to a second test camper preserved the original camper's two entered
+  digits and question while the second camper retained zero progress and tokens.
+- The live report counted the hint-assisted first trial as 0/1; the first
+  completed mission recorded 4 independent attempts out of 5. Successful assisted
+  work still received mission rewards.
+- A three-token decoration changed the displayed balance from eight to five,
+  became Owned, and appeared in the camp. Sound off did not block completing work.
+- No game errors were observed during these flows. Physical iPad, touch keyboard,
+  Safari narration, and narrow portrait/landscape layout trials are still needed.
 
 ## Remaining work
 
-- Publication checkpoint, October 12: the corrected files are recovered and all
-  23 automated regression tests pass. GitHub rejected both Git Trees and Contents
-  writes with HTTP 403, `Resource not accessible by integration`; the connection
-  returned no app installations. The public site is still the pre-audit version at
-  commit `5cf15a114a2676d1049690b29802b3f3086e699a`. This is an access blocker,
-  not a failed mathematical test. No live verification of the patch is claimed.
+- Publication and the desktop live-browser pass are complete. The earlier 403
+  connection issue was resolved by reauthorization; all 23 automated tests pass.
 - This is a correction of the existing two-chapter milestone. It does not cover
   the remaining 2B chapters or every assessment structure, such as cumulative
   multi-step problems, number-pattern review, or contextual leftovers.
@@ -105,22 +134,21 @@ separately after deployment; they are not a substitute for physical iPad trials.
   Melody recordings can replace it without changing the mathematics.
 - Physical iPad Safari, Home Screen offline behavior, and cross-browser layout
   still need device trials. There is no service worker in this milestone.
-- Further visual design should preserve mathematically precise diagrams and
-  readable working areas. The broader camp artwork refresh is a later phase.
+- Further visual polish should preserve mathematically precise diagrams and
+  readable working areas. The illustrated camp refresh is included in this release.
 
 ## Resume in three checkpoints
 
 1. **Audit and correct instruction — complete locally.** Recovered the prior
    staged edits, reviewed all 12 targets against the publisher's Chapter 8 letter
    and Chapter 9 instructor samples, and checked the supplied assessments.
-2. **Release and verify — pending GitHub write access.** Publish the tested files
-   together, retaining existing audio assets and profile identifiers. Then test
-   both division activities in the live browser, hint/retry scoring, pause/refresh
-   recovery, and an actual iPad. Record the release commit and browser results.
-3. **Visual improvement — implemented locally, verification pending.** Original
+2. **Release and verify — published; desktop pass complete.** The source and
+   illustration were released together. Division entry, scoring, rewards,
+   pause/refresh, and camper switching passed live checks. Finish actual iPad tests.
+3. **Visual improvement — published; desktop pass complete.** Original
    camp artwork, clearer activity layouts, native navigation controls, and
-   responsive styles are included in qa2. Finish browser and iPad review after
-   publication. Chapters 10–15 remain outside this existing milestone.
+   responsive styles are included in qa2. Finish narrow-screen and physical iPad
+   review. Chapters 10–15 remain outside this existing milestone.
 
 The recovery patch includes only source changes, the QA report, and regression
 tests; it does not publish the supplied textbook scan or any camper's saved data.
