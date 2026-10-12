@@ -9,9 +9,12 @@ const EXPECTED_ORDER=[
   'ch8-adding-ones','ch8-adding-tens','ch8-making-100','ch8-adding-98',
   'ch8-subtracting','ch8-subtracting-98',
   'ch9-groups-3','ch9-multiply-3','ch9-divide-3',
-  'ch9-groups-4','ch9-multiply-4','ch9-divide-4'
+  'ch9-groups-4','ch9-multiply-4','ch9-divide-4',
+  'ch10-making-1','ch10-counting','ch10-change','ch10-comparing','ch10-adding','ch10-subtracting',
+  'ch11-halves','ch11-unit','ch11-writing','ch11-whole','ch11-comparing'
 ];
-const DEMO2=['ch8-adding-tens','ch8-adding-98','ch8-subtracting-98','ch9-divide-3','ch9-divide-4'];
+const DEMO2=['ch8-adding-tens','ch8-adding-98','ch8-subtracting-98','ch9-divide-3','ch9-divide-4',
+  'ch10-change','ch10-subtracting','ch11-writing','ch11-comparing'];
 
 function locked(){ const a=load(); a.Settings.unlockAll=false; return a; }
 function markDone(a,id){ a.profile.targets[id]={attempts:[],done:true,badge:false}; }
@@ -69,7 +72,7 @@ test('teacher override opens everything and the choice is saved on the device',(
   assert.deepEqual(JSON.parse(a.data.get('campWildwood.settings')),{unlockAll:false});
 });
 
-test('the five hardest skills have a second, mathematically consistent demonstration',()=>{
+test('the hardest skills have a second, mathematically consistent demonstration',()=>{
   const a=load();
   for(const id of DEMO2){
     const t=a.TARGETS.find(x=>x.id===id);
