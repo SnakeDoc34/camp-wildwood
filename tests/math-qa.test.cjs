@@ -159,8 +159,8 @@ test('legacy progress survives normalization and backup recovery',()=>{
 });
 test('recorded audio keys resolve; old narration cannot restart after navigation',()=>{
   const a=load();a.window.AUDIO_DATA['m1-m1-ch8-adding-ones.mp3']='data:audio/mpeg;base64,TEST';
-  a.Audio2.narrate('audio/m1-ch8-adding-ones.mp3','old');const audio=a.audios[0],timer=[...a.timers.values()].find(x=>x.ms===4000);
-  assert.equal(audio.src,'data:audio/mpeg;base64,TEST');a.Audio2.stopNarration();timer.f();audio.oncanplaythrough();audio.onerror();assert.equal(a.speech.length,0);
+  a.Audio2.narrate('audio/m1-ch8-adding-ones.mp3','old');const audio=a.audios[0],timer=[...a.timers.values()].find(x=>x.ms===9000);
+  assert.equal(audio.src,'data:audio/mpeg;base64,TEST');a.Audio2.stopNarration();timer.f();audio.onerror();assert.equal(a.speech.length,0);
   a.Audio2.enabled=false;a.Audio2.speak('muted');assert.equal(a.speech.length,0);
   for(const id of ['ch8-adding-tens','ch8-subtracting','ch9-multiply-3','ch9-multiply-4','ch9-divide-3','ch9-divide-4'])assert.match(a.TARGETS.find(t=>t.id===id).audio,/^audio\/m2-.*\.mp3$/);
 });

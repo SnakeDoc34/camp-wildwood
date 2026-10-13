@@ -112,23 +112,38 @@ const Audio2 = {
     if(this.current){ try{ this.current.pause(); this.current.currentTime=0; }catch(e){} this.current=null; }
     try{ speechSynthesis.cancel(); }catch(e){}
   },
-  /* Play a demo MP3; fall back to speechSynthesis reading `fallbackText`. onend called either way. */
+  /* Play a demo MP3; fall back to speechSynthesis reading `fallbackText`. onend called either way.
+     Hardened for iOS Safari: start playback immediately (the old code gated on
+     oncanplaythrough, which Safari fires unreliably for data URIs, and a 4s
+     timer could stomp a starting clip with the fallback voice). If the clip's
+     chunk file is still loading, wait for it instead of falling back. */
   narrate(src, fallbackText, onend){
     this.stopNarration();
     if(!this.enabled){ if(onend) onend(); return; }
     if(!src){this.speak(fallbackText,onend);return;}
-    // Prefer embedded Melody-voice clips (audio/a*.js); fall back to file URL, then speech.
     const name = String(src).split('/').pop();
-    const data=window.AUDIO_DATA||{},embedded=data[name]||data['m1-'+name]||null;
-    const audio=new Audio(embedded||src),epoch=this.narrationEpoch;
-    let finished=false,started=false;
-    const valid=()=>!finished&&epoch===this.narrationEpoch;
-    const done=()=>{if(!valid())return;finished=true;clearTimeout(this.fallbackTimer);this.current=null;if(onend)onend();};
-    const fallback=()=>{if(!valid())return;finished=true;clearTimeout(this.fallbackTimer);audio.pause();this.current=null;this.speak(fallbackText,onend);};
-    audio.onended=done;audio.onerror=fallback;
-    audio.oncanplaythrough=()=>{if(!valid()||started)return;started=true;try{audio.play().then(()=>{if(valid())clearTimeout(this.fallbackTimer);}).catch(fallback);}catch(e){fallback();}};
-    this.fallbackTimer=setTimeout(()=>{if(valid()&&audio.paused)fallback();},4000);
-    this.current=audio;
+    const epoch=this.narrationEpoch,valid=()=>epoch===this.narrationEpoch;
+    let tries=0;
+    const attempt=()=>{
+      if(!valid())return;
+      const data=window.AUDIO_DATA||{},embedded=data[name]||data['m1-'+name]||null;
+      const stillLoading=typeof document!=='undefined'&&document.readyState&&document.readyState!=='complete';
+      if(!embedded&&stillLoading&&tries<12){ tries++; this.fallbackTimer=setTimeout(attempt,500); return; }
+      const audio=new Audio(embedded||src);
+      let finished=false,started=false;
+      const done=()=>{if(!valid()||finished)return;finished=true;clearTimeout(this.fallbackTimer);this.current=null;if(onend)onend();};
+      const fallback=()=>{if(!valid()||finished||started)return;finished=true;clearTimeout(this.fallbackTimer);try{audio.pause();}catch(e){}this.current=null;this.speak(fallbackText,onend);};
+      audio.onended=done;
+      audio.onerror=()=>{ if(!started)fallback(); };
+      if(audio.addEventListener)audio.addEventListener('playing',()=>{ started=true; clearTimeout(this.fallbackTimer); });
+      this.current=audio;
+      try{
+        const p=audio.play();
+        if(p&&typeof p.then==='function')p.then(()=>{ started=true; clearTimeout(this.fallbackTimer); }).catch(()=>{ if(!started)fallback(); });
+      }catch(e){ fallback(); }
+      this.fallbackTimer=setTimeout(()=>{ if(valid()&&!started&&audio.currentTime===0)fallback(); },9000);
+    };
+    attempt();
   },
   speak(text, onend){
     this.stopNarration();
