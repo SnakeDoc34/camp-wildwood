@@ -168,8 +168,9 @@ test('chapter 15: 40000 shape problems agree with an independent oracle',()=>{
 
 test('festival: completing all 37 missions opens the Festival with a certificate',()=>{
   const a=load();const p=a.profile;
-  assert.equal(a.TARGETS.length,37);
-  assert.equal(a.Camp.critterList(p).length,37);
+  assert.equal(a.TARGETS.length,41);
+  assert.equal(a.Camp.coreTargets().length,37);
+  assert.equal(a.Camp.critterList(p).length,41);
   a.Camp.renderHub(p);
   assert.ok(a.doc.getElementById('festival-meter').textContent.includes('0 of 37'));
   for(const t of a.TARGETS)p.targets[t.id]={done:true,badge:true};
@@ -183,7 +184,7 @@ test('festival: completing all 37 missions opens the Festival with a certificate
   assert.ok(body.textContent.includes('Camp Wildwood Festival'));
   assert.ok(body.textContent.includes('Ranger Certificate'));
   assert.ok(body.textContent.includes('37 woodland friends')||body.textContent.includes('37'));
-  assert.equal(a.Camp.critterList(p).filter(c=>c.found).length,37);
+  assert.equal(a.Camp.critterList(p).filter(c=>c.found).length,41);
   // chapter gating still chains at the far end
   const a2=load();a2.Settings.unlockAll=false;const p2=a2.profile;
   assert.equal(a2.Camp.isChapterUnlocked(p2,'ch15'),false);

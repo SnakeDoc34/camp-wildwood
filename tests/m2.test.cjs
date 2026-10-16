@@ -155,14 +155,14 @@ test('chapter 11: chapter unlocks after money and grove grows with completions',
 
 test('rewards: field guide, festival meter, and chapter activities motivate completion',()=>{
   const a=load();const p=a.profile;
-  assert.equal(a.Camp.critterList(p).length,37);
+  assert.equal(a.Camp.critterList(p).length,41);
   assert.equal(a.Camp.critterList(p).filter(c=>c.found).length,0);
   a.Camp.renderHub(p);
   assert.ok(a.doc.getElementById('festival-meter').textContent.includes('0 of 37'));
   assert.ok(a.doc.getElementById('critter-row').textContent.includes('none yet'));
   a.Camp.renderGuide(p);
-  assert.equal(a.doc.getElementById('guide-list').children.length,37);
-  assert.ok(a.doc.getElementById('guide-summary').textContent.includes('0 of 37'));
+  assert.equal(a.doc.getElementById('guide-list').children.length,41);
+  assert.ok(a.doc.getElementById('guide-summary').textContent.includes('0 of 41'));
   // activities locked until their chapter is complete
   a.Yard.renderActivities(p);
   const acts=a.doc.getElementById('chapter-activities');
@@ -184,5 +184,5 @@ test('rewards: field guide, festival meter, and chapter activities motivate comp
   for(const t of a.TARGETS)p.targets[t.id]={done:true};
   a.Camp.renderHub(p);
   assert.ok(a.doc.getElementById('festival-meter').textContent.includes('ready for the Camp Festival'));
-  assert.equal(a.Camp.critterList(p).filter(c=>c.found).length,37);
+  assert.equal(a.Camp.critterList(p).filter(c=>c.found).length,41);
 });

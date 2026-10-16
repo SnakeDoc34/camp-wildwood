@@ -33,7 +33,7 @@ test('every family and mission carries a strategy from the registry',()=>{
 test('every strategy introduction is recorded in Melody and resolves',()=>{
   const a=load(),keys=audioKeys();
   for(const t of a.TARGETS)
-    assert.ok(keys.has('m7-intro-'+t.id+'.mp3'),t.id+' intro clip resolves');
+    assert.ok(keys.has(String(t.strategyIntro).split('/').pop()),t.id+' intro clip resolves: '+t.strategyIntro);
 });
 
 test('the demonstration teaches the strategy before any problem',()=>{

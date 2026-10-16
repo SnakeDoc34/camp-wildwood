@@ -172,10 +172,10 @@ test('repeated purchase callbacks charge only once',()=>{
 test('the camp offers only playable trails and exposes no planned trails separately',()=>{
   const a=load();a.Camp.renderHub(a.profile);
   const playable=a.doc.getElementById('camp-map').children;
-  assert.equal(playable.length,8);assert.ok(playable.every(e=>e.tagName==='BUTTON'));
+  assert.equal(playable.length,9);assert.ok(playable.every(e=>e.tagName==='BUTTON'));
   assert.equal(a.doc.getElementById('future-trails-list').children.length,0);
   assert.match(a.doc.getElementById('camp-completion').textContent,/0 of 37/);
-  playable[0].onclick();
+  playable[1].onclick();
   const skills=a.doc.getElementById('target-list').children;
   assert.equal(skills.length,6);assert.ok(skills.every(e=>e.tagName==='BUTTON'));
   skills[0].onclick();assert.equal(a.Engine.target.id,'ch8-adding-ones');
