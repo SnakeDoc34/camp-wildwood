@@ -27,10 +27,11 @@ test('trailhead: 39000 problems agree with an independent oracle',()=>{
       if(fid==='trail-pv-digit'){
         const m=txt.match(/In the number (\d+), what is the value of the digit (\d+)\?/);
         assert.ok(m,fid+' parse: '+txt);
-        const n=String(m[1]).padStart(3,'0'),place=p.key.split('|')[2];
-        const idx={hundreds:0,tens:1,ones:2}[place];
-        assert.equal(Number(n[idx]),Number(m[2]),fid+' key place matches displayed digit');
-        assert.equal(Number(p.answer),Number(m[2])*[100,10,1][idx],fid);
+        const n=String(m[1]).padStart(3,'0'),d=m[2];
+        const hits=[...n].filter(c=>c===d).length;
+        assert.equal(hits,1,fid+' asked digit appears exactly once (else two answers are right): '+n);
+        const idx=n.indexOf(d);
+        assert.equal(Number(p.answer),Number(d)*[100,10,1][idx],fid);
       }
       if(fid==='trail-pv-expand'){
         const eq=txt.split('What number is missing?')[0];

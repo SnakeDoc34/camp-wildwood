@@ -186,3 +186,17 @@ test('rewards: field guide, festival meter, and chapter activities motivate comp
   assert.ok(a.doc.getElementById('festival-meter').textContent.includes('ready for the Camp Festival'));
   assert.equal(a.Camp.critterList(p).filter(c=>c.found).length,41);
 });
+
+test('between-fraction questions offer exactly one fraction in range',()=>{
+  const a=load();const f=a.FAMILIES['ch11-between'];
+  const val=s=>{const[n,d]=s.split('/').map(Number);return n/d;};
+  for(let i=0;i<20000;i++){
+    const p=f.gen();
+    const m=p.html.match(/more than 1\/(\d+) and less than 1\/(\d+)\?/);
+    assert.ok(m,'parse bounds: '+p.html);
+    const lo=1/Number(m[1]),hi=1/Number(m[2]); // value bounds: 1/hi < x < 1/lo
+    const inRange=p.choices.filter(c=>val(c)>lo&&val(c)<hi);
+    assert.equal(inRange.length,1,'exactly one choice strictly between: '+p.html+' choices '+p.choices.join(','));
+    assert.equal(inRange[0],p.answer);
+  }
+});

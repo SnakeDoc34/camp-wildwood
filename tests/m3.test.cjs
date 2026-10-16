@@ -191,3 +191,14 @@ test('festival: completing all 37 missions opens the Festival with a certificate
   for(const t of a2.TARGETS.filter(t=>t.chapter!=='ch15'))p2.targets[t.id]={done:true};
   assert.equal(a2.Camp.isChapterUnlocked(p2,'ch15'),true);
 });
+
+test('bar-graph most/least questions never tie',()=>{
+  const a=load();const f=a.FAMILIES['ch14-bar-most'];
+  for(let i=0;i<20000;i++){
+    const p=f.gen(),vals=p.visual.data.map(d=>d.value);
+    assert.equal(vals.filter(v=>v===Math.max(...vals)).length,1,'unique tallest bar: '+JSON.stringify(vals));
+    assert.equal(vals.filter(v=>v===Math.min(...vals)).length,1,'unique shortest bar: '+JSON.stringify(vals));
+    const want=p.html.includes('most')?Math.max(...vals):Math.min(...vals);
+    assert.equal(p.visual.data.find(d=>d.label===p.answer).value,want,'answer label holds the extreme value');
+  }
+});
