@@ -14,10 +14,13 @@ Object.assign(window.FAMILIES,{
       guide:'Write the hundreds digit, then the tens digit, then the ones digit.',
       explain:h+' hundreds + '+t+' tens + '+o+' ones = '+n+'.',speak:'What number is that?',key:'pb|'+n});
   }},
-  /* --- The value of a digit --- */
+  /* --- The value of a digit (the digit must appear exactly once: with a
+     repeated digit, like the 8s in 688, two answers would both be right) --- */
   'trail-pv-digit':{gen(){
-    const h=R.int(1,9),t=R.int(1,9),o=R.int(0,9),n=h*100+t*10+o;
-    const place=R.choice([['hundreds',h*100,h],['tens',t*10,t],['ones',o,o]]);
+    const h=R.int(1,9),t=R.int(1,9),o=R.int(0,9);
+    if(h===t||t===o||h===o)return this.gen();
+    const n=h*100+t*10+o;
+    const place=R.choice([['hundreds',h*100,h],['tens',t*10,t],['ones',o,o]].filter(p=>p[2]!==0));
     return problem({math:{type:'value',value:place[1]},
       html:'In the number '+n+', what is the value of the digit '+place[2]+'?',answer:String(place[1]),
       choices:mcqChoices(place[1],[place[2],place[1]*10,place[1]/10]),

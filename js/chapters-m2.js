@@ -297,7 +297,7 @@ Object.assign(window.FAMILIES,{
     const answer='1/'+mid;
     return problem({math:{type:'fraction',num:1,den:mid},
       html:'Which fraction is more than 1/'+hi+' and less than 1/'+lo+'?',answer,
-      choices:fracMCQ(answer,['1/'+lo,'1/'+hi]),
+      choices:fracMCQ(answer,['1/'+lo,'1/'+hi,'1/'+(hi+2)]),
       hint:'Unit fractions get smaller as the bottom number grows.',
       guide:'Order them by their bottoms: 1/'+lo+' is biggest, 1/'+hi+' is smallest. The answer sits between.',
       explain:'1/'+lo+' > 1/'+mid+' > 1/'+hi+'. More parts means smaller parts.',
