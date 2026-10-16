@@ -6,6 +6,7 @@ const {load}=require('./helpers.cjs');
 const ROOT=path.resolve(__dirname,'..');
 
 const EXPECTED_ORDER=[
+  'trail-place','trail-bonds','trail-regroup','trail-mult',
   'ch8-adding-ones','ch8-adding-tens','ch8-making-100','ch8-adding-98',
   'ch8-subtracting','ch8-subtracting-98',
   'ch9-groups-3','ch9-multiply-3','ch9-divide-3',
@@ -18,21 +19,22 @@ const EXPECTED_ORDER=[
   'ch15-sides','ch15-polygons','ch15-circles','ch15-patterns','ch15-solids'
 ];
 const DEMO2=['ch8-adding-tens','ch8-adding-98','ch8-subtracting-98','ch9-divide-3','ch9-divide-4',
-  'ch10-change','ch10-subtracting','ch11-writing','ch11-comparing','ch12-intervals'];
+  'ch10-change','ch10-subtracting','ch11-writing','ch11-comparing','ch12-intervals','trail-regroup'];
 
 function locked(){ const a=load(); a.Settings.unlockAll=false; return a; }
 function markDone(a,id){ a.profile.targets[id]={attempts:[],done:true,badge:false}; }
 
-test('targets follow the Dimensions Math 2B lesson order',()=>{
+test('targets follow the publisher lesson order, Trailhead foundations first',()=>{
   const a=load();
   assert.equal(a.TARGETS.map(t=>t.id).join(','),EXPECTED_ORDER.join(','));
 });
 
-test('locked by default: only the first mission of Chapter 8 is open',()=>{
+test('locked by default: the first Trailhead mission and the first Chapter 8 mission are open',()=>{
   const a=locked(),p=a.profile;
   for(const t of a.TARGETS){
-    assert.equal(a.Camp.isTargetUnlocked(p,t),t.id==='ch8-adding-ones',t.id);
+    assert.equal(a.Camp.isTargetUnlocked(p,t),t.id==='ch8-adding-ones'||t.id==='trail-place',t.id);
   }
+  assert.equal(a.Camp.isChapterUnlocked(p,'trail'),true);
   assert.equal(a.Camp.isChapterUnlocked(p,'ch8'),true);
   assert.equal(a.Camp.isChapterUnlocked(p,'ch9'),false);
   a.Engine.start('ch8-adding-tens');
@@ -51,7 +53,7 @@ test('finishing a mission unlocks exactly the next one',()=>{
 
 test('Chapter 9 opens only when every Chapter 8 mission is done',()=>{
   const a=locked(),p=a.profile;
-  for(const id of EXPECTED_ORDER.slice(0,5))markDone(a,id);
+  for(const id of EXPECTED_ORDER.filter(id=>id.startsWith('ch8-')).slice(0,5))markDone(a,id);
   assert.equal(a.Camp.isChapterUnlocked(p,'ch9'),false);
   markDone(a,'ch8-subtracting-98');
   assert.equal(a.Camp.isChapterUnlocked(p,'ch9'),true);
