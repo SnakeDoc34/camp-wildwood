@@ -61,7 +61,11 @@ const STRATEGY_BLURBS={
   'Find the Repeating Unit':'Patterns repeat a unit again and again. Find the unit and you know what comes next.',
   'Watch It Grow by One':'In a growing pattern, each shape has one more side than the one before.',
   'Name the Solid':'Solids are named by their look: round like a ball, pointy like a hat, flat-sided like a box, or like a can.',
-  'Faces, Edges, and Corners':'Faces are flat sides, edges are where faces meet, and corners are where edges meet.'
+  'Faces, Edges, and Corners':'Faces are flat sides, edges are where faces meet, and corners are where edges meet.',
+  'Place Value: Hundreds, Tens, Ones':'Every digit has a place, and its place gives its value: hundreds, tens, then ones.',
+  'Number Bonds':'A whole splits into parts. Know the whole and one part, and the other part is the whole minus the part.',
+  'Renaming':'Trade 10 ones for 1 ten when a place overflows — or 1 ten for 10 ones when you run short. The value never changes.',
+  'Skip Counting':'Count by 2s, 5s, or 10s to multiply fast. Each hop adds the same amount.'
 };
 
 const FAMILY_STRATEGY={
@@ -92,7 +96,12 @@ const FAMILY_STRATEGY={
   'ch15-open':'Trace the Edge','ch15-count-sides':'Count Each Side','ch15-name':'Name by the Number of Sides',
   'ch15-sides-corners':'Sides and Corners Match','ch15-identify':'Parts of a Circle','ch15-combine':'Parts Build the Whole',
   'ch15-pattern-next':'Find the Repeating Unit','ch15-pattern-grow':'Watch It Grow by One','ch15-solid-name':'Name the Solid',
-  'ch15-solid-attrs':'Faces, Edges, and Corners'
+  'ch15-solid-attrs':'Faces, Edges, and Corners',
+  'trail-pv-build':'Place Value: Hundreds, Tens, Ones','trail-pv-digit':'Place Value: Hundreds, Tens, Ones',
+  'trail-pv-expand':'Place Value: Hundreds, Tens, Ones','trail-pv-compare':'Place Value: Hundreds, Tens, Ones',
+  'trail-bond10':'Number Bonds','trail-bond100':'Number Bonds','trail-bond3':'Number Bonds',
+  'trail-add-rename':'Renaming','trail-sub-rename':'Renaming','trail-word-rename':'Renaming',
+  'trail-skip':'Skip Counting','trail-facts':'Skip Counting','trail-groups-intro':'Equal Groups'
 };
 
 const TARGET_STRATEGY={
@@ -108,14 +117,15 @@ const TARGET_STRATEGY={
   'ch13-comparing':'Compare the Levels','ch13-units':'Pick the Right Unit','ch13-measuring':'Read the Measure',
   'ch14-picture':'Read the Key First','ch14-bar':'Read the Scale','ch14-questions':'How Many More: Subtract',
   'ch15-sides':'Trace the Edge','ch15-polygons':'Name by the Number of Sides','ch15-circles':'Parts of a Circle',
-  'ch15-patterns':'Find the Repeating Unit','ch15-solids':'Name the Solid'
+  'ch15-patterns':'Find the Repeating Unit','ch15-solids':'Name the Solid',
+  'trail-place':'Place Value: Hundreds, Tens, Ones','trail-bonds':'Number Bonds','trail-regroup':'Renaming','trail-mult':'Skip Counting'
 };
 
 for(const [fid,name] of Object.entries(FAMILY_STRATEGY))
   if(window.FAMILIES[fid]) window.FAMILIES[fid].strategy={name, blurb:STRATEGY_BLURBS[name]||''};
 for(const t of window.TARGETS){
   const name=TARGET_STRATEGY[t.id];
-  if(name){ t.strategyName=name; t.strategyBlurb=STRATEGY_BLURBS[name]||''; t.strategyIntro='audio/m7-intro-'+t.id+'.mp3'; }
+  if(name){ t.strategyName=name; t.strategyBlurb=STRATEGY_BLURBS[name]||''; t.strategyIntro=t.introFile||('audio/m7-intro-'+t.id+'.mp3'); }
 }
 window.strategyForProblem=function(pr){
   const fam=pr&&window.FAMILIES[pr.fid];
