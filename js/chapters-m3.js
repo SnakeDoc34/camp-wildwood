@@ -274,7 +274,7 @@ Object.assign(window.FAMILIES,{
   /* --- Most and least on a bar graph --- */
   'ch14-bar-most':{gen(){
     const g=barData();let sorted=[...g.data].sort((x,y)=>y.value-x.value);
-    if(sorted[0].value===sorted[1].value)return this.gen();
+    if(sorted[0].value===sorted[1].value||sorted[sorted.length-1].value===sorted[sorted.length-2].value)return this.gen();
     const pick=R.f()<.5?'most':'least',d=pick==='most'?sorted[0]:sorted[sorted.length-1];
     return problem({math:{type:'text',answer:d.label},
       html:g.theme.title+'.<br>Which has the '+pick+'?',answer:d.label,choices:R.shuffle(g.data.map(x=>x.label)),
