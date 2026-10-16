@@ -2,6 +2,8 @@
 'use strict';
 
 const CHAPTERS = [
+  { id:'trail', num:0, title:'Trailhead', place:'Trailhead', art:'🥾', soon:false,
+    blurb:'Start here: the 2A foundations — place value, number bonds, renaming, first multiplication.' },
   { id:'ch8', num:8, title:'Mental Calculation', place:'Welcome Lodge', art:'🛖', soon:false,
     blurb:'Add and subtract like a mental-math ranger.' },
   { id:'ch9', num:9, title:'Equal Groups', place:'Soccer Field', art:'⚽', soon:false,
@@ -14,7 +16,7 @@ const CHAPTERS = [
   { id:'ch15', num:15, title:'Shapes', place:'Woodland Workshop', art:'🔷', soon:false, blurb:'Sides, polygons, patterns, and solid shapes.' },
 ];
 const RESTORE_STAGES = ['🛖 run-down','🛖 tidy','🛖 cozy','🛖⭐ beautiful'];
-const CHAPTER_AREA = { ch8:'lodge', ch9:'field', ch10:'post', ch11:'grove', ch12:'station', ch13:'water', ch14:'dock', ch15:'workshop' };
+const CHAPTER_AREA = { trail:'trailhead', ch8:'lodge', ch9:'field', ch10:'post', ch11:'grove', ch12:'station', ch13:'water', ch14:'dock', ch15:'workshop' };
 const AREA_STAGE_LABELS = {
   lodge: RESTORE_STAGES,
   field: ['run-down','tidy','cozy','⭐ beautiful'],
@@ -23,9 +25,10 @@ const AREA_STAGE_LABELS = {
   station: ['bare ground','trail post','adventure station','⭐ expedition base'],
   water: ['dry ground','pump','water works','⭐ splash station'],
   dock: ['bare shore','small dock','fishing dock','⭐ angler’s wharf'],
-  workshop: ['bare ground','tool bench','woodland workshop','⭐ master craftsman’s shop']
+  workshop: ['bare ground','tool bench','woodland workshop','⭐ master craftsman’s shop'],
+  trailhead: ['overgrown path','marked trail','trailhead camp','⭐ ranger gateway']
 };
-const AREA_NAMES = { lodge:'Lodge', field:'Field', post:'Trading Post', grove:'Picnic Grove', station:'Adventure Station', water:'Water Works', dock:'Fishing Dock', workshop:'Workshop' };
+const AREA_NAMES = { trailhead:'Trailhead', lodge:'Lodge', field:'Field', post:'Trading Post', grove:'Picnic Grove', station:'Adventure Station', water:'Water Works', dock:'Fishing Dock', workshop:'Workshop' };
 /* One woodland friend per mission — completing a mission befriends its critter. */
 const CRITTERS = {
   'ch8-adding-ones':['🐇','Bunny'],'ch8-adding-tens':['🦉','Owl'],'ch8-making-100':['🦫','Beaver'],
@@ -40,7 +43,8 @@ const CRITTERS = {
   'ch13-comparing':['🦢','Swan'],'ch13-units':['🐟','Trout'],'ch13-measuring':['🦀','Crab'],
   'ch14-picture':['🦐','Shrimp'],'ch14-bar':['🐡','Pufferfish'],'ch14-questions':['🐙','Octopus'],
   'ch15-sides':['🐛','Caterpillar'],'ch15-polygons':['🪲','Beetle'],'ch15-circles':['🐚','Hermit Crab'],
-  'ch15-patterns':['🦚','Peacock'],'ch15-solids':['🦨','Skunk']
+  'ch15-patterns':['🦚','Peacock'],'ch15-solids':['🦨','Skunk'],
+  'trail-place':['🪿','Goose'],'trail-bonds':['🐥','Chick'],'trail-regroup':['🐹','Vole'],'trail-mult':['🐓','Hen']
 };
 const FESTIVAL_TEXT='Welcome to the Camp Wildwood Festival! You did it, camper. You learned to add and subtract the smart way, to multiply and divide, to count money and make change, to share fairly with fractions, to tell time, to measure water, to read graphs, and to build with shapes. Every lodge beam, every dock plank, every picnic blanket is here because of your hard work. All your woodland friends are here to celebrate with you. Camp Wildwood is restored — and you are a true Camp Wildwood Ranger!';
 const SHOP_ITEMS = [
@@ -59,11 +63,17 @@ const Camp = {
      open every mission from the Report screen (Settings.unlockAll). */
   isChapterUnlocked(p,chId){
     if(typeof Settings!=='undefined'&&Settings.unlockAll)return true;
+    /* The Trailhead is a foundation ramp, not a gate: it and Chapter 8 are
+       both open from the start. Chapters 9+ chain as before. */
+    if(chId==='trail'||chId==='ch8')return true;
     const order=CHAPTERS.filter(c=>!c.soon).map(c=>c.id),i=order.indexOf(chId);
     if(i<=0)return true;
     const prev=this.targetsFor(order[i-1]);
     return prev.length>0&&prev.every(t=>p.targets[t.id]&&p.targets[t.id].done);
   },
+  /* The Festival celebrates the 37 Dimensions Math 2B missions; the
+     Trailhead foundations are a bonus ramp and never gate it. */
+  coreTargets(){ return window.TARGETS.filter(t=>t.chapter!=='trail'); },
   isTargetUnlocked(p,t){
     if(typeof Settings!=='undefined'&&Settings.unlockAll)return true;
     if(p.targets[t.id]&&p.targets[t.id].done)return true;
@@ -97,18 +107,18 @@ const Camp = {
     this.refreshStages(p); Store.persist();
     const yard=document.getElementById('hub-yard');yard.innerHTML='';yard.appendChild(Yard.scene(p,false));
     Yard.renderGoal(document.getElementById('hub-goal'),p);Store.persist();
-    const completed=window.TARGETS.filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
-    document.getElementById('camp-completion').textContent=completed+' of '+window.TARGETS.length+' missions complete';
+    const core=this.coreTargets(),completed=core.filter(t=>p.targets[t.id]&&p.targets[t.id].done).length;
+    document.getElementById('camp-completion').textContent=completed+' of '+core.length+' missions complete';
     /* festival meter: every mission brings the Camp Festival closer */
     const fm=document.getElementById('festival-meter');
     if(fm){
-      if(completed===window.TARGETS.length){
+      if(completed===core.length){
         fm.innerHTML='<b>🎉 Your camp is ready for the Camp Festival!</b><p class="fine">Every trail is complete. The Festival is open!</p>';
         const go=el('button','big-btn','🎪 Enter the Camp Festival');
         go.onclick=()=>{ Audio2.click(); App.show('screen-festival'); Camp.renderFestival(p); };
         fm.appendChild(go);
       }else{
-        fm.innerHTML='<b>🎪 Camp Festival readiness: '+completed+' of '+window.TARGETS.length+' missions</b><div class="festival-bar"><span style="width:'+Math.round(completed/window.TARGETS.length*100)+'%"></span></div><p class="fine">Finish missions to get the camp ready for the big Festival at the end of the trail.</p>';
+        fm.innerHTML='<b>🎪 Camp Festival readiness: '+completed+' of '+core.length+' missions</b><div class="festival-bar"><span style="width:'+Math.round(completed/core.length*100)+'%"></span></div><p class="fine">Finish the Dimensions Math 2B missions to get the camp ready for the big Festival. Trailhead foundations are a bonus ramp — they do not count toward the Festival.</p>';
       }
     }
     /* woodland friends living at this camp */
@@ -123,7 +133,7 @@ const Camp = {
       const stage = area? AREA_NAMES[area]+' '+(AREA_STAGE_LABELS[area][p.camp[area]]||'') : '';
       const chapterLocked=!this.isChapterUnlocked(p,ch.id);
       if(chapterLocked)card.classList.add('trail-locked');
-      card.innerHTML='<span class="trail-top"><span class="eyebrow">Chapter '+ch.num+'</span><span class="art" aria-hidden="true">'+ch.art+'</span></span><h3>'+esc(ch.place)+'</h3>'+
+      card.innerHTML='<span class="trail-top"><span class="eyebrow">'+(ch.num? 'Chapter '+ch.num : 'Start Here · 2A Foundations')+'</span><span class="art" aria-hidden="true">'+ch.art+'</span></span><h3>'+esc(ch.place)+'</h3>'+
         '<p class="trail-subtitle">'+esc(ch.title)+'</p><p class="hint">'+esc(ch.blurb)+'</p>'+
         '<span class="trail-progress" aria-label="'+done+' of '+targets.length+' missions complete"><span style="width:'+done/targets.length*100+'%"></span></span>'+
         (chapterLocked
@@ -135,7 +145,7 @@ const Camp = {
   },
   renderTargets(chId){
     const ch=CHAPTERS.find(c=>c.id===chId);
-    document.getElementById('targets-title').textContent='Chapter '+ch.num+': '+ch.title;
+    document.getElementById('targets-title').textContent=(ch.num? 'Chapter '+ch.num+': '+ch.title : ch.title+' — 2A Foundations');
     document.getElementById('targets-sub').textContent=ch.place+' · pick a skill to practice';
     const list=document.getElementById('target-list'); list.innerHTML='';
     this.targetsFor(chId).forEach((t,index)=>{
@@ -220,7 +230,7 @@ const Camp = {
     const friends=this.critterList(p).filter(c=>c.found).length;
     const cert=el('div','card festival-cert');
     cert.innerHTML='<h3>🏅 Camp Wildwood Ranger Certificate</h3>'
-      +'<p>This certifies that <strong>'+esc(p.name)+'</strong> completed all '+window.TARGETS.length+' Dimensions Math 2B missions at Camp Wildwood.</p>'
+      +'<p>This certifies that <strong>'+esc(p.name)+'</strong> completed all '+this.coreTargets().length+' Dimensions Math 2B missions at Camp Wildwood.</p>'
       +'<p>🪙 '+p.tokens+' camp tokens · 🏅 '+badges+' skill badges · 🦉 '+friends+' woodland friends</p>'
       +'<p class="critter-row">'+this.critterList(p).filter(c=>c.found).map(c=>c.emoji).join(' ')+'</p>';
     b.appendChild(cert);
@@ -238,7 +248,7 @@ const Camp = {
     const rows=p.report.map(r=>'<tr><td>'+new Date(r.t).toLocaleTimeString()+'</td><td>'+esc(r.text)+'</td><td>'+(r.total? r.good+'/'+r.total : '—')+'</td></tr>').join('');
     const tg=p.report.reduce((a,r)=>a+(r.good||0),0), tt=p.report.reduce((a,r)=>a+(r.total||0),0);
     b.innerHTML='<h3>Report for '+esc(p.name)+' · 🪙 '+p.tokens+' tokens</h3>'+
-      (window.TARGETS.every(t=>p.targets[t.id]&&p.targets[t.id].done)?'<p>🎪 <strong>Camp Festival complete!</strong> All '+window.TARGETS.length+' missions finished — this camper is a Camp Wildwood Ranger.</p>':'')+
+      (this.coreTargets().every(t=>p.targets[t.id]&&p.targets[t.id].done)?'<p>🎪 <strong>Camp Festival complete!</strong> All '+this.coreTargets().length+' Dimensions Math 2B missions finished — this camper is a Camp Wildwood Ranger.</p>':'')+
       '<p>🦉 Woodland friends met: '+this.critterList(p).filter(c=>c.found).length+' of '+window.TARGETS.length+' — see the Field Guide on the camp map.</p>'+
       (()=>{
         const learned=[...new Set(window.TARGETS.filter(t=>p.targets[t.id]&&p.targets[t.id].done&&t.strategyName).map(t=>t.strategyName))];

@@ -50,7 +50,7 @@ const MathCheck={
 };
 
 const Engine={
-  VERSION:'dm2b-m4b',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
+  VERSION:'dm2b-m5',target:null,profile:null,steps:[],idx:0,firstTry:true,active:false,visitId:null,
   start(targetId){
     const t=window.TARGETS.find(x=>x.id===targetId);if(!t||!App.profile)return;
     if(typeof Camp!=='undefined'&&Camp.isTargetUnlocked&&!Camp.isTargetUnlocked(App.profile,t)){
@@ -306,7 +306,7 @@ const Engine={
   },
   renderDone(body){
     const t=this.target,p=this.profile,st=p.targets[t.id]||(p.targets[t.id]={attempts:[],done:false,badge:false});
-    const oldStages={lodge:p.camp.lodge,field:p.camp.field,post:p.camp.post||0,grove:p.camp.grove||0,station:p.camp.station||0,water:p.camp.water||0,dock:p.camp.dock||0,workshop:p.camp.workshop||0};
+    const oldStages={lodge:p.camp.lodge,field:p.camp.field,post:p.camp.post||0,grove:p.camp.grove||0,station:p.camp.station||0,water:p.camp.water||0,dock:p.camp.dock||0,workshop:p.camp.workshop||0,trailhead:p.camp.trailhead||0};
     st.done=true;let newToken=false,newBadge=false,newBonus=false,newPractice=false;
     const doneStep=this.steps.find(s=>s.type==='done');
     if(!p.missionsDone[t.id]){p.missionsDone[t.id]=true;p.tokens++;newToken=true;}
@@ -329,8 +329,8 @@ const Engine={
     const critter=(typeof CRITTERS!=='undefined')?CRITTERS[t.id]:null;
     if(newToken&&critter)html+='<p>'+critter[0]+' <strong>'+esc(critter[1])+'</strong> moved into your camp! Meet all of your friends in the Field Guide on the camp map.</p>';
     body.appendChild(el('div','caption-box',html));
-    const part={ch8:'lodge',ch9:'field',ch10:'post',ch11:'grove',ch12:'station',ch13:'water',ch14:'dock',ch15:'workshop'}[t.chapter]||'lodge';
-    const restored=p.camp[part]>oldStages[part]?({lodge:'Your lodge has a new look!',field:'Your meadow is looking greener!',post:'Your Trading Post is growing!',grove:'Your Picnic Grove is blooming!',station:'Your Adventure Station is outfitted!',water:'Your Water Works is flowing!',dock:'Your Fishing Dock is bustling!',workshop:'Your Woodland Workshop is humming!'})[part]+' Finish more skills to restore your camp.':null;
+    const part={trail:'trailhead',ch8:'lodge',ch9:'field',ch10:'post',ch11:'grove',ch12:'station',ch13:'water',ch14:'dock',ch15:'workshop'}[t.chapter]||'lodge';
+    const restored=p.camp[part]>oldStages[part]?({trailhead:'Your Trailhead is cleared and marked!',lodge:'Your lodge has a new look!',field:'Your meadow is looking greener!',post:'Your Trading Post is growing!',grove:'Your Picnic Grove is blooming!',station:'Your Adventure Station is outfitted!',water:'Your Water Works is flowing!',dock:'Your Fishing Dock is bustling!',workshop:'Your Woodland Workshop is humming!'})[part]+' Finish more skills to restore your camp.':null;
     Yard.reward(body,p,Number(newToken)+Number(newPractice)+Number(newBonus),restored);
     const row=el('div','row'),again=el('button','mid-btn','🔁 Play again'),hub=el('button','big-btn','Back to camp 🗺️');
     again.onclick=()=>this.start(t.id);hub.onclick=()=>{App.show('screen-hub');Camp.renderHub(p);};
