@@ -65,12 +65,13 @@ const Store = {
 /* ---------- Teacher settings (device-level, shared by all campers on this device) ---------- */
 const Settings = {
   KEY:'campWildwood.settings',
-  unlockAll:false,
+  unlockAll:false,calmVisuals:false,
   init(){
-    try{ const v=JSON.parse(localStorage.getItem(this.KEY)); if(v&&typeof v==='object'&&!Array.isArray(v)) this.unlockAll=!!v.unlockAll; }catch(e){}
+    try{ const v=JSON.parse(localStorage.getItem(this.KEY)); if(v&&typeof v==='object'&&!Array.isArray(v)) {this.unlockAll=!!v.unlockAll;this.calmVisuals=!!v.calmVisuals;} }catch(e){}
   },
-  save(){ try{ localStorage.setItem(this.KEY,JSON.stringify({unlockAll:this.unlockAll})); }catch(e){} },
-  setUnlockAll(v){ this.unlockAll=!!v; this.save(); }
+  save(){ try{ localStorage.setItem(this.KEY,JSON.stringify({unlockAll:this.unlockAll,calmVisuals:this.calmVisuals})); }catch(e){} },
+  setUnlockAll(v){ this.unlockAll=!!v; this.save(); },
+  setCalmVisuals(v){this.calmVisuals=!!v;this.save();if(typeof Living!=='undefined')Living.applyMotion();}
 };
 function newProfileState(name, avatar){
   return {
@@ -96,6 +97,7 @@ const Audio2 = {
   tone(freq,dur,type,vol,when){
     if(!this.enabled) return;
     const ctx=this.ac(); if(!ctx) return;
+    if(ctx.state==='suspended')ctx.resume().catch(()=>{});
     const o=ctx.createOscillator(), g=ctx.createGain();
     o.type=type||'sine'; o.frequency.value=freq;
     const t=ctx.currentTime+(when||0);
@@ -172,6 +174,7 @@ function toast(msg, ms){
   clearTimeout(t._h); t._h=setTimeout(()=>t.classList.add('hidden'), ms||2200);
 }
 function confetti(n){
+  if(typeof Living!=='undefined'&&Living.isCalm())return;
   const layer=document.getElementById('confetti-layer');
   const colors=['#ffcf4d','#43a468','#2f7fd0','#d94f3d','#b678e0'];
   for(let i=0;i<(n||40);i++){

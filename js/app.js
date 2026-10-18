@@ -28,7 +28,7 @@ const App = {
     Yard.renderDesigner(this.profile);
   },
   init(){
-    Store.init(); R.seed(Date.now()%2147483647);
+    Store.init(); if(typeof Living!=='undefined')Living.init(); R.seed(Date.now()%2147483647);
     if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); }catch(e){} }
     // topbar
     document.getElementById('btn-home').onclick=()=>{ Audio2.click(); this.show('screen-hub'); Camp.renderHub(this.profile); };
@@ -49,6 +49,8 @@ const App = {
     document.getElementById('btn-guide').onclick=()=>{ Audio2.click(); this.show('screen-guide'); Camp.renderGuide(this.profile); };
     const unlockToggle=document.getElementById('unlock-all-toggle');
     if(unlockToggle){ unlockToggle.checked=Settings.unlockAll; unlockToggle.onchange=e=>{ Settings.setUnlockAll(e.target.checked); toast(e.target.checked?'🔓 All missions unlocked.':'🔒 Trail order on — missions unlock in order.'); }; }
+    const calm=document.getElementById('calm-visuals-toggle');
+    if(calm){calm.checked=Settings.calmVisuals;calm.onchange=e=>Settings.setCalmVisuals(e.target.checked);}
     document.getElementById('btn-print').onclick=()=>window.print();
     document.getElementById('btn-quit-mission').onclick=()=>{ Audio2.stopNarration(); document.onkeydown=null; this.showTargets(this.targetChapter()); };
     document.querySelectorAll('[data-go="hub"]').forEach(b=>b.onclick=()=>{ Audio2.click(); this.show('screen-hub'); Camp.renderHub(this.profile); });

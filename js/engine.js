@@ -117,6 +117,7 @@ const Engine={
     body.setAttribute('data-phase',this.steps[this.idx].type);
     document.onkeydown=null;Audio2.stopNarration();
     const step=this.steps[this.idx];
+    if(typeof Living!=='undefined')Living.mission(this);
     if(step.type==='demo')this.renderDemo(body,false);
     else if(step.type==='demo2')this.renderDemo(body,true);
     else if(step.type==='controls')this.renderControls(body);
@@ -194,8 +195,14 @@ const Engine={
     const row=el('div','row'),hear=el('button','hint-btn','🔊 Read aloud'),hint=el('button','hint-btn','💡 Hint');
     hear.onclick=()=>Audio2.speak(pr.speak||pr.html.replace(/<[^>]+>/g,' '));
     hint.disabled=Boolean(step.solved);
-    hint.onclick=()=>{this.firstTry=false;step.assisted=true;step.hintsUsed=(step.hintsUsed||0)+1;this.checkpoint();Audio2.click();fb.className='feedback retry';fb.textContent='💡 '+this.hintText(pr,step.hintsUsed-1);};
-    row.appendChild(hear);row.appendChild(hint);body.appendChild(row);
+    hint.onclick=()=>{this.firstTry=false;step.assisted=true;step.hintsUsed=(step.hintsUsed||0)+1;this.checkpoint();Audio2.click();if(typeof Living!=='undefined')Living.react('think');fb.className='feedback retry';fb.textContent='💡 '+this.hintText(pr,step.hintsUsed-1);};
+    row.appendChild(hear);row.appendChild(hint);
+    if(typeof Backpack!=='undefined'&&Backpack.supports(pr)){
+      const pack=el('button','hint-btn',step.backpackOpen?'🎒 Close math backpack':'🎒 Camp Backpack');pack.disabled=Boolean(step.solved);pack.setAttribute('aria-expanded',String(Boolean(step.backpackOpen)));
+      pack.onclick=()=>{step.backpackOpen=!step.backpackOpen;if(step.backpackOpen){this.firstTry=false;step.assisted=true;}this.checkpoint();Audio2.pop();this.render();};row.appendChild(pack);
+    }
+    body.appendChild(row);
+    if(step.backpackOpen&&!step.solved&&typeof Backpack!=='undefined')Backpack.render(body,pr,step,this);
   },
   hintText(pr,index){const hints=pr.hints||[pr.hint];return hints[Math.min(index,hints.length-1)];},
   renderChoices(body,pr,fb,step){
@@ -233,6 +240,7 @@ const Engine={
     else if(pr.answerUnit)body.appendChild(el('p','answer-unit',esc(pr.answerUnit)));
     if(!step.solved)document.onkeydown=e=>{
       if(!this.active||document.getElementById('screen-mission').classList.contains('hidden'))return;
+      if(e.target?.tagName==='BUTTON'||e.target?.tagName==='SUMMARY')return;
       if(e.key==='Enter'){e.preventDefault();check.onclick();}
       else if(e.target!==disp&&/^[0-9]$/.test(e.key)){e.preventDefault();write((step.entry||'')+e.key);}
       else if(e.target!==disp&&e.key==='Backspace'){e.preventDefault();write((step.entry||'').slice(0,-1));}
@@ -293,7 +301,7 @@ const Engine={
       if(wrap){step.wrongChoices=step.wrongChoices||[];step.wrongChoices.push(String(btn.textContent));btn.classList.add('wrong');btn.disabled=true;}
       if(disp){disp.value='';step.entry='';}
       fb.className='feedback retry';fb.textContent='Let’s try again. '+this.hintText(pr,step.mistakes-1);
-      this.checkpoint();Audio2.bad();
+      this.checkpoint();Audio2.bad();if(typeof Living!=='undefined')Living.react('think');
     }
   },
   renderSolved(body,pr,fb,step){

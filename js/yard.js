@@ -26,6 +26,7 @@ const Yard={
     const clean={},used=new Set();
     for(const slot of YARD_SLOTS){const id=d.slots[slot.id];if(this.item(id)&&id!=='soccer-field'&&this.owns(p,id)&&!used.has(id)){clean[slot.id]=id;used.add(id);}}
     d.slots=clean;
+    if(!['morning','golden','night'].includes(d.timeOfDay))d.timeOfDay='morning';
     d.pitch=this.owns(p,'soccer-field')&&d.pitch==='soccer'?'soccer':'meadow';
     if(!this.item(d.goal)||this.owns(p,d.goal))d.goal=null;
     d.goals=Number.isSafeInteger(d.goals)&&d.goals>=0?d.goals:0;
@@ -51,6 +52,9 @@ const Yard={
   putAway(p,id){const d=this.ensure(p);for(const slot of YARD_SLOTS)if(d.slots[slot.id]===id)delete d.slots[slot.id];Store.persist();},
   art(id){
     const shapes={
+      campfire:'<path class="fire-smoke" d="M50 20Q39 11 51 3" fill="none" stroke="#b8c1b6" stroke-width="4" opacity=".7"/><ellipse cx="50" cy="84" rx="40" ry="10" fill="#62685e"/><path d="m20 83 60-9m-58 0 57 10" stroke="#78523c" stroke-width="10"/><path class="fire-flame" d="M28 73Q16 57 41 32L44 8Q75 30 72 50Q91 75 61 80Z" fill="#eb8c46"/><path class="fire-core" d="M43 76Q32 64 52 43Q72 65 59 78Z" fill="#ffdc80"/>',
+      canoe:'<ellipse cx="50" cy="83" rx="44" ry="9" fill="#559da4" opacity=".4"/><path d="M5 45Q50 81 95 45L82 77Q49 98 17 76Z" fill="#b67547" stroke="#71492f" stroke-width="3"/><path d="M5 45Q48 26 95 45Q49 79 5 45Z" fill="#e9c38d" stroke="#71492f" stroke-width="3"/><path d="m18 29 59 58" stroke="#76533c" stroke-width="5"/><path d="m62 65 22 13 5 16-15-3Z" fill="#9b683e"/>',
+      'fairy-lights':'<path d="M12 90V9m76 81V9" stroke="#74543d" stroke-width="6"/><path d="M12 18Q50 60 88 18" fill="none" stroke="#466349" stroke-width="3"/><g class="light-bulbs" fill="#ffdf82" stroke="#bb8b42" stroke-width="2"><circle cx="26" cy="33" r="6"/><circle cx="42" cy="40" r="6"/><circle cx="59" cy="40" r="6"/><circle cx="75" cy="32" r="6"/></g>',
       sapling:'<path d="M46 92V61" stroke="#765239" stroke-width="9"/><path d="M46 4 25 38h12L16 68h60L55 38h12Z" fill="#327152" stroke="#174b38" stroke-width="3"/>',
       stones:'<path d="m14 65 8-13 22-3 10 14-9 12-24 1Z" fill="#bbb9ac" stroke="#69756c" stroke-width="3"/><path d="m50 34 8-13 21 3 5 14-13 10-18-4Z" fill="#d4cfc2" stroke="#69756c" stroke-width="3"/><path d="m57 84 4-12 21 1 8 10-9 8-20 2Z" fill="#989f94" stroke="#69756c" stroke-width="3"/>',
       'flag-red':'<path d="M31 91V8" stroke="#765239" stroke-width="6"/><path d="M34 12h47L66 30l15 17H34Z" fill="#d76549" stroke="#823e2d" stroke-width="3"/><ellipse cx="32" cy="94" rx="18" ry="4" fill="#658951"/>',
@@ -66,11 +70,13 @@ const Yard={
   lodge(stage){
     return '<svg viewBox="0 0 200 150" aria-hidden="true" focusable="false"><ellipse cx="100" cy="138" rx="88" ry="9" fill="#6d9259" opacity=".5"/><path d="M32 69h137v66H32Z" fill="'+(stage?'#bd9362':'#9a8b70')+'" stroke="#6e5239" stroke-width="4"/><path d="m19 70 81-61 81 61Z" fill="'+(stage>1?'#ba6347':'#6c7560')+'" stroke="#5b5140" stroke-width="4"/><path d="M135 14h18v33h-18" fill="#9d7455" stroke="#6e5239" stroke-width="3"/><path d="M85 86h32v49H85Z" fill="#6f5034"/><g fill="'+(stage>1?'#ffd779':'#9dbbbb')+'" stroke="#6f5034" stroke-width="3"><rect x="46" y="86" width="23" height="23"/><rect x="131" y="86" width="23" height="23"/></g>'+(stage===0?'<path d="m43 78 22 36m64-37 27 39" stroke="#716954" stroke-width="7"/>':'')+(stage===3?'<path d="M37 77q63 27 124 0" fill="none" stroke="#477046" stroke-width="5"/><g fill="#efcb70"><circle cx="58" cy="84" r="4"/><circle cx="83" cy="89" r="4"/><circle cx="108" cy="89" r="4"/><circle cx="134" cy="84" r="4"/></g>':'')+'</svg>';
   },
-  scene(p,editable){
+  scene(p,editable,daylight){
     const d=this.ensure(p),scene=el('div','camp-yard'+(editable?' editable-yard':''));
     const count=Object.keys(d.slots).length;
+    scene.setAttribute('data-daylight',daylight||d.timeOfDay);
+    if(typeof Living!=='undefined')Living.decorate(scene,p,editable);
     scene.setAttribute('aria-label','Your camp: '+(d.pitch==='soccer'?'soccer field':'open meadow')+' and '+count+' placed item'+(count===1?'':'s'));
-    const trees=[25,100,182,270,725,810,895,977].map((x,i)=>'<path d="m'+x+' 8-27 52h15l-30 46h84l-30-46h15Z" fill="'+(i%2?'#386d51':'#4d805b')+'"/>').join('');
+    const trees=[25,100,182,270,725,810,895,977].map((x,i)=>'<path class="yard-pine" style="animation-delay:'+(-i*.7)+'s" d="m'+x+' 8-27 52h15l-30 46h84l-30-46h15Z" fill="'+(i%2?'#386d51':'#4d805b')+'"/>').join('');
     const grass=['#c1c89d','#c6d49c','#cbdca7','#d0e2af'][p.camp.field]||'#c1c89d';
     scene.appendChild(el('div','yard-ground','<svg viewBox="0 0 1000 650" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect width="1000" height="650" fill="'+grass+'"/><path d="M0 480Q120 420 115 650H0Z" fill="#93c6c8"/><path d="M0 468Q142 420 128 650" fill="none" stroke="#f2e9cb" stroke-width="18"/><path d="M510 180Q610 300 850 610" fill="none" stroke="#e7d6ae" stroke-width="35"/><ellipse cx="500" cy="425" rx="290" ry="175" fill="'+grass+'"/>'+trees+'</svg>'));
     const lodge=el('div','yard-lodge',this.lodge(p.camp.lodge)+'<span>Welcome Lodge</span>');scene.appendChild(lodge);
@@ -223,7 +229,7 @@ const Yard={
     const card=el('div','camp-reward');card.appendChild(el('span','eyebrow','Your work grows your camp'));
     card.appendChild(el('h3',null,earned?'🪙 +'+earned+' camp token'+(earned===1?'':'s'):'Your camp is waiting'));
     card.appendChild(el('p','fine',restored||'Use your tokens to choose something, then put it in your camp.'));
-    card.appendChild(this.scene(p,false));
+    const rewardScene=this.scene(p,false,'night');rewardScene.classList.add('camp-celebration');card.appendChild(rewardScene);
     const goal=el('div');this.renderGoal(goal,p);card.appendChild(goal);
     const build=el('button','big-btn','Build my camp →');build.onclick=()=>App.showDesign();card.appendChild(build);body.appendChild(card);
   }

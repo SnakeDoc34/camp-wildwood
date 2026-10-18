@@ -3,6 +3,15 @@
 A 2nd-grade math learning game (Dimensions Math 2B) set at an outdoor camp that players restore.
 Built for classroom use — share the site URL; each player keeps their own camp on their own device.
 
+## Living campsite update (living-camp1)
+
+- Local SVG scenery adds mountains, swaying pines, a rippling creek, drifting clouds, and night fireflies. Tap the lighting button to choose morning, golden hour, or night; each camper keeps their own choice.
+- A fox helper responds to correct work and encourages retries. A mission day advances with completed practice, not a timer; mathematical diagrams remain still.
+- Three additional shop rewards: cozy campfire (4 tokens), woodland fairy lights (6), and creek canoe (7). Existing purchases and camp layouts remain compatible.
+- The optional Camp Backpack supports whole-number place-value exchanges and equal-group multiplication/division. Opening it marks the question as supported practice without reducing rewards. Work mats resume with the mission.
+- Calm visuals in My Report pauses decorations and celebrations. The device Reduce Motion setting also applies. No graphics libraries or external assets are added.
+- All chapters 8–15 and the optional Trailhead are present in the current source; the older milestone notes below document earlier releases.
+
 ## How it works
 
 - **Players** pick a nickname (nicknames only) and get their own camp, tokens, and progress.

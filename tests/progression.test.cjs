@@ -73,9 +73,9 @@ test('teacher override opens everything and the choice is saved on the device',(
   const a=locked(),p=a.profile;
   a.Settings.setUnlockAll(true);
   for(const t of a.TARGETS)assert.equal(a.Camp.isTargetUnlocked(p,t),true,t.id);
-  assert.deepEqual(JSON.parse(a.data.get('campWildwood.settings')),{unlockAll:true});
+  assert.deepEqual(JSON.parse(a.data.get('campWildwood.settings')),{unlockAll:true,calmVisuals:false});
   a.Settings.setUnlockAll(false);
-  assert.deepEqual(JSON.parse(a.data.get('campWildwood.settings')),{unlockAll:false});
+  assert.deepEqual(JSON.parse(a.data.get('campWildwood.settings')),{unlockAll:false,calmVisuals:false});
 });
 
 test('the hardest skills have a second, mathematically consistent demonstration',()=>{

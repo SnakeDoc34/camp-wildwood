@@ -55,6 +55,9 @@ const SHOP_ITEMS = [
   { id:'tent', name:'Adventure tent', art:'⛺', cost:5, place:'field-right', description:'Set up a tent for your woodland adventures.' },
   { id:'lanterns', name:'Paper lanterns', art:'🏮', cost:8, place:'lodge-left', description:'Hang golden lanterns to brighten your camp.' },
   { id:'sign', name:'Carved camp sign', art:'🪧', cost:6, place:'trail', description:'Give your trail a wooden welcome sign.' },
+  {id:'campfire',name:'Cozy campfire',art:'🔥',cost:4,place:'trail',description:'A glowing stone-ring campfire with a little curl of smoke.'},
+  {id:'canoe',name:'Creek canoe',art:'🛶',cost:7,place:'creek',description:'Park a cedar canoe beside the water. A new story starts at the creek.'},
+  {id:'fairy-lights',name:'Woodland fairy lights',art:'✨',cost:6,place:'lodge-left',description:'String warm lights between two pines. They glow after sunset.'},
 ];
 
 const Camp = {

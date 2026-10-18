@@ -305,3 +305,14 @@ Chapter order and targets follow the publisher's 2B lesson list exactly: Time (T
 
 ## Strategy vocabulary addendum (dm2b-m4)
 Every one of the 73 problem families now carries a named Singapore Math strategy (for example, Make the Next Ten, Make the Next Hundred, Compensation, Counting Up for Change, Think Multiplication, Read the Key First), with a kid-readable definition. Each mission teaches its strategy at the demonstration: a banner names and defines it, and a short recorded Melody introduction ("The strategy is called...") plays before the demonstration narration. Every problem card shows a strategy chip while solving, the solved feedback names the strategy alongside the worked explanation, mission cards and the session report list strategies, and the report ends with a "Strategies learned" vocabulary list. Coverage is enforced by tests/strategies.test.cjs: all 73 families and 37 missions mapped, all 37 introduction clips recorded and resolving, engine-level checks that the banner, chip, and feedback actually render. Total suite: 59 tests.
+
+
+## Living Camp 1 — October 18, 2026
+
+Updated from main commit 78371f7, preserving the complete current curriculum, Trailhead, narration, camp designer, profile save key, and mission schema version. No problem generators or answer keys changed.
+
+Added local SVG/CSS scenery, camper-specific lighting, a reacting fox, progress-based mission lighting, and three shop rewards. The Camp Backpack represents only supported whole-number addition/subtraction/equivalent-addition/number-bond and multiplication/division questions. Place-value exchanges conserve value; group counters explicitly distinguish sharing from grouping. Using the backpack marks the attempt as assisted and preserves mission token rewards. Existing chapter-specific models remain the tools for money, fractions, time, capacity, graphs, and shapes.
+
+Verification: all 75 automated tests pass, including the existing independent math oracles (335,000 generated questions across the chapter and Trailhead suites). New tests cover every place-value value 0–1000 through full exchange/recombination, both division meanings for 3/4 and quotients 1–10, multiplication groups, assisted evidence and resumed mats, per-camper lighting, one-charge purchases, and preserved teacher settings. Fixed keyboard handling so Enter on a work-mat button cannot also submit the answer.
+
+Motion respects the system prefers-reduced-motion preference and the saved Calm visuals setting. Decorative animation pauses in hidden screens and when the document is hidden. No continuous JavaScript rendering loop or new dependencies. Browser checks and physical iPad Safari checks are distinct; physical iPad verification remains pending.

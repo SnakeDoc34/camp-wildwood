@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2e7d4f">
 <title>Camp Wildwood</title>
-<link rel="stylesheet" href="css/style.css?v=dm2b-m5b">
+<link rel="stylesheet" href="css/style.css?v=living-camp1">
 </head>
-<body data-math-release="dm2b-m5b" data-camp-release="camp-build1b">
+<body data-math-release="dm2b-m5b" data-camp-release="living-camp1">
 <div id="app">
   <header id="topbar" class="hidden">
     <button id="btn-home" class="icon-btn" aria-label="Back to camp map">🏕️</button>
@@ -28,7 +28,7 @@
           <h1>Camp <br>Wildwood</h1>
           <p class="subtitle">Learn the math.<br>Restore your woodland camp.</p>
           <button id="btn-start" class="big-btn">Start adventure <span aria-hidden="true">→</span></button>
-          <p class="fine">Dimensions Math 2B · Chapters 8 and 9</p>
+          <p class="fine">Dimensions Math 2B · A whole woodland of learning</p>
           <div class="learning-path"><span>Learn</span><span>Practice</span><span>Explore</span></div>
         </div>
       </div>
@@ -62,7 +62,7 @@
       <div id="festival-meter" class="card"></div>
       <div id="critter-row" class="critter-row"></div>
       <div id="camp-map" class="card-grid"></div>
-      <details class="future-trails"><summary>Future trails</summary><p class="fine">Now open: Money at the Trading Post and Fractions at the Picnic Grove. Still to come: Time, Capacity, Graphs, and Shapes, with a Camp Festival finale. Each new trail adds teaching, practice, and more camp activities.</p><div id="future-trails-list" class="future-trails-grid"></div></details>
+      <details class="future-trails"><summary>Future trails</summary><p class="fine">All Dimensions Math 2B trails are here. Finish missions in order to open each new chapter, or revisit an open trail for practice. The Trailhead offers an optional foundations review.</p><div id="future-trails-list" class="future-trails-grid"></div></details>
     </section>
 
     <!-- TARGET PICKER -->
@@ -80,6 +80,7 @@
         <span id="mission-phase" class="phase-label"></span>
         <div id="mission-progress" aria-label="Mission progress"></div>
       </div>
+      <div id="mission-outlook"></div>
       <div id="mission-body"></div>
     </section>
 
@@ -129,6 +130,8 @@
       </div>
       <div id="teacher-tools" class="card">
         <h3>🧑‍🏫 Teacher tools</h3>
+        <label class="teacher-toggle"><input type="checkbox" id="calm-visuals-toggle"> Calm visuals</label>
+        <p class="fine">Pause decorative animations. Your device’s Reduce Motion setting is always respected.</p>
         <label class="teacher-toggle"><input type="checkbox" id="unlock-all-toggle"> Unlock all missions</label>
         <p class="fine">Missions normally unlock in the Dimensions Math lesson order: finish one mission to open the next, and finish a chapter to open the next chapter's trail. Turn this on to let a camper play any mission in any order. This setting is saved on this device and applies to every camper.</p>
       </div>
@@ -224,15 +227,16 @@
 <script src="audio/i1.js?v=dm2b-m5b"></script>
 <script src="audio/j1.js?v=dm2b-m5b"></script>
 <script src="audio/j2.js?v=dm2b-m5b"></script>
-<script src="js/core.js?v=dm2b-m5b"></script>
-<script src="js/yard.js?v=camp-build1b"></script>
-<script src="js/camp.js?v=dm2b-m5b"></script>
-<script src="js/engine.js?v=dm2b-m5b"></script>
+<script src="js/core.js?v=living-camp1"></script>
+<script src="js/yard.js?v=living-camp1"></script>
+<script src="js/living.js?v=living-camp1"></script>
+<script src="js/camp.js?v=living-camp1"></script>
+<script src="js/engine.js?v=living-camp1"></script>
 <script src="js/chapters.js?v=dm2b-m5b"></script>
 <script src="js/chapters-m2.js?v=dm2b-m5b"></script>
 <script src="js/chapters-m3.js?v=dm2b-m5b"></script>
 <script src="js/chapters-trail.js?v=dm2b-m5b"></script>
 <script src="js/strategies.js?v=dm2b-m5b"></script>
-<script src="js/app.js?v=dm2b-m5b"></script>
+<script src="js/app.js?v=living-camp1"></script>
 </body>
 </html>
