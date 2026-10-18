@@ -79,7 +79,8 @@ test('new rewards are purchasable once and reload as owned visual objects',()=>{
   assert.equal(b.Yard.ensure(saved).slots['field-left'],'fairy-lights');
 });
 test('Enter on a work-mat button cannot submit a math answer',()=>{
-  const a=load(),s=practice(a);if(s.problem.choices)return;
+  const a=load(),s=practice(a,'ch8-adding-98');assert.ok(!s.problem.choices);
   const btn=a.doc.createElement('button');a.doc.onkeydown({key:'Enter',target:btn,preventDefault(){throw new Error('native button activation must remain available');}});
   assert.equal(s.mistakes,undefined);assert.equal(s.solved,undefined);
+  a.doc.onkeydown({key:'7',target:btn,preventDefault(){}});assert.equal(s.entry,'7');
 });

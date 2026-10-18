@@ -88,7 +88,7 @@ const Backpack={
     const panel=el('section','math-backpack');panel.setAttribute('aria-label','Camp Backpack work mat');
     panel.appendChild(el('h3',null,'🎒 Camp Backpack'));
     panel.appendChild(el('p','fine','A little support is welcome. This attempt counts as supported practice. You still earn your mission rewards.'));
-    const redraw=()=>{engine.checkpoint();engine.render();};
+    const redraw=(focusId)=>{engine.checkpoint();engine.render();if(focusId)document.getElementById(focusId)?.focus?.();};
     if(['multiply','divide'].includes(pr.math.type))this.groups(panel,pr,step,redraw);
     else this.placeValue(panel,pr,step,redraw);
     body.appendChild(panel);
@@ -98,7 +98,7 @@ const Backpack={
     const selected=values.includes(step.matValue)?step.matValue:values[0];step.matValue=selected;
     if(!this.valid(step.baseMat,selected))step.baseMat=this.base(selected);
     const m=step.baseMat,row=el('div','row');
-    for(const n of values){const b=el('button','hint-btn','Show '+n);b.setAttribute('aria-pressed',String(n===selected));b.onclick=()=>{step.matValue=n;step.baseMat=this.base(n);redraw();};row.appendChild(b);}panel.appendChild(row);
+    for(const n of values){const b=el('button','hint-btn','Show '+n);b.setAttribute('aria-pressed',String(n===selected));b.id='mat-show-'+n;b.onclick=()=>{step.matValue=n;step.baseMat=this.base(n);redraw(b.id);};row.appendChild(b);}panel.appendChild(row);
     panel.appendChild(el('p','hint','Model a given number. Exchange 1 hundred for 10 tens, or 1 ten for 10 ones. The value stays the same. Use your lesson’s strategy to finish the calculation.'));
     const grid=el('div','place-value-mat');
     for(const [k,label,value] of [['h','Hundreds',100],['t','Tens',10],['o','Ones',1]]){
@@ -113,9 +113,9 @@ const Backpack={
     const status=el('p','mat-equation',100*m.h+' + '+10*m.t+' + '+m.o+' = '+selected);status.setAttribute('role','status');panel.appendChild(status);
     const controls=el('div','row');
     for(const [k,label,disabled] of [['h','1 hundred → 10 tens',m.h<1],['t','1 ten → 10 ones',m.t<1],['o','10 ones → 1 ten',m.o<10],['ten','10 tens → 1 hundred',m.t<10]]){
-      const b=el('button','hint-btn',label);b.disabled=disabled;b.onclick=()=>{if(this.exchange(m,k))redraw();};controls.appendChild(b);
+      const b=el('button','hint-btn',label);b.disabled=disabled;b.id='mat-exchange-'+k;b.onclick=()=>{if(this.exchange(m,k))redraw(b.id);};controls.appendChild(b);
     }
-    const reset=el('button','hint-btn','Reset this number');reset.onclick=()=>{step.baseMat=this.base(selected);redraw();};controls.appendChild(reset);panel.appendChild(controls);
+    const reset=el('button','hint-btn','Reset this number');reset.id='mat-reset-number';reset.onclick=()=>{step.baseMat=this.base(selected);redraw(reset.id);};controls.appendChild(reset);panel.appendChild(controls);
   },
   groups(panel,pr,step,redraw){
     const m=pr.math,multiply=m.type==='multiply';
@@ -132,8 +132,8 @@ const Backpack={
     const caption=multiply?state.round+' groups of '+per+' = '+placed+' counters':placed+' of '+total+' counters placed. '+(total-placed)+' left.';
     const status=el('p','mat-equation',caption);status.setAttribute('role','status');panel.appendChild(status);
     if(state.round===limit&&!multiply)panel.appendChild(el('p','hint',sharing?'All shared: '+state.round+' counters in each group.':'All grouped: '+state.round+' groups.'));
-    const row=el('div','row'),next=el('button','mid-btn',sharing?'Deal one round':'Build one group of '+per);next.disabled=state.round>=limit;
-    next.onclick=()=>{if(state.round<limit){state.round++;Audio2.pop();redraw();}};
-    const reset=el('button','hint-btn','Reset counters');reset.onclick=()=>{state.round=0;redraw();};row.appendChild(next);row.appendChild(reset);panel.appendChild(row);
+    const row=el('div','row'),next=el('button','mid-btn',sharing?'Deal one round':'Build one group of '+per);next.disabled=state.round>=limit;next.id='mat-build-group';
+    next.onclick=()=>{if(state.round<limit){state.round++;Audio2.pop();redraw(state.round===limit?'mat-reset-groups':next.id);}};
+    const reset=el('button','hint-btn','Reset counters');reset.id='mat-reset-groups';reset.onclick=()=>{state.round=0;redraw(reset.id);};row.appendChild(next);row.appendChild(reset);panel.appendChild(row);
   }
 };

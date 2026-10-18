@@ -198,7 +198,7 @@ const Engine={
     hint.onclick=()=>{this.firstTry=false;step.assisted=true;step.hintsUsed=(step.hintsUsed||0)+1;this.checkpoint();Audio2.click();if(typeof Living!=='undefined')Living.react('think');fb.className='feedback retry';fb.textContent='💡 '+this.hintText(pr,step.hintsUsed-1);};
     row.appendChild(hear);row.appendChild(hint);
     if(typeof Backpack!=='undefined'&&Backpack.supports(pr)){
-      const pack=el('button','hint-btn',step.backpackOpen?'🎒 Close math backpack':'🎒 Camp Backpack');pack.disabled=Boolean(step.solved);pack.setAttribute('aria-expanded',String(Boolean(step.backpackOpen)));
+      const open=step.backpackOpen&&!step.solved,pack=el('button','hint-btn',open?'🎒 Close math backpack':'🎒 Camp Backpack');pack.disabled=Boolean(step.solved);pack.setAttribute('aria-expanded',String(Boolean(open)));
       pack.onclick=()=>{step.backpackOpen=!step.backpackOpen;if(step.backpackOpen){this.firstTry=false;step.assisted=true;}this.checkpoint();Audio2.pop();this.render();};row.appendChild(pack);
     }
     body.appendChild(row);
@@ -240,7 +240,7 @@ const Engine={
     else if(pr.answerUnit)body.appendChild(el('p','answer-unit',esc(pr.answerUnit)));
     if(!step.solved)document.onkeydown=e=>{
       if(!this.active||document.getElementById('screen-mission').classList.contains('hidden'))return;
-      if(e.target?.tagName==='BUTTON'||e.target?.tagName==='SUMMARY')return;
+      if(e.key==='Enter'&&(e.target?.tagName==='BUTTON'||e.target?.tagName==='SUMMARY'))return;
       if(e.key==='Enter'){e.preventDefault();check.onclick();}
       else if(e.target!==disp&&/^[0-9]$/.test(e.key)){e.preventDefault();write((step.entry||'')+e.key);}
       else if(e.target!==disp&&e.key==='Backspace'){e.preventDefault();write((step.entry||'').slice(0,-1));}

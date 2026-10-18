@@ -76,7 +76,7 @@ const Yard={
     scene.setAttribute('data-daylight',daylight||d.timeOfDay);
     if(typeof Living!=='undefined')Living.decorate(scene,p,editable);
     scene.setAttribute('aria-label','Your camp: '+(d.pitch==='soccer'?'soccer field':'open meadow')+' and '+count+' placed item'+(count===1?'':'s'));
-    const trees=[25,100,182,270,725,810,895,977].map((x,i)=>'<path class="yard-pine" style="animation-delay:'+(-i*.7)+'s" d="m'+x+' 8-27 52h15l-30 46h84l-30-46h15Z" fill="'+(i%2?'#386d51':'#4d805b')+'"/>').join('');
+    const trees=[25,100,182,270,725,810,895,977].map((x,i)=>'<g class="yard-pine" style="animation-delay:'+(-i*.7)+'s"><ellipse cx="'+x+'" cy="137" rx="31" ry="7" fill="#355b4229"/><path d="M'+x+' 80v58" stroke="#795d40" stroke-width="9"/><path d="m'+x+' 2-23 48h10l-26 35h13l-30 42h112l-30-42h13l-26-35h10Z" fill="'+(i%2?'#386d51':'#4d805b')+'"/><path d="m'+x+' 2v125h56l-30-42h13l-26-35h10Z" fill="#173f35" opacity=".18"/></g>').join('');
     const grass=['#c1c89d','#c6d49c','#cbdca7','#d0e2af'][p.camp.field]||'#c1c89d';
     scene.appendChild(el('div','yard-ground','<svg viewBox="0 0 1000 650" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect width="1000" height="650" fill="'+grass+'"/><path d="M0 480Q120 420 115 650H0Z" fill="#93c6c8"/><path d="M0 468Q142 420 128 650" fill="none" stroke="#f2e9cb" stroke-width="18"/><path d="M510 180Q610 300 850 610" fill="none" stroke="#e7d6ae" stroke-width="35"/><ellipse cx="500" cy="425" rx="290" ry="175" fill="'+grass+'"/>'+trees+'</svg>'));
     const lodge=el('div','yard-lodge',this.lodge(p.camp.lodge)+'<span>Welcome Lodge</span>');scene.appendChild(lodge);
