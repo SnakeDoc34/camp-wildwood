@@ -202,7 +202,7 @@ const Engine={
       pack.onclick=()=>{step.backpackOpen=!step.backpackOpen;if(step.backpackOpen){this.firstTry=false;step.assisted=true;}this.checkpoint();Audio2.pop();this.render();};row.appendChild(pack);
     }
     body.appendChild(row);
-    if(step.backpackOpen&&!step.solved&&typeof Backpack!=='undefined')Backpack.render(body,pr,step,this);
+    if(step.backpackOpen&&!step.solved&&typeof Backpack!=='undefined'&&Backpack.supports(pr))Backpack.render(body,pr,step,this);
   },
   hintText(pr,index){const hints=pr.hints||[pr.hint];return hints[Math.min(index,hints.length-1)];},
   renderChoices(body,pr,fb,step){

@@ -72,7 +72,7 @@ const Living={
    just as Hint does; token rewards are unchanged. Each mat is checkpointed. */
 const Backpack={
   values(pr){const m=pr.math;return [...new Set([m.a,m.b,m.total,m.known].filter(n=>Number.isInteger(n)&&n>=0&&n<=1000))];},
-  supports(pr){return ['add','subtract','equivalent-add','missing-addend','multiply','divide'].includes(pr.math?.type);},
+  supports(pr){return !['deal','grouping'].includes(pr.kind)&&['add','subtract','equivalent-add','missing-addend','multiply','divide'].includes(pr.math?.type);},
   base(n){return {h:Math.floor(n/100),t:Math.floor(n%100/10),o:n%10,value:n};},
   exchange(mat,from){
     if(!mat||!['h','t','o','ten'].includes(from))return false;

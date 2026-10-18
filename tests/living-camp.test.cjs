@@ -84,3 +84,14 @@ test('Enter on a work-mat button cannot submit a math answer',()=>{
   assert.equal(s.mistakes,undefined);assert.equal(s.solved,undefined);
   a.doc.onkeydown({key:'7',target:btn,preventDefault(){}});assert.equal(s.entry,'7');
 });
+
+test('guided division keeps its native counters without a duplicate backpack model',()=>{
+  const a=load();
+  for(const kind of ['deal','grouping']){
+    const p={kind,math:{type:'divide',total:24,divisor:3}};assert.equal(a.Backpack.supports(p),false);
+  }
+  for(const id of ['ch9-divide-3','ch9-divide-4']){
+    practice(a,id);const body=a.doc.getElementById('mission-body');
+    assert.equal(button(body,'🎒 Camp Backpack'),undefined);assert.ok(body.querySelector('.deal-pile'));
+  }
+});

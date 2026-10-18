@@ -319,3 +319,6 @@ Motion respects the system prefers-reduced-motion preference and the saved Calm 
 
 
 Live Chrome check for living-camp1: completed Adding Ones (7 questions including Adventure) with a supported work mat and an intentional incorrect answer. Confirmed morning → golden hour → night after 0/3/6 completed required questions, gentle fox feedback, +2 tokens, restoration, and no unintended advancement. Refresh restored the 734 work mat as 7 hundreds, 2 tens, 14 ones, with the same question and saved night lighting. Refinement living-camp1b keeps the fox inside smaller camp scenes, adds layered pine silhouettes, maintains button focus while using mats, and preserves physical numeric typing when a button has focus. Existing mathematical narration and diagrams were retained.
+
+
+Live division check: shared 30 counters into three equal groups of 10, then grouped six counters into two groups of three. Independent grouping correctly showed the optional mat, separate from the sharing meaning. Found and removed duplicate work mats on guided division questions that already have interactive counters (living-camp1c). Added a regression check for both guided division missions; all 76 tests pass. Calm visuals applied through the Report control in Chrome.
