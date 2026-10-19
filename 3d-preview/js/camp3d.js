@@ -15,7 +15,7 @@ const Camp3D={
   run(){if(this.raf)return;const tick=stamp=>{
     this.raf=0;this.sweep();if(!this.views.size){this.last=0;return;}
     this.raf=window.requestAnimationFrame(tick);if(stamp-this.last<([...this.views].some(v=>v.mode==='webgl')?33:66))return;const dt=Math.min(.08,(stamp-(this.last||stamp))/1000);this.last=stamp;if(document.hidden)return;
-    for(const v of this.views){const r=v.host.getBoundingClientRect();if(r.bottom>0&&r.top<window.innerHeight&&r.width>0)v.tick(dt);}
+    for(const v of this.views){if(document.documentElement.classList.contains('playing-camp-game')&&!v.host.closest('.arcade-playing'))continue;const r=v.host.getBoundingClientRect();if(r.bottom>0&&r.top<window.innerHeight&&r.width>0)v.tick(dt);}
   };this.raf=window.requestAnimationFrame(tick);},
   refresh(){for(const v of this.views)if(v.kind==='camp')v.rebuild();},
   stopGames(){for(const v of [...this.views])if(v.kind!=='camp'){v.dispose();this.views.delete(v);}},
@@ -54,7 +54,7 @@ class WildView{
     if(this.renderer.shadowMap){this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;}this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.25;
     this.canvas=this.renderer.domElement;this.canvas.classList.add('world-canvas');this.canvas.setAttribute('aria-label',kind==='camp'?'3D campsite. Drag to orbit. Use the camera buttons to rotate or zoom.':kind==='soccer'?'3D soccer field with moving goalkeeper and ball':'3D creek with canoe and approaching gates');this.canvas.setAttribute('role','img');host.appendChild(this.canvas);
     this.canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.dispose();host.setAttribute('data-renderer','fallback');const note=host.querySelector('.world-loading');if(note)note.textContent='3D paused. Game controls remain available. Reload to try 3D again.';});
-    this.scene=new T.Scene();this.camera=new T.PerspectiveCamera(kind==='camp'?39:48,1,.1,160);const saved=Yard.ensure(p).camera;this.yaw=saved?.yaw??.55;this.pitch=saved?.pitch??.76;this.distance=saved?.distance??35;this.target=new T.Vector3(0,0,0);this.rebuild();
+    this.scene=new T.Scene();this.camera=new T.PerspectiveCamera(kind==='camp'?39:48,1,.1,160);const saved=Yard.ensure(p).camera;this.yaw=saved?.yaw??.55;this.pitch=saved?.pitch??.76;this.distance=saved?.distance??42;this.target=new T.Vector3(0,0,0);this.rebuild();
     if(kind==='camp')this.pointer();this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(host);this.resize();host.querySelector('.world-loading')?.classList.add('hidden');
   }
   m(color,extra={}){const key=String(color)+JSON.stringify(extra);if(!this.materials.has(key))this.materials.set(key,new this.T.MeshStandardMaterial({color,roughness:.82,metalness:0,...extra}));return this.materials.get(key);}
@@ -62,7 +62,7 @@ class WildView{
   box(w,h,d,c,x,y,z,parent){return this.mesh(new this.T.BoxGeometry(w,h,d),c,x,y,z,parent);}
   sphere(r,c,x,y,z,parent){return this.mesh(new this.T.SphereGeometry(r,16,10),c,x,y,z,parent);}
   cylinder(rt,rb,h,c,x,y,z,parent){return this.mesh(new this.T.CylinderGeometry(rt,rb,h,12),c,x,y,z,parent);}
-  line(points,c,width=.035,parent=this.root){const T=this.T;if(width<.02){const o=new T.Line(new T.BufferGeometry().setFromPoints(points.map(p=>new T.Vector3(...p))),new T.LineBasicMaterial({color:c}));parent.add(o);return o;}const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));return this.mesh(new T.TubeGeometry(curve,Math.max(4,points.length*3),width,5,false),c,0,0,0,parent);}
+  line(points,c,width=.035,parent=this.root){const T=this.T;if(width<.02){const o=new T.Line(new T.BufferGeometry().setFromPoints(points.map(p=>new T.Vector3(...p))),new T.LineBasicMaterial({color:c}));parent.add(o);return o;}const curve=new T.CurvePath();for(let j=1;j<points.length;j++)curve.add(new T.LineCurve3(new T.Vector3(...points[j-1]),new T.Vector3(...points[j])));return this.mesh(new T.TubeGeometry(curve,Math.max(4,points.length*3),width,5,false),c,0,0,0,parent);}
   group(x=0,y=0,z=0,parent=this.root){const g=new this.T.Group();g.position.set(x,y,z);parent.add(g);return g;}
   clear(){
     if(!this.root)return;const geometries=new Set(),textures=new Set(),allMaterials=new Set();this.root.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of (Array.isArray(o.material)?o.material:[o.material]).filter(Boolean)){allMaterials.add(m);if(m.map)textures.add(m.map);}});geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());for(const m of allMaterials)m.dispose();this.materials.clear();this.scene.remove(this.root);this.anim=[];
@@ -88,19 +88,19 @@ class WildView{
     for(let i=0;i<=12;i++){const xx=-3.4+i*6.8/12;this.line([[xx,0,-1.25],[xx,2.5,-.05]],'#c8dbcb',.014,g);}
     for(let j=0;j<=5;j++){const yy=j*.5;this.line([[-3.4,yy,-1.25+yy*.48],[3.4,yy,-1.25+yy*.48]],'#c8dbcb',.014,g);}return g;
   }
-  buildPitch(x=0,z=1,w=8,d=11,parent=this.root){
+  buildPitch(x=0,z=1,w=8,d=11,parent=this.root,arena=false){
     const T=this.T,design=Yard.ensure(this.p),g=this.group(x,0,z,parent),theme=CampStyle.team(design.team);
-    this.box(w+.6,.16,d+.6,'#42684c',0,.02,0,g);
+    this.box(w+.6,.16,d+.6,'#42684c',0,.02,0,g).renderOrder=-82;
     const striped=Yard.owns(this.p,'pitch-stripes')&&design.striped;
-    for(let i=0;i<(striped?8:1);i++)this.box(w,.035,d/(striped?8:1),striped&&i%2?'#4c9662':'#6fa76b',0,.12,-d/2+d/(striped?16:2)+i*d/(striped?8:1),g);
+    for(let i=0;i<(striped?8:1);i++)this.box(w,.035,d/(striped?8:1),striped&&i%2?'#4c9662':'#6fa76b',0,.12,-d/2+d/(striped?16:2)+i*d/(striped?8:1),g).renderOrder=-80;
     const lines=this.group(0,.15,0,g),paint='#f7f1d4';this.line([[-w/2,0,-d/2],[w/2,0,-d/2],[w/2,0,d/2],[-w/2,0,d/2],[-w/2,0,-d/2]],paint,.035,lines);this.line([[-w/2,0,0],[w/2,0,0]],paint,.035,lines);
     const circle=[];for(let i=0;i<=40;i++)circle.push([Math.cos(i/40*Math.PI*2)*w*.15,0,Math.sin(i/40*Math.PI*2)*w*.15]);this.line(circle,paint,.027,lines);
-    for(const side of [-1,1]){const zz=side*d/2;this.line([[-w*.27,0,zz],[-w*.27,0,zz-side*d*.17],[w*.27,0,zz-side*d*.17],[w*.27,0,zz]],paint,.03,lines);const goal=this.goal(0,zz,w/11,Yard.owns(this.p,'goal-neon')&&design.neon?'#86efd0':'#fff3d4',g);if(side===1)goal.rotation.y=Math.PI;}
+    for(const side of [-1,1]){const zz=side*d/2;this.line([[-w*.27,0,zz],[-w*.27,0,zz-side*d*.17],[w*.27,0,zz-side*d*.17],[w*.27,0,zz]],paint,.03,lines);if(!arena){const goal=this.goal(0,zz,w/11,Yard.owns(this.p,'goal-neon')&&design.neon?'#86efd0':'#fff3d4',g);if(side===1)goal.rotation.y=Math.PI;}}
     for(const xx of [-w/2,w/2])for(const zz of [-d/2,d/2]){this.cylinder(.025,.025,.8,'#ede4c8',xx,.5,zz,g);const f=this.box(.4,.24,.025,theme,xx+.17,.82,zz,g);this.anim.push(t=>{if(!Living.isCalm())f.rotation.y=Math.sin(t*2+xx)*.12;});}
     if(design.teamName){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;const ctx=canvas.getContext('2d');ctx.fillStyle=theme;ctx.fillRect(0,0,512,96);ctx.font='bold 38px sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff6dc';ctx.fillText(design.teamName.toUpperCase().slice(0,16),256,62);const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;const sign=this.mesh(new T.BoxGeometry(4,.65,.1),'#ffffff',0,.6,d/2+1.2,g);sign.material=new T.MeshStandardMaterial({map:texture,roughness:.8});}
     if(Yard.owns(this.p,'stadium-lights')&&design.floodlights)for(const xx of [-w/2-1,w/2+1]){this.cylinder(.05,.09,4,'#697e7c',xx,2,0,g);this.box(.9,.3,.35,'#2d4f4f',xx,4,0,g);for(let j=-1;j<=1;j++)this.mesh(new T.BoxGeometry(.18,.18,.07),'#fff0bd',xx+j*.25,4,.2,g,{emissive:'#ffd48a',emissiveIntensity:2});}
     if(Yard.owns(this.p,'grandstand')&&design.stands)for(const side of [-1,1]){for(let j=0;j<3;j++){this.box(1.1,.22,d*.48,theme,side*(w/2+1.1+j*.35),.35+j*.3,0,g);for(let k=-1;k<=1;k++)this.cylinder(.055,.055,.6+j*.3,'#7b6147',side*(w/2+1.1+j*.35),.1+j*.15,k*d*.17,g);}}
-    return g;
+    lines.traverse(o=>o.renderOrder=-70);return g;
   }
   cabin(x,z){
     const T=this.T,g=this.group(x,0,z),d=Yard.ensure(this.p),roof=CampStyle.roof(d.roof);
@@ -129,12 +129,12 @@ class WildView{
   }
   buildCamp(night){
     const T=this.T,d=Yard.ensure(this.p);this.target.set(0,.3,0);
-    const land=this.mesh(new T.CylinderGeometry(16,14.5,1.8,64),'#82684c',0,-1.05,0);land.receiveShadow=true;this.mesh(new T.CylinderGeometry(16,16,.18,64),'#8baf78',0,-.08,0);
-    const river=this.box(3,.09,26,'#75b8bd',-10.2,.05,0);river.material=this.m('#75b8bd',{roughness:.25,metalness:.2});
-    for(let j=0;j<9;j++){const ripple=this.box(1+.3*(j%3),.015,.035,'#bde2d6',-10.2,.12,-10+j*2.6);this.anim.push(t=>{if(!Living.isCalm())ripple.position.z=-12+(j*2.7+t*.4)%24;});}
+    const land=this.mesh(new T.CylinderGeometry(16,14.5,1.8,64),'#82684c',0,-1.05,0);land.receiveShadow=true;land.renderOrder=-100;const grass=this.mesh(new T.CylinderGeometry(16,16,.18,64),'#8baf78',0,-.08,0);grass.renderOrder=-99;
+    const river=this.box(3,.09,26,'#75b8bd',-10.2,.05,0);river.renderOrder=-90;river.material=this.m('#75b8bd',{roughness:.25,metalness:.2});
+    for(let j=0;j<9;j++){const ripple=this.box(1+.3*(j%3),.015,.035,'#bde2d6',-10.2,.12,-10+j*2.6);ripple.renderOrder=-89;this.anim.push(t=>{if(!Living.isCalm())ripple.position.z=-12+(j*2.7+t*.4)%24;});}
     for(let j=0;j<8;j++)this.box(.42,.08,2,'#b49061',-11.6+j*.43,.27,-3.8);
     for(let j=0;j<3;j++){const cloud=this.group(-14+j*13,10+j%2*2,-18);for(let k=0;k<3;k++)this.sphere(1.5+k*.15,night?'#506478':'#f5efda',k*1.7,0,0,cloud);cloud.scale.y=.45;this.anim.push(t=>{if(!Living.isCalm())cloud.position.x=-14+j*13+Math.sin(t*.1+j)*1.3;});}
-    this.cabin(0,-8.2);if(d.pitch==='soccer')this.buildPitch(1.2,1,8,10);else{this.box(8,.05,10,'#a8bf80',1.2,.05,1);for(let j=0;j<5;j++)this.box(.35,.06,.28,'#789765',-1+j*.9,.1,1);}
+    this.cabin(0,-8.2);if(d.pitch==='soccer')this.buildPitch(1.2,1,8,10);else{this.box(8,.05,10,'#a8bf80',1.2,.05,1).renderOrder=-80;for(let j=0;j<5;j++)this.box(.35,.06,.28,'#789765',-1+j*.9,.1,1);}
     for(let j=0;j<24;j++){const theta=j/24*Math.PI*2,rr=13.3+(j%3)*.65;this.tree(Math.cos(theta)*rr,Math.sin(theta)*rr,.65+(j%4)*.13);}
     this.pickables=[];
     for(const slot of YARD_SLOTS){const x=(slot.x-50)*.28,z=(slot.y-50)*.28,id=d.slots[slot.id];if(id){const tr=d.transforms[id]||{rotation:0,scale:1};this.item(id,x,z,tr.rotation*Math.PI/180,tr.scale);}
@@ -145,10 +145,12 @@ class WildView{
     this.orbit();
   }
   buildSoccer(){
-    const T=this.T;this.buildPitch(0,0,11,19);for(const side of [-1,1])for(let j=0;j<6;j++)this.tree(side*(9+j%2),-10+j*4,.9);
+    const T=this.T;this.buildPitch(0,0,11,19,this.root,true);for(const side of [-1,1])for(let j=0;j<6;j++)this.tree(side*(9+j%2),-10+j*4,.9);
     this.goal(0,-8.5,1.2,Yard.ensure(this.p).neon?'#87edd5':'#fff6df');
     this.ball=this.sphere(.29,'#fff8e7',0,.4,6.5);for(let j=0;j<6;j++){const spot=this.mesh(new T.CircleGeometry(.1,5),'#344c43',Math.sin(j)*.27,.05,Math.cos(j)*.27,this.ball);spot.lookAt(0,0,0);}
     this.keeper=this.group(0,0,-8);const kit=CampStyle.team(Yard.ensure(this.p).team);this.box(.7,.85,.35,kit,0,1.1,0,this.keeper);this.sphere(.25,'#ebbf8c',0,1.85,0,this.keeper);for(const side of [-1,1]){this.box(.18,.65,.2,'#233e40',side*.23,.39,0,this.keeper);const arm=this.box(.2,.8,.2,kit,side*.55,1.28,0,this.keeper);arm.rotation.z=side*.65;this.sphere(.14,'#fff6df',side*.82,1,0,this.keeper);}
+    this.aimRing=this.mesh(new T.TorusGeometry(.17,.025,5,20),'#b6ffe4',0,1,-8.3);
+    this.canvas.addEventListener('pointerdown',e=>{if(!this.options.onAim)return;const bounds=this.canvas.getBoundingClientRect(),ray=new T.Raycaster();ray.setFromCamera(new T.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);const hit=ray.ray.intersectPlane(new T.Plane(new T.Vector3(0,0,1),8.3),new T.Vector3());if(hit&&Math.abs(hit.x)<4.1&&hit.y>=0&&hit.y<3)this.options.onAim(Math.max(-1,Math.min(1,hit.x/3.65)),Math.max(0,Math.min(1,(hit.y-.55)/1.8)));});
     this.targetRing=this.mesh(new T.TorusGeometry(.38,.055,6,32),'#ffd76f',2.8,1.9,-8.35);this.camera.position.set(0,4.1,13.3);this.camera.lookAt(0,1,-5);this.options.onReady?.(this);
   }
   buildCanoe(){
@@ -165,7 +167,7 @@ class WildView{
     c.addEventListener('wheel',e=>{e.preventDefault();this.distance=Math.max(20,Math.min(55,this.distance+e.deltaY*.025));this.orbit();},{passive:false});
   }
   orbit(){this.camera.position.set(Math.sin(this.yaw)*Math.cos(this.pitch)*this.distance,Math.sin(this.pitch)*this.distance,Math.cos(this.yaw)*Math.cos(this.pitch)*this.distance);this.camera.lookAt(this.target);}
-  cameraAction(action){if(action==='left')this.yaw-=Math.PI/6;if(action==='right')this.yaw+=Math.PI/6;if(action==='in')this.distance=Math.max(20,this.distance-4);if(action==='out')this.distance=Math.min(55,this.distance+4);if(action==='reset'){this.yaw=.55;this.pitch=.76;this.distance=35;}this.orbit();this.saveCamera();}
+  cameraAction(action){if(action==='left')this.yaw-=Math.PI/6;if(action==='right')this.yaw+=Math.PI/6;if(action==='in')this.distance=Math.max(20,this.distance-4);if(action==='out')this.distance=Math.min(55,this.distance+4);if(action==='reset'){this.yaw=.55;this.pitch=.76;this.distance=42;}this.orbit();this.saveCamera();}
   saveCamera(){Yard.ensure(this.p).camera={yaw:this.yaw,pitch:this.pitch,distance:this.distance};Store.persist();}
   resize(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.fov=this.kind==='camp'&&w/h<1.3?53:this.kind==='camp'?39:48;this.camera.updateProjectionMatrix();}
   tick(dt){if(this.dead)return;this.time+=dt;for(const fn of this.anim)fn(this.time);this.options.update?.(this,dt);this.renderer.render(this.scene,this.camera);}
