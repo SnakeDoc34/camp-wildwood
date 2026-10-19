@@ -1,20 +1,20 @@
 /* Real perspective 3D scenes, locally bundled Three.js (MIT). Math is DOM/SVG. */
 'use strict';
 const Camp3D={
-  T:null,loading:null,views:new Set(),raf:0,last:0,
-  load(){return this.loading||(this.loading=import('../../vendor/three.module.min.js').then(t=>this.T=t));},
+  T:null,SVG:null,noWebGL:false,loading:null,views:new Set(),raf:0,last:0,
+  load(){return this.loading||(this.loading=Promise.all([import('../../vendor/three.module.min.js'),import('../../vendor/addons/SVGRenderer.js')]).then(([t,svg])=>{this.SVG=svg.SVGRenderer;return this.T=t;}));},
   mount(host,kind,p,options={}){
     if(!window.requestAnimationFrame)return; // Node mechanics adapter / no graphics surface.
     window.requestAnimationFrame(async()=>{
       this.sweep();if(!host.isConnected)return;
-      try{const T=await this.load();if(!host.isConnected)return;const v=new WildView(T,host,kind,p,options);this.views.add(v);host._view=v;host.setAttribute('data-renderer','webgl');this.run();}
+      try{const T=await this.load();if(!host.isConnected)return;const v=new WildView(T,host,kind,p,options);this.views.add(v);host._view=v;host.setAttribute('data-renderer',v.mode);this.run();}
       catch(err){host.setAttribute('data-renderer','fallback');const note=host.querySelector('.world-loading');if(note)note.textContent='3D is unavailable on this device. Use the camp and game controls below.';console.warn('Camp 3D unavailable:',err.message);}
     });
   },
   sweep(){for(const v of this.views)if(!v.host.isConnected||v.host.closest('.screen')?.classList.contains('hidden')){v.dispose();this.views.delete(v);}},
   run(){if(this.raf)return;const tick=stamp=>{
     this.raf=0;this.sweep();if(!this.views.size){this.last=0;return;}
-    this.raf=window.requestAnimationFrame(tick);if(stamp-this.last<33)return;const dt=Math.min(.05,(stamp-(this.last||stamp))/1000);this.last=stamp;if(document.hidden)return;
+    this.raf=window.requestAnimationFrame(tick);if(stamp-this.last<([...this.views].some(v=>v.mode==='webgl')?33:66))return;const dt=Math.min(.08,(stamp-(this.last||stamp))/1000);this.last=stamp;if(document.hidden)return;
     for(const v of this.views){const r=v.host.getBoundingClientRect();if(r.bottom>0&&r.top<window.innerHeight&&r.width>0)v.tick(dt);}
   };this.raf=window.requestAnimationFrame(tick);},
   refresh(){for(const v of this.views)if(v.kind==='camp')v.rebuild();},
@@ -50,9 +50,9 @@ const Camp3D={
 class WildView{
   constructor(T,host,kind,p,options){
     this.T=T;this.host=host;this.kind=kind;this.p=p;this.options=options;this.dead=false;this.time=0;this.materials=new Map();this.anim=[];
-    this.renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.65));
-    this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.25;
-    this.canvas=this.renderer.domElement;this.canvas.setAttribute('aria-label',kind==='camp'?'3D campsite. Drag to orbit. Use the camera buttons to rotate or zoom.':kind==='soccer'?'3D soccer field with moving goalkeeper and ball':'3D creek with canoe and approaching gates');this.canvas.setAttribute('role','img');host.appendChild(this.canvas);
+    this.mode='webgl';try{if(Camp3D.noWebGL)throw new Error('Software renderer selected');this.renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});}catch(e){Camp3D.noWebGL=true;this.mode='svg3d';this.renderer=new Camp3D.SVG();this.renderer.setPrecision(2);}this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.65));
+    if(this.renderer.shadowMap){this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;}this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.25;
+    this.canvas=this.renderer.domElement;this.canvas.classList.add('world-canvas');this.canvas.setAttribute('aria-label',kind==='camp'?'3D campsite. Drag to orbit. Use the camera buttons to rotate or zoom.':kind==='soccer'?'3D soccer field with moving goalkeeper and ball':'3D creek with canoe and approaching gates');this.canvas.setAttribute('role','img');host.appendChild(this.canvas);
     this.canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.dispose();host.setAttribute('data-renderer','fallback');const note=host.querySelector('.world-loading');if(note)note.textContent='3D paused. Game controls remain available. Reload to try 3D again.';});
     this.scene=new T.Scene();this.camera=new T.PerspectiveCamera(kind==='camp'?39:48,1,.1,160);const saved=Yard.ensure(p).camera;this.yaw=saved?.yaw??.55;this.pitch=saved?.pitch??.76;this.distance=saved?.distance??35;this.target=new T.Vector3(0,0,0);this.rebuild();
     if(kind==='camp')this.pointer();this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(host);this.resize();host.querySelector('.world-loading')?.classList.add('hidden');
@@ -62,17 +62,18 @@ class WildView{
   box(w,h,d,c,x,y,z,parent){return this.mesh(new this.T.BoxGeometry(w,h,d),c,x,y,z,parent);}
   sphere(r,c,x,y,z,parent){return this.mesh(new this.T.SphereGeometry(r,16,10),c,x,y,z,parent);}
   cylinder(rt,rb,h,c,x,y,z,parent){return this.mesh(new this.T.CylinderGeometry(rt,rb,h,12),c,x,y,z,parent);}
-  line(points,c,width=.035,parent=this.root){const T=this.T,curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));return this.mesh(new T.TubeGeometry(curve,Math.max(4,points.length*3),width,5,false),c,0,0,0,parent);}
+  line(points,c,width=.035,parent=this.root){const T=this.T;if(width<.02){const o=new T.Line(new T.BufferGeometry().setFromPoints(points.map(p=>new T.Vector3(...p))),new T.LineBasicMaterial({color:c}));parent.add(o);return o;}const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));return this.mesh(new T.TubeGeometry(curve,Math.max(4,points.length*3),width,5,false),c,0,0,0,parent);}
   group(x=0,y=0,z=0,parent=this.root){const g=new this.T.Group();g.position.set(x,y,z);parent.add(g);return g;}
   clear(){
     if(!this.root)return;const geometries=new Set(),textures=new Set(),allMaterials=new Set();this.root.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of (Array.isArray(o.material)?o.material:[o.material]).filter(Boolean)){allMaterials.add(m);if(m.map)textures.add(m.map);}});geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());for(const m of allMaterials)m.dispose();this.materials.clear();this.scene.remove(this.root);this.anim=[];
   }
   rebuild(){
-    if(this.dead)return;this.clear();const T=this.T;this.scene.clear();this.root=new T.Group();this.scene.add(this.root);this.materials.clear();this.anim=[];this.pickables=[];
+    if(this.dead)return;this.clear();this.scene.traverse(o=>{if(o.isLight&&o.shadow)o.shadow.dispose();});const T=this.T;this.scene.clear();this.root=new T.Group();this.scene.add(this.root);this.materials.clear();this.anim=[];this.pickables=[];
     const day=this.host.getAttribute('data-daylight')||Yard.ensure(this.p).timeOfDay,night=day==='night',gold=day==='golden';
     const sky=night?'#17283e':gold?'#b7a2a4':'#b8d6d5';this.scene.background=new T.Color(sky);this.scene.fog=new T.Fog(sky,48,110);
     this.scene.add(new T.HemisphereLight(night?'#9cbbe3':'#fff3d1',night?'#344641':'#63834c',night?1.6:2.5));
-    const sun=new T.DirectionalLight(gold?'#ffd6a0':night?'#b8d4ff':'#fff0d5',night?1.4:3);sun.position.set(-12,24,10);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-22;sun.shadow.camera.right=22;sun.shadow.camera.top=22;sun.shadow.camera.bottom=-22;sun.shadow.normalBias=.035;this.scene.add(sun);
+    if(this.mode==='svg3d')this.scene.add(new T.AmbientLight('#d7e6e0',night?.4:.65));
+    const sun=new T.DirectionalLight(gold?'#ffd6a0':night?'#b8d4ff':'#fff0d5',this.mode==='svg3d'?(night?.7:1):night?1.4:3);sun.position.set(-12,24,10);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-22;sun.shadow.camera.right=22;sun.shadow.camera.top=22;sun.shadow.camera.bottom=-22;sun.shadow.normalBias=.035;this.scene.add(sun);
     if(this.kind==='camp')this.buildCamp(night);else if(this.kind==='soccer')this.buildSoccer();else this.buildCanoe();
   }
   tree(x,z,scale=1){
@@ -132,6 +133,7 @@ class WildView{
     const river=this.box(3,.09,26,'#75b8bd',-10.2,.05,0);river.material=this.m('#75b8bd',{roughness:.25,metalness:.2});
     for(let j=0;j<9;j++){const ripple=this.box(1+.3*(j%3),.015,.035,'#bde2d6',-10.2,.12,-10+j*2.6);this.anim.push(t=>{if(!Living.isCalm())ripple.position.z=-12+(j*2.7+t*.4)%24;});}
     for(let j=0;j<8;j++)this.box(.42,.08,2,'#b49061',-11.6+j*.43,.27,-3.8);
+    for(let j=0;j<3;j++){const cloud=this.group(-14+j*13,10+j%2*2,-18);for(let k=0;k<3;k++)this.sphere(1.5+k*.15,night?'#506478':'#f5efda',k*1.7,0,0,cloud);cloud.scale.y=.45;this.anim.push(t=>{if(!Living.isCalm())cloud.position.x=-14+j*13+Math.sin(t*.1+j)*1.3;});}
     this.cabin(0,-8.2);if(d.pitch==='soccer')this.pitch(1.2,1,8,10);else{this.box(8,.05,10,'#a8bf80',1.2,.05,1);for(let j=0;j<5;j++)this.box(.35,.06,.28,'#789765',-1+j*.9,.1,1);}
     for(let j=0;j<24;j++){const theta=j/24*Math.PI*2,rr=13.3+(j%3)*.65;this.tree(Math.cos(theta)*rr,Math.sin(theta)*rr,.65+(j%4)*.13);}
     this.pickables=[];
@@ -165,7 +167,7 @@ class WildView{
   orbit(){this.camera.position.set(Math.sin(this.yaw)*Math.cos(this.pitch)*this.distance,Math.sin(this.pitch)*this.distance,Math.cos(this.yaw)*Math.cos(this.pitch)*this.distance);this.camera.lookAt(this.target);}
   cameraAction(action){if(action==='left')this.yaw-=Math.PI/6;if(action==='right')this.yaw+=Math.PI/6;if(action==='in')this.distance=Math.max(20,this.distance-4);if(action==='out')this.distance=Math.min(55,this.distance+4);if(action==='reset'){this.yaw=.55;this.pitch=.76;this.distance=35;}this.orbit();this.saveCamera();}
   saveCamera(){Yard.ensure(this.p).camera={yaw:this.yaw,pitch:this.pitch,distance:this.distance};Store.persist();}
-  resize(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
+  resize(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.fov=this.kind==='camp'&&w/h<1.3?53:this.kind==='camp'?39:48;this.camera.updateProjectionMatrix();}
   tick(dt){if(this.dead)return;this.time+=dt;for(const fn of this.anim)fn(this.time);this.options.update?.(this,dt);this.renderer.render(this.scene,this.camera);}
-  dispose(){if(this.dead)return;this.dead=true;this.resizeObserver?.disconnect();this.clear();this.renderer.dispose();this.renderer.forceContextLoss();this.canvas.remove();}
+  dispose(){if(this.dead)return;this.dead=true;this.resizeObserver?.disconnect();this.clear();this.renderer.dispose?.();this.renderer.forceContextLoss?.();this.canvas.remove();}
 }

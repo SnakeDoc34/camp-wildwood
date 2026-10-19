@@ -195,7 +195,7 @@ const Camp = {
             p.tokens-=it.cost;p.shop.push(it.id);Yard.install(p,it.id);
             if(p.camp.design.goal===it.id)p.camp.design.goal=null;
             Store.persist();Audio2.good();confetti(30);
-            document.getElementById('shop-message').textContent=it.id==='soccer-field'?'Your soccer field is built! Choose Play in my camp to try goal kicks.':it.name+' is yours! Choose Arrange in my camp to move it.';
+            document.getElementById('shop-message').textContent=it.id==='soccer-field'?'Your soccer field is built! Choose Play in my camp to try goal kicks.':it.name+' is yours! '+(it.fieldUpgrade?'Choose Customize field to use it.':'Choose Arrange in my camp to move it.');
             toast(it.name+' unlocked!');this.renderShop(p);App.syncTop();
           }
           else { Audio2.bad(); toast('Not enough tokens yet — finish missions to earn more!'); }
@@ -206,7 +206,7 @@ const Camp = {
         save.onclick=()=>{Yard.setGoal(p,it.id);this.renderShop(p);toast('Saving for '+it.name+'.');};actions.appendChild(save);
       }else{
         actions.appendChild(el('span','badge','✓ Yours'));
-        const use=el('button','mid-btn',it.id==='soccer-field'?'Play in my camp':'Arrange in my camp');use.onclick=()=>App.showDesign(it.id);actions.appendChild(use);
+        const use=el('button','mid-btn',it.id==='soccer-field'?'Play in my camp':it.fieldUpgrade?'Customize field':'Arrange in my camp');use.onclick=()=>App.showDesign(it.id);actions.appendChild(use);
       }
       card.appendChild(actions);
       list.appendChild(card);
