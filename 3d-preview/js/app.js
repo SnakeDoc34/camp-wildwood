@@ -6,7 +6,7 @@ const AVATARS=['🦝','🦊','🐻','🦉','🐸','🐢','🦌','🐿️'];
 const App = {
   profile:null,
   show(id){
-    if(id!=='screen-design')document.documentElement?.classList.remove('playing-camp-game');
+    if(id!=='screen-design'){document.documentElement?.classList.remove('playing-camp-game');if(typeof CampPlay!=='undefined')CampPlay.stop();}
     if(id!=='screen-mission')Engine.suspend();
     document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');

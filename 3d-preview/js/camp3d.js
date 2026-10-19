@@ -14,7 +14,7 @@ const Camp3D={
   sweep(){for(const v of this.views)if(!v.host.isConnected||v.host.closest('.screen')?.classList.contains('hidden')){v.dispose();this.views.delete(v);}},
   run(){if(this.raf)return;const tick=stamp=>{
     this.raf=0;this.sweep();if(!this.views.size){this.last=0;return;}
-    this.raf=window.requestAnimationFrame(tick);if(stamp-this.last<([...this.views].some(v=>v.mode==='webgl')?33:66))return;const dt=Math.min(.08,(stamp-(this.last||stamp))/1000);this.last=stamp;if(document.hidden)return;
+    this.raf=window.requestAnimationFrame(tick);if(stamp-this.last<([...this.views].some(v=>v.mode==='webgl')?33:66))return;const dt=Math.min(.25,(stamp-(this.last||stamp))/1000);this.last=stamp;if(document.hidden)return;
     for(const v of this.views){if(document.documentElement.classList.contains('playing-camp-game')&&!v.host.closest('.arcade-playing'))continue;const r=v.host.getBoundingClientRect();if(r.bottom>0&&r.top<window.innerHeight&&r.width>0)v.tick(dt);}
   };this.raf=window.requestAnimationFrame(tick);},
   refresh(){for(const v of this.views)if(v.kind==='camp')v.rebuild();},

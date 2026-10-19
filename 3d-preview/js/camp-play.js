@@ -48,7 +48,8 @@ const CanoeRules={
   cross(s){if(!s||s.phase!=='running'||s.index>=s.gates.length)return false;const hit=s.lane===s.gates[s.index];if(hit)s.score++;s.index++;s.progress=0;if(s.index===s.gates.length)s.phase='done';return hit;}
 };
 const CampPlay={
-  soccer:null,canoe:null,
+  soccer:null,canoe:null,canoeTimer:null,
+  stop(){this.soccer=null;this.canoe=null;if(this.canoeTimer){window.clearInterval?.(this.canoeTimer);this.canoeTimer=null;}this.syncMode();},
   dialog(card){card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Camp sports challenge');card.addEventListener('keydown',e=>{if(e.key==='Escape'){card.querySelector('.game-exit')?.click?.();return;}if(e.key==='Tab'){const buttons=[...card.querySelectorAll('button,input')].filter(b=>!b.disabled);const first=buttons[0],last=buttons[buttons.length-1];if(e.shiftKey&&e.target===first){e.preventDefault();last?.focus?.();}else if(!e.shiftKey&&e.target===last){e.preventDefault();first?.focus?.();}}});},
   syncMode(){document.documentElement?.classList.toggle('playing-camp-game',Boolean(this.soccer||(this.canoe&&this.canoe.phase!=='ready')));},
   newSoccer(mode='cozy'){return {mode,phase:'ready',shots:0,goals:0,points:0,aimX:.7,aimY:.65,power:.6,clock:0,keeperX:0,flight:0,result:null,committed:false,target:0};},
@@ -69,13 +70,13 @@ const CampPlay={
     card.appendChild(el('p','hint','1. Tap the goal or pick an aim button. 2. Watch the keeper. 3. Kick while the power marker is in the gold zone. Aim for the floating ring for a bonus. Five shots, no timer.'));
     if(!this.soccer){const modes=el('div','row');for(const [mode,label]of [['cozy','Play goal kick'],['ranger','Ranger challenge']]){const b=el('button',mode==='cozy'?'big-btn':'mid-btn',label);b.onclick=()=>{this.canoe=null;this.soccer=this.newSoccer(mode);this.renderSoccer(box,p);};modes.appendChild(b);}card.appendChild(modes);}
     const s=this.soccer||this.newSoccer(),aimButtons=[];const stage=el('div','world-stage soccer-stage');stage.appendChild(el('span','world-loading','Opening the 3D pitch…'));stage.setAttribute('data-daylight',d.timeOfDay);const layout=el('div','shootout-layout'),consoleBox=el('div','shootout-console');layout.appendChild(stage);layout.appendChild(consoleBox);card.appendChild(layout);
-    const hud=el('div','arcade-hud','<span>'+esc(d.teamName)+'</span><span>SHOT '+Math.min(5,s.shots+1)+' / 5</span><strong>'+s.goals+' GOALS · '+s.points+' PTS</strong>');consoleBox.appendChild(hud);
+    const hud=el('div','arcade-hud','<span>'+esc(d.teamName)+'</span><span>SHOT '+Math.min(5,s.phase==='ready'?s.shots+1:Math.max(1,s.shots))+' / 5</span><strong>'+s.goals+' GOALS · '+s.points+' PTS</strong>');consoleBox.appendChild(hud);
     const status=el('p','arcade-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');consoleBox.appendChild(status);
     if(this.soccer){
       const grid=el('div','aim-grid');grid.setAttribute('aria-label','Choose where to aim in the goal');for(const [yy,rowName]of [[.85,'High'],[.2,'Low']])for(const [xx,colName]of [[-.8,'left'],[0,'center'],[.8,'right']]){const b=el('button','aim-btn',rowName+' '+colName);b.setAttribute('aria-pressed',String(s.aimX===xx&&s.aimY===yy));b.disabled=s.phase!=='ready';b.onclick=()=>{s.aimX=xx;s.aimY=yy;for(const a of grid.children)a.setAttribute('aria-pressed','false');b.setAttribute('aria-pressed','true');};grid.appendChild(b);aimButtons.push(b);}consoleBox.appendChild(grid);
       if(s.phase==='ready'){
         const meter=el('div','power-meter','<span class="power-safe"></span><i class="power-marker"></i>');meter.setAttribute('role','img');meter.setAttribute('aria-label','Shot power meter. Gold zone gives controlled power.');consoleBox.appendChild(meter);
-        const controls=el('div','row shot-buttons'),kick=el('button','big-btn','KICK!');kick.onclick=()=>{if(this.fire(p,s)){kick.disabled=true;status.textContent='Ball in flight…';for(const b of grid.children)b.disabled=true;if(!['webgl','svg3d'].includes(stage.getAttribute('data-renderer'))){setTimeout(()=>{if(!['webgl','svg3d'].includes(stage.getAttribute('data-renderer'))&&this.soccer===s&&this.commit(p,s))this.renderSoccer(box,p);},650);}}};controls.appendChild(kick);
+        const controls=el('div','row shot-buttons'),kick=el('button','big-btn','KICK!');kick.onclick=()=>{if(this.fire(p,s)){kick.disabled=true;status.textContent='Ball in flight…';for(const b of grid.children)b.disabled=true;setTimeout(()=>{if(this.soccer===s&&s.phase==='flight'&&this.commit(p,s))this.renderSoccer(box,p);},1250);}};controls.appendChild(kick);
         const steady=el('button','hint-btn',s.steady?'Steady power: ON':'Use steady power');steady.setAttribute('aria-pressed',String(Boolean(s.steady)));steady.onclick=()=>{s.steady=!s.steady;s.power=.65;steady.textContent=s.steady?'Steady power: ON':'Use steady power';steady.setAttribute('aria-pressed',String(s.steady));};controls.appendChild(steady);consoleBox.appendChild(controls);
         status.textContent='Choose a corner. Watch the keeper, then make your shot.';
       }else if(s.phase==='done'||s.phase==='result'){
@@ -94,6 +95,7 @@ const CampPlay={
     }});
   },
   renderCanoe(box,p){
+    if(this.canoeTimer){window.clearInterval?.(this.canoeTimer);this.canoeTimer=null;}
     const d=Yard.ensure(p),card=el('div','arcade-card canoe-card');card.appendChild(el('span','eyebrow','THE CREEK IS CALLING'));card.appendChild(el('h3',null,'Creek Gate Rally'));
     if(!Yard.owns(p,'canoe')){card.appendChild(el('p','hint','Save 7 math tokens for the creek canoe. Then steer a 3D canoe through eight winding gates.'));const b=el('button','mid-btn','Save for the canoe');b.onclick=()=>{Yard.setGoal(p,'canoe');App.showShop();};card.appendChild(b);box.appendChild(card);return;}
     card.appendChild(el('p','hint','Steer left, middle, or right to line up with the next gold gate. The creek carries you forward. Eight gates; missing one just gives you another chance.'));
@@ -104,8 +106,13 @@ const CampPlay={
     if(s.phase==='ready'||s.phase==='done'){const start=el('button','big-btn',s.phase==='ready'?'Start creek run':'Run the creek again');start.onclick=()=>{if(s.phase==='done')this.canoe=CanoeRules.create();this.soccer=null;this.canoe.phase='running';Yard.renderDesigner(p);};card.appendChild(start);}
     const pause=el('button','hint-btn',s.phase==='paused'?'Resume creek run':'Pause creek run');pause.disabled=s.phase==='ready'||s.phase==='done';pause.onclick=()=>{s.phase=s.phase==='paused'?'running':'paused';pause.textContent=s.phase==='paused'?'Resume creek run':'Pause creek run';};card.appendChild(pause);
     card.appendChild(el('p','fine','Personal best: '+d.canoeBest+' / 8 gates. No tokens are spent or awarded.'));box.appendChild(card);
+    if(s.phase==='running'&&window.setInterval)this.canoeTimer=window.setInterval(()=>{
+      if(this.canoe!==s||!stage.isConnected){window.clearInterval(this.canoeTimer);this.canoeTimer=null;return;}
+      if(document.hidden||s.phase!=='running')return;
+      s.progress+=.1*(s.index<3?.24:.29);
+      if(s.progress>=1){const good=CanoeRules.cross(s);good?Audio2.pop():Audio2.click();updateStatus();if(s.phase==='done'){d.canoeBest=Math.max(d.canoeBest,s.score);Store.persist();Yard.renderDesigner(p);}}
+    },100);
     if(typeof Camp3D!=='undefined')Camp3D.mount(stage,'canoe',p,{update:(v,dt)=>{
-      if(s.phase==='running'){s.progress+=dt*(s.index<3?.24:.29);if(s.progress>=1){const good=CanoeRules.cross(s);good?Audio2.pop():Audio2.click();updateStatus();if(s.phase==='done'){d.canoeBest=Math.max(d.canoeBest,s.score);Store.persist();Yard.renderDesigner(p);return;}}}
       v.boat.position.x+=((s.lane-1)*2.8-v.boat.position.x)*Math.min(1,dt*7);v.boat.rotation.z=Living.isCalm()?0:Math.sin(v.time*2)*.04;
       for(let j=0;j<v.gates.length;j++){const idx=s.index+j;v.gates[j].visible=idx<s.gates.length;v.gates[j].position.set(((s.gates[idx]??1)-1)*2.8,0,5-(1-s.progress)*12-j*12);}
     }});
