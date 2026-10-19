@@ -88,7 +88,7 @@ class WildView{
     for(let i=0;i<=12;i++){const xx=-3.4+i*6.8/12;this.line([[xx,0,-1.25],[xx,2.5,-.05]],'#c8dbcb',.014,g);}
     for(let j=0;j<=5;j++){const yy=j*.5;this.line([[-3.4,yy,-1.25+yy*.48],[3.4,yy,-1.25+yy*.48]],'#c8dbcb',.014,g);}return g;
   }
-  pitch(x=0,z=1,w=8,d=11,parent=this.root){
+  buildPitch(x=0,z=1,w=8,d=11,parent=this.root){
     const T=this.T,design=Yard.ensure(this.p),g=this.group(x,0,z,parent),theme=CampStyle.team(design.team);
     this.box(w+.6,.16,d+.6,'#42684c',0,.02,0,g);
     const striped=Yard.owns(this.p,'pitch-stripes')&&design.striped;
@@ -134,7 +134,7 @@ class WildView{
     for(let j=0;j<9;j++){const ripple=this.box(1+.3*(j%3),.015,.035,'#bde2d6',-10.2,.12,-10+j*2.6);this.anim.push(t=>{if(!Living.isCalm())ripple.position.z=-12+(j*2.7+t*.4)%24;});}
     for(let j=0;j<8;j++)this.box(.42,.08,2,'#b49061',-11.6+j*.43,.27,-3.8);
     for(let j=0;j<3;j++){const cloud=this.group(-14+j*13,10+j%2*2,-18);for(let k=0;k<3;k++)this.sphere(1.5+k*.15,night?'#506478':'#f5efda',k*1.7,0,0,cloud);cloud.scale.y=.45;this.anim.push(t=>{if(!Living.isCalm())cloud.position.x=-14+j*13+Math.sin(t*.1+j)*1.3;});}
-    this.cabin(0,-8.2);if(d.pitch==='soccer')this.pitch(1.2,1,8,10);else{this.box(8,.05,10,'#a8bf80',1.2,.05,1);for(let j=0;j<5;j++)this.box(.35,.06,.28,'#789765',-1+j*.9,.1,1);}
+    this.cabin(0,-8.2);if(d.pitch==='soccer')this.buildPitch(1.2,1,8,10);else{this.box(8,.05,10,'#a8bf80',1.2,.05,1);for(let j=0;j<5;j++)this.box(.35,.06,.28,'#789765',-1+j*.9,.1,1);}
     for(let j=0;j<24;j++){const theta=j/24*Math.PI*2,rr=13.3+(j%3)*.65;this.tree(Math.cos(theta)*rr,Math.sin(theta)*rr,.65+(j%4)*.13);}
     this.pickables=[];
     for(const slot of YARD_SLOTS){const x=(slot.x-50)*.28,z=(slot.y-50)*.28,id=d.slots[slot.id];if(id){const tr=d.transforms[id]||{rotation:0,scale:1};this.item(id,x,z,tr.rotation*Math.PI/180,tr.scale);}
@@ -145,7 +145,7 @@ class WildView{
     this.orbit();
   }
   buildSoccer(){
-    const T=this.T;this.pitch(0,0,11,19);for(const side of [-1,1])for(let j=0;j<6;j++)this.tree(side*(9+j%2),-10+j*4,.9);
+    const T=this.T;this.buildPitch(0,0,11,19);for(const side of [-1,1])for(let j=0;j<6;j++)this.tree(side*(9+j%2),-10+j*4,.9);
     this.goal(0,-8.5,1.2,Yard.ensure(this.p).neon?'#87edd5':'#fff6df');
     this.ball=this.sphere(.29,'#fff8e7',0,.4,6.5);for(let j=0;j<6;j++){const spot=this.mesh(new T.CircleGeometry(.1,5),'#344c43',Math.sin(j)*.27,.05,Math.cos(j)*.27,this.ball);spot.lookAt(0,0,0);}
     this.keeper=this.group(0,0,-8);const kit=CampStyle.team(Yard.ensure(this.p).team);this.box(.7,.85,.35,kit,0,1.1,0,this.keeper);this.sphere(.25,'#ebbf8c',0,1.85,0,this.keeper);for(const side of [-1,1]){this.box(.18,.65,.2,'#233e40',side*.23,.39,0,this.keeper);const arm=this.box(.2,.8,.2,kit,side*.55,1.28,0,this.keeper);arm.rotation.z=side*.65;this.sphere(.14,'#fff6df',side*.82,1,0,this.keeper);}
