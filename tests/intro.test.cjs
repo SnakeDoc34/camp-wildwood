@@ -16,7 +16,8 @@ test('intro camera and every decorative animation freeze under pause or reduced 
   assert.equal(o.elapsed,.2);assert.equal(moved,1);assert.equal(JSON.stringify([v.yaw,v.pitch,v.distance]),pose);
   b.onclick();v.tick(.1);assert.ok(Math.abs(o.elapsed-.3)<1e-10);assert.equal(moved,2);
   a.Living.media={matches:true};v.tick(.2);assert.ok(Math.abs(o.elapsed-.3)<1e-10);assert.equal(moved,2);assert.equal(b.disabled,true);assert.equal(b.textContent,'Still scenery');
-  a.Living.media.matches=false;v.tick(.1);assert.equal(b.disabled,false);assert.equal(moved,3);assert.equal(rendered,24);
+  a.Living.media.matches=false;v.tick(.1);assert.equal(b.disabled,false);assert.equal(moved,3);assert.equal(rendered,3);
+  b.onclick();v.needsRender=true;v.tick(.1);assert.equal(rendered,4);assert.equal(moved,3);
 });
 test('a long-running intro keeps a finite, bounded camera path',()=>{
   const a=load();for(let t=0;t<=7200;t+=.5){const p=a.Camp3D.introPose(t);assert.ok(p.yaw>=.05-1e-10&&p.yaw<=.95);assert.ok(p.pitch>=.615&&p.pitch<=.705);assert.ok(p.distance>=39&&p.distance<=45);}

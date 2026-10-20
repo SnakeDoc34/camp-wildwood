@@ -369,7 +369,7 @@ clock. The browser pass also caught a stale canoe launch after soccer; the fixed
 handoff is covered by a regression test. Temporary preview files and their
 sample-camp setup button are removed from the published main game.
 
-## Cinematic opening — wildwood-intro1
+## Cinematic opening — wildwood-intro2
 
 The opening now renders a demonstration camp with a looping camera sweep,
 drifting clouds, swaying pines, creek ripples, birds and chimney smoke. The title,
@@ -387,3 +387,9 @@ and animate the opening scenery. The renderer is released when the title screen
 is left; the established lesson and reward rules are unchanged.
 
 Physical iPad Safari and hardware WebGL performance still require a device pass.
+
+The live browser pass confirmed camera/scenery movement in the software 3D
+renderer and a functioning Pause scenery control. Paused/reduced-motion title
+scenes now retain their last frame without repeatedly redrawing static geometry;
+resizing still refreshes that frame. Refined the skyline so mountain bases extend
+below the view rather than appearing as floating cones.

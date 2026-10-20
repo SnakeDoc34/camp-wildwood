@@ -34,6 +34,12 @@ math progress, purchases, and sports scores in that device's browser storage.
 
 ## Camp activities
 
+The opening screen has a live 3D camp tour: a slow camera sweep, distant ridges,
+birds, chimney smoke, moving water, and drifting clouds. Start adventure opens
+the camper chooser immediately. Pause scenery freezes the entire title scene;
+Calm visuals and system Reduce Motion start it still. The title demonstration
+does not change a camper's camp, purchases, tokens, or learning record.
+
 **Wildwood Shootout:** five shots against a moving goalkeeper. Tap the goal or
 use six aiming buttons, watch the power meter, and kick. The ball follows a 3D
 arc and the keeper dives. The ring awards an accuracy bonus. Cozy and Ranger
