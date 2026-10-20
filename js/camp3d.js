@@ -168,7 +168,7 @@ class WildView{
     const T=this.T;
     // Distant ridges, smoke and a flock of birds move in the same perspective
     // as the campsite. No video, remote assets or full-screen waiting period.
-    for(let j=0;j<7;j++){const mountain=this.mesh(new T.ConeGeometry(14+j%3*2,70+j%4*3,5),j%2?'#809f91':'#678b7f',-42+j*14,-29,-38-j%2*9);mountain.rotation.y=j*.8;mountain.renderOrder=-200;}
+    for(let j=0;j<7;j++){const mountain=this.mesh(new T.ConeGeometry(18+j%3*2,36+j%4*2,5),j%2?'#809f91':'#678b7f',-42+j*14,-32,-38-j%2*9);mountain.rotation.y=j*.8;mountain.renderOrder=-200;}
     for(let j=0;j<5;j++){const puff=this.sphere(.2+j*.045,'#dae1cd',1.4,5+j*.48,-8.8);this.anim.push(t=>{puff.position.set(1.4+Math.sin(t*.3+j)*.35,4.9+(j*.55+t*.22)%3.2,-8.8);puff.scale.setScalar(.7+(puff.position.y-4.9)*.35);});}
     for(let j=0;j<3;j++){const bird=this.group(-6+j*3,8+j*.6,-8-j*2),wings=[];for(const side of [-1,1]){const wing=this.box(.7,.035,.19,'#314e46',side*.32,0,0,bird);wings.push([wing,side]);}this.anim.push(t=>{bird.position.x=-8+j*3+Math.sin(t*.16)*9;bird.position.z=-10-j*2+Math.cos(t*.16)*3;bird.rotation.y=-Math.sin(t*.16)*.4;for(const[w,s]of wings)w.rotation.z=s*Math.sin(t*5+j)*.45;});}
     Object.assign(this,Camp3D.introPose(0));this.target.set(0,1,0);

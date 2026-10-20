@@ -369,7 +369,7 @@ clock. The browser pass also caught a stale canoe launch after soccer; the fixed
 handoff is covered by a regression test. Temporary preview files and their
 sample-camp setup button are removed from the published main game.
 
-## Cinematic opening — wildwood-intro2
+## Cinematic opening — wildwood-intro3
 
 The opening now renders a demonstration camp with a looping camera sweep,
 drifting clouds, swaying pines, creek ripples, birds and chimney smoke. The title,
