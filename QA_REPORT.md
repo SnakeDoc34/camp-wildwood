@@ -322,3 +322,49 @@ Live Chrome check for living-camp1: completed Adding Ones (7 questions including
 
 
 Live division check: shared 30 counters into three equal groups of 10, then grouped six counters into two groups of three. Independent grouping correctly showed the optional mat, separate from the sharing meaning. Found and removed duplicate work mats on guided division questions that already have interactive counters (living-camp1c). Added a regression check for both guided division missions; all 76 tests pass. Calm visuals applied through the Report control in Chrome.
+
+## Wildwood 3D — October 19, 2026
+
+Rebuilt the camp rendering and sports activities while retaining every math
+generator, curriculum diagram, strategy, lesson lock, narration file, and the
+existing math mission schema/version. The camera and field geometry use real
+Three.js scene graphs; software SVG projection is available when WebGL 2 cannot
+be created. The local vendor files are pinned to Three.js 0.180.0 with its MIT
+license; SVGRenderer and Projector only change relative import paths.
+
+Ten plots preserve the six legacy plot identifiers. Rotation, scale, roofing,
+tent colors, team nickname/colors, purchased field options, five-shot soccer
+bests, and canoe bests are saved per camper. Field upgrades cannot be placed as
+ordinary camp objects; locked colors are rejected and invalid saved options are
+normalized. Existing camp purchases and old soccer scores remain present.
+
+The fixed-sequence three-kick activity is replaced by aim/power/goalkeeper
+shooting, with five shots, two speeds, a visible target bonus, a steady-power
+option, and idempotent shot settlement. The canoe reward now opens an eight-gate
+steering activity with pause/resume. Neither sport awards or deducts math tokens
+or changes mathematical learning evidence. Both activities keep controls and
+motion graphics together in a game overlay, with an exit control.
+
+All 86 automated tests pass, including 335,000 existing generated-question
+checks and a new actual-Three.js scene-construction check for camp, shootout, and
+canoe geometry. Additional tests verify soccer goal/save/power outcomes, duplicate
+shot guards, five-shot limits, purchase affordability/duplicate callbacks, locked
+customization, per-profile persistence, seeded canoe gates, and score bounds.
+
+The isolated browser preview exposed that the cloud browser disables WebGL.
+Added a genuine software 3D renderer instead of leaving empty graphics. This
+preview route does not replace the main site until the browser pass is complete.
+Hardware shadows, GPU throughput, touch gestures on a physical iPad, and physical
+iPad Safari audio/rendering remain explicitly unverified.
+
+
+Final browser pass: software 3D displayed the actual camp, field, animated keeper,
+ball arc, and canoe. Camera buttons rotated and zoomed the scene. Changed tent
+fabric, rotated/resized and moved the tent (swapping with lanterns), changed team
+colors/name and night lighting; these choices restored after refresh. Completed a
+five-shot shootout (3 goals, 300 points) and a canoe run (6 of 8 gates), with the
+math-token balance unchanged at 80 in the isolated QA camper. Low-frame scoring
+settles once on its own timer, and canoe progression/pausing has an independent
+clock. The browser pass also caught a stale canoe launch after soccer; the fixed
+handoff is covered by a regression test. Temporary preview files and their
+sample-camp setup button are removed from the published main game.

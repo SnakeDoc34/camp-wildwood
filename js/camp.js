@@ -58,6 +58,12 @@ const SHOP_ITEMS = [
   {id:'campfire',name:'Cozy campfire',art:'🔥',cost:4,place:'trail',description:'A glowing stone-ring campfire with a little curl of smoke.'},
   {id:'canoe',name:'Creek canoe',art:'🛶',cost:7,place:'creek',description:'Park a cedar canoe beside the water. A new story starts at the creek.'},
   {id:'fairy-lights',name:'Woodland fairy lights',art:'✨',cost:6,place:'lodge-left',description:'String warm lights between two pines. They glow after sunset.'},
+  {id:'team-blue',name:'Lagoon club colors',art:'🔵',cost:3,fieldUpgrade:true,description:'Blue corner flags, team stands, and goalkeeper kit. Choose it in Your soccer club.'},
+  {id:'team-sunset',name:'Sunset club colors',art:'🟠',cost:3,fieldUpgrade:true,description:'Warm coral team colors for your custom soccer club.'},
+  {id:'pitch-stripes',name:'Pro striped turf',art:'🏟️',cost:4,fieldUpgrade:true,description:'Alternating mown stripes across your 3D field and shootout arena.'},
+  {id:'goal-neon',name:'Mint goal frames',art:'🥅',cost:5,fieldUpgrade:true,description:'Bright mint frames for both soccer goals.'},
+  {id:'stadium-lights',name:'Stadium light kit',art:'💡',cost:7,fieldUpgrade:true,description:'Tall floodlights around your field. Try them at night!'},
+  {id:'grandstand',name:'Club grandstands',art:'📣',cost:6,fieldUpgrade:true,description:'Build two rows of cheering stands in your chosen team color.'},
 ];
 
 const Camp = {
@@ -189,7 +195,7 @@ const Camp = {
             p.tokens-=it.cost;p.shop.push(it.id);Yard.install(p,it.id);
             if(p.camp.design.goal===it.id)p.camp.design.goal=null;
             Store.persist();Audio2.good();confetti(30);
-            document.getElementById('shop-message').textContent=it.id==='soccer-field'?'Your soccer field is built! Choose Play in my camp to try goal kicks.':it.name+' is yours! Choose Arrange in my camp to move it.';
+            document.getElementById('shop-message').textContent=it.id==='soccer-field'?'Your soccer field is built! Choose Play in my camp to try goal kicks.':it.name+' is yours! '+(it.fieldUpgrade?'Choose Customize field to use it.':'Choose Arrange in my camp to move it.');
             toast(it.name+' unlocked!');this.renderShop(p);App.syncTop();
           }
           else { Audio2.bad(); toast('Not enough tokens yet — finish missions to earn more!'); }
@@ -200,7 +206,7 @@ const Camp = {
         save.onclick=()=>{Yard.setGoal(p,it.id);this.renderShop(p);toast('Saving for '+it.name+'.');};actions.appendChild(save);
       }else{
         actions.appendChild(el('span','badge','✓ Yours'));
-        const use=el('button','mid-btn',it.id==='soccer-field'?'Play in my camp':'Arrange in my camp');use.onclick=()=>App.showDesign(it.id);actions.appendChild(use);
+        const use=el('button','mid-btn',it.id==='soccer-field'?'Play in my camp':it.fieldUpgrade?'Customize field':'Arrange in my camp');use.onclick=()=>App.showDesign(it.id);actions.appendChild(use);
       }
       card.appendChild(actions);
       list.appendChild(card);

@@ -27,8 +27,8 @@ function load(saved){
   const speechSynthesis={cancel(){},getVoices(){return [];},speak(u){speech.push(u.text);}};window.speechSynthesis=speechSynthesis;
   const c=vm.createContext({window,document:doc,localStorage:storage,Audio,speechSynthesis,SpeechSynthesisUtterance:class{constructor(t){this.text=t;}},console,confirm:()=>false,
     setTimeout(f,ms){const id=++timerId;timers.set(id,{f,ms});return id;},clearTimeout(id){timers.delete(id);}});
-  for(const f of ['core','yard','living','camp','engine','chapters','chapters-m2','chapters-m3','chapters-trail','strategies','app'])vm.runInContext(fs.readFileSync(ROOT+'/js/'+f+'.js','utf8'),c);
-  const api=vm.runInContext('({R,Store,Settings,Audio2,Engine,MathCheck,App,Camp,Yard,Living,Backpack,SHOP_ITEMS,YARD_SLOTS,newProfileState,FAMILIES:window.FAMILIES,TARGETS:window.TARGETS,knownFact,clockSVG,barGraphSVG,pictoSVG,fractionSVG})',c);
+  for(const f of ['core','yard','living','camp-play','camp3d','camp','engine','chapters','chapters-m2','chapters-m3','chapters-trail','strategies','app'])vm.runInContext(fs.readFileSync(ROOT+'/js/'+f+'.js','utf8'),c);
+  const api=vm.runInContext('({R,Store,Settings,Audio2,Engine,MathCheck,App,Camp,Yard,Living,Backpack,Camp3D,WildView,CampPlay,CampStyle,SoccerRules,CanoeRules,SHOP_ITEMS,YARD_SLOTS,newProfileState,FAMILIES:window.FAMILIES,TARGETS:window.TARGETS,knownFact,clockSVG,barGraphSVG,pictoSVG,fractionSVG})',c);
   api.Store.init();api.R.seed(20261012);
   // Mechanics tests run as if a teacher opened every trail from the Report
   // screen; progression.test.cjs opts back into the locked default.

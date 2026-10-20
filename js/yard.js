@@ -7,7 +7,11 @@ const YARD_SLOTS=[
   {id:'field-left',name:'Left sideline',x:17,y:50},
   {id:'field-right',name:'Right sideline',x:83,y:50},
   {id:'creek',name:'Creek corner',x:19,y:81},
-  {id:'trail',name:'Trail corner',x:81,y:81}
+  {id:'trail',name:'Trail corner',x:81,y:81},
+  {id:'west-woods',name:'West woods',x:7,y:40},
+  {id:'east-woods',name:'East woods',x:94,y:40},
+  {id:'south-bank',name:'South bank',x:36,y:92},
+  {id:'camp-green',name:'Camp green',x:67,y:92}
 ];
 const STARTER_ITEMS=[
   {id:'sapling',name:'Little pine',art:'🌲',cost:0,description:'A welcome gift. Find a sunny place for your tree.'},
@@ -16,6 +20,7 @@ const STARTER_ITEMS=[
 const Yard={
   selected:null,message:'',soccer:null,checkout:null,picnic:null,
   item(id){return [...STARTER_ITEMS,...SHOP_ITEMS].find(it=>it.id===id);},
+  isPlaceable(id){const it=this.item(id);return Boolean(it&&id!=='soccer-field'&&!it.fieldUpgrade);},
   owns(p,id){return STARTER_ITEMS.some(it=>it.id===id)||p.shop.includes(id);},
   ensure(p){
     const old=p.camp.design;
@@ -24,19 +29,31 @@ const Yard={
     const d=p.camp.design;
     if(!d.slots||typeof d.slots!=='object'||Array.isArray(d.slots))d.slots={};
     const clean={},used=new Set();
-    for(const slot of YARD_SLOTS){const id=d.slots[slot.id];if(this.item(id)&&id!=='soccer-field'&&this.owns(p,id)&&!used.has(id)){clean[slot.id]=id;used.add(id);}}
+    for(const slot of YARD_SLOTS){const id=d.slots[slot.id];if(this.isPlaceable(id)&&this.owns(p,id)&&!used.has(id)){clean[slot.id]=id;used.add(id);}}
     d.slots=clean;
     if(!['morning','golden','night'].includes(d.timeOfDay))d.timeOfDay='morning';
     d.pitch=this.owns(p,'soccer-field')&&d.pitch==='soccer'?'soccer':'meadow';
     if(!this.item(d.goal)||this.owns(p,d.goal))d.goal=null;
     d.goals=Number.isSafeInteger(d.goals)&&d.goals>=0?d.goals:0;
     d.best=Number.isInteger(d.best)&&d.best>=0&&d.best<=3?d.best:0;
+    if(!d.transforms||typeof d.transforms!=='object'||Array.isArray(d.transforms))d.transforms={};
+    for(const [id,tr] of Object.entries(d.transforms))if(!this.isPlaceable(id)||!tr||!Number.isFinite(tr.rotation)||![.8,1,1.2].includes(tr.scale))delete d.transforms[id];
+    for(const [key,values,fallback]of [['roof',['cedar','pine','slate'],'cedar'],['tentColor',['canvas','coral','lake'],'canvas'],['team',['forest','gold','lagoon','sunset'],'forest']])if(!values.includes(d[key]))d[key]=fallback;
+    if(d.team==='lagoon'&&!this.owns(p,'team-blue')||d.team==='sunset'&&!this.owns(p,'team-sunset'))d.team='forest';
+    if(d.camera&&(!Number.isFinite(d.camera.yaw)||!Number.isFinite(d.camera.pitch)||d.camera.pitch<.35||d.camera.pitch>1.25||!Number.isFinite(d.camera.distance)||d.camera.distance<20||d.camera.distance>55))delete d.camera;
+    d.teamName=typeof d.teamName==='string'?d.teamName.slice(0,16):'Wildwood FC';
+    for(const [id,key]of [['pitch-stripes','striped'],['goal-neon','neon'],['stadium-lights','floodlights'],['grandstand','stands']])d[key]=this.owns(p,id)&&d[key]===true;
+    const stats=d.soccer3D;if(!stats||typeof stats!=='object'||Array.isArray(stats))d.soccer3D={bestGoals:0,bestScore:0,rounds:0};
+    for(const k of ['bestGoals','bestScore','rounds'])if(!Number.isSafeInteger(d.soccer3D[k])||d.soccer3D[k]<0)d.soccer3D[k]=0;
+    d.soccer3D.bestGoals=Math.min(5,d.soccer3D.bestGoals);
+    d.canoeBest=Number.isInteger(d.canoeBest)?Math.max(0,Math.min(8,d.canoeBest)):0;
     if(migrating){for(const id of p.shop)this.install(p,id);}
     return d;
   },
   install(p,id){
     const d=p.camp.design,it=this.item(id);if(!d||!it||!this.owns(p,id))return;
     if(id==='soccer-field'){d.pitch='soccer';return;}
+    if(it.fieldUpgrade){const config={'team-blue':['team','lagoon'],'team-sunset':['team','sunset'],'pitch-stripes':['striped',true],'goal-neon':['neon',true],'stadium-lights':['floodlights',true],'grandstand':['stands',true]}[id];if(config)d[config[0]]=config[1];return;}
     if(Object.values(d.slots).includes(id))return;
     const slot=YARD_SLOTS.find(s=>s.id===it.place&&!d.slots[s.id])||YARD_SLOTS.find(s=>!d.slots[s.id]);
     if(slot)d.slots[slot.id]=id;
@@ -44,7 +61,7 @@ const Yard={
   goal(p){const d=this.ensure(p);return this.item(d.goal)||SHOP_ITEMS.find(it=>!this.owns(p,it.id)&&it.id==='soccer-field')||SHOP_ITEMS.find(it=>!this.owns(p,it.id));},
   setGoal(p,id){if(!SHOP_ITEMS.some(it=>it.id===id)||this.owns(p,id))return false;this.ensure(p).goal=id;Store.persist();return true;},
   place(p,id,slotId){
-    if(id==='soccer-field'||!this.item(id)||!this.owns(p,id)||!YARD_SLOTS.some(s=>s.id===slotId))return false;
+    if(!this.isPlaceable(id)||!this.owns(p,id)||!YARD_SLOTS.some(s=>s.id===slotId))return false;
     const d=this.ensure(p),oldSlot=YARD_SLOTS.find(s=>d.slots[s.id]===id),replaced=d.slots[slotId];
     if(oldSlot&&oldSlot.id!==slotId){if(replaced)d.slots[oldSlot.id]=replaced;else delete d.slots[oldSlot.id];}
     d.slots[slotId]=id;Store.persist();return true;
@@ -52,6 +69,12 @@ const Yard={
   putAway(p,id){const d=this.ensure(p);for(const slot of YARD_SLOTS)if(d.slots[slot.id]===id)delete d.slots[slot.id];Store.persist();},
   art(id){
     const shapes={
+      'team-blue':'<path d="m29 12-21 18 13 19 11-9v48h38V40l11 9 13-19-23-18-9 12H40Z" fill="#3979b5" stroke="#214a6e" stroke-width="4"/><path d="M37 55h27M50 43v25" stroke="#eef4e2" stroke-width="6"/>',
+      'team-sunset':'<path d="m29 12-21 18 13 19 11-9v48h38V40l11 9 13-19-23-18-9 12H40Z" fill="#c96c61" stroke="#844a43" stroke-width="4"/><path d="M39 49h24v19H39Z" fill="#f2daaa"/>',
+      'pitch-stripes':'<rect x="10" y="12" width="80" height="77" rx="8" fill="#438462"/><path d="M12 29h76M12 48h76M12 67h76" stroke="#75af73" stroke-width="12"/><g stroke="#f6f0d9" fill="none" stroke-width="3"><rect x="18" y="20" width="64" height="61"/><path d="M18 50h64"/><circle cx="50" cy="50" r="12"/></g>',
+      'goal-neon':'<path d="m14 84 10-51h61l-8 51Z" fill="#a5cabc"/><path d="M14 84V20h64v64M14 20l10 13m54-13 7 13" fill="none" stroke="#6fe0c6" stroke-width="7"/><path d="M28 35v48m13-48v48m13-48v48m13-48v48M22 48h58M20 62h59" stroke="#f1f1db" stroke-width="2"/>',
+      'stadium-lights':'<path d="M49 91V28" stroke="#677e7a" stroke-width="9"/><rect x="11" y="8" width="78" height="32" rx="7" fill="#32564f"/><g fill="#f8d986"><rect x="20" y="16" width="13" height="15" rx="3"/><rect x="43" y="16" width="13" height="15" rx="3"/><rect x="66" y="16" width="13" height="15" rx="3"/></g><path d="M32 93h34" stroke="#677e7a" stroke-width="6"/>',
+      grandstand:'<path d="M11 82V61h18V42h18V23h42v59Z" fill="#326b91"/><path d="M11 61h78M29 42h60M47 23h42" stroke="#77afd0" stroke-width="8"/><path d="M19 83v10m61-10v10" stroke="#606c60" stroke-width="6"/>',
       campfire:'<path class="fire-smoke" d="M50 20Q39 11 51 3" fill="none" stroke="#b8c1b6" stroke-width="4" opacity=".7"/><ellipse cx="50" cy="84" rx="40" ry="10" fill="#62685e"/><path d="m20 83 60-9m-58 0 57 10" stroke="#78523c" stroke-width="10"/><path class="fire-flame" d="M28 73Q16 57 41 32L44 8Q75 30 72 50Q91 75 61 80Z" fill="#eb8c46"/><path class="fire-core" d="M43 76Q32 64 52 43Q72 65 59 78Z" fill="#ffdc80"/>',
       canoe:'<ellipse cx="50" cy="83" rx="44" ry="9" fill="#559da4" opacity=".4"/><path d="M5 45Q50 81 95 45L82 77Q49 98 17 76Z" fill="#b67547" stroke="#71492f" stroke-width="3"/><path d="M5 45Q48 26 95 45Q49 79 5 45Z" fill="#e9c38d" stroke="#71492f" stroke-width="3"/><path d="m18 29 59 58" stroke="#76533c" stroke-width="5"/><path d="m62 65 22 13 5 16-15-3Z" fill="#9b683e"/>',
       'fairy-lights':'<path d="M12 90V9m76 81V9" stroke="#74543d" stroke-width="6"/><path d="M12 18Q50 60 88 18" fill="none" stroke="#466349" stroke-width="3"/><g class="light-bulbs" fill="#ffdf82" stroke="#bb8b42" stroke-width="2"><circle cx="26" cy="33" r="6"/><circle cx="42" cy="40" r="6"/><circle cx="59" cy="40" r="6"/><circle cx="75" cy="32" r="6"/></g>',
@@ -71,6 +94,7 @@ const Yard={
     return '<svg viewBox="0 0 200 150" aria-hidden="true" focusable="false"><ellipse cx="100" cy="138" rx="88" ry="9" fill="#6d9259" opacity=".5"/><path d="M32 69h137v66H32Z" fill="'+(stage?'#bd9362':'#9a8b70')+'" stroke="#6e5239" stroke-width="4"/><path d="m19 70 81-61 81 61Z" fill="'+(stage>1?'#ba6347':'#6c7560')+'" stroke="#5b5140" stroke-width="4"/><path d="M135 14h18v33h-18" fill="#9d7455" stroke="#6e5239" stroke-width="3"/><path d="M85 86h32v49H85Z" fill="#6f5034"/><g fill="'+(stage>1?'#ffd779':'#9dbbbb')+'" stroke="#6f5034" stroke-width="3"><rect x="46" y="86" width="23" height="23"/><rect x="131" y="86" width="23" height="23"/></g>'+(stage===0?'<path d="m43 78 22 36m64-37 27 39" stroke="#716954" stroke-width="7"/>':'')+(stage===3?'<path d="M37 77q63 27 124 0" fill="none" stroke="#477046" stroke-width="5"/><g fill="#efcb70"><circle cx="58" cy="84" r="4"/><circle cx="83" cy="89" r="4"/><circle cx="108" cy="89" r="4"/><circle cx="134" cy="84" r="4"/></g>':'')+'</svg>';
   },
   scene(p,editable,daylight){
+    if(typeof Camp3D!=='undefined')return Camp3D.camp(p,editable,daylight);
     const d=this.ensure(p),scene=el('div','camp-yard'+(editable?' editable-yard':''));
     const count=Object.keys(d.slots).length;
     scene.setAttribute('data-daylight',daylight||d.timeOfDay);
@@ -124,7 +148,7 @@ const Yard={
     const inv=document.getElementById('design-inventory');inv.innerHTML='';
     inv.appendChild(el('h3',null,'Your backpack'));inv.appendChild(el('p','fine','Pick an item, then a place. Moving onto another item swaps their places. Items put away stay yours.'));
     const grid=el('div','inventory-grid');
-    for(const it of [...STARTER_ITEMS,...SHOP_ITEMS].filter(it=>it.id!=='soccer-field'&&this.owns(p,it.id))){
+    for(const it of [...STARTER_ITEMS,...SHOP_ITEMS].filter(it=>this.isPlaceable(it.id)&&this.owns(p,it.id))){
       const placed=Object.values(d.slots).includes(it.id),b=el('button','inventory-item'+(this.selected===it.id?' selected':''),this.art(it.id)+'<span>'+esc(it.name)+'</span><small>'+(it.cost===0?'Welcome gift · ':'')+(placed?'In camp':'In backpack')+'</small>');
       b.id='pack-'+it.id;b.setAttribute('aria-label','Place '+it.name);b.setAttribute('aria-pressed',String(this.selected===it.id));
       b.onclick=()=>{this.selected=it.id;this.message=it.name+' selected. Choose a place in your camp.';this.renderDesigner(p);document.getElementById(b.id)?.focus?.();};grid.appendChild(b);
@@ -136,39 +160,12 @@ const Yard={
       const mode=el('div','field-mode');mode.appendChild(el('h3',null,'Choose your field'));
       for(const value of ['soccer','meadow']){const b=el('button','hint-btn',value==='soccer'?'Soccer field':'Open meadow');b.setAttribute('aria-pressed',String(d.pitch===value));b.onclick=()=>{d.pitch=value;this.soccer=null;Store.persist();this.message=value==='soccer'?'Soccer field ready. Try a few goal kicks below!':'Open meadow ready. Your soccer kit stays yours.';this.renderDesigner(p);};mode.appendChild(b);}inv.appendChild(mode);
     }
+    if(typeof CampStyle!=='undefined')CampStyle.render(inv,p);
     this.renderSoccer(p);
     this.renderActivities(p);
+    if(typeof CampPlay!=='undefined'){const activities=document.getElementById('chapter-activities');CampPlay.renderCanoe(activities,p);}
   },
-  kick(p,aim){
-    if(!this.owns(p,'soccer-field')||this.ensure(p).pitch!=='soccer'||!['left','center','right'].includes(aim)||!this.soccer||this.soccer.shots>=3)return false;
-    const s=this.soccer,target=['center','left','right'][s.shots],goal=aim===target;
-    s.shots++;if(goal){s.goals++;p.camp.design.goals++;Audio2.good();}else Audio2.pop();
-    s.lastAim=aim;s.lastGoal=goal;p.camp.design.best=Math.max(p.camp.design.best,s.goals);Store.persist();return true;
-  },
-  renderSoccer(p){
-    const box=document.getElementById('soccer-activity');box.innerHTML='';const d=this.ensure(p);
-    if(!this.owns(p,'soccer-field')){
-      const locked=el('div','soccer-unlock');locked.appendChild(el('div','unlock-art',this.art('soccer-field')));locked.appendChild(el('h3',null,'Turn the meadow into a soccer field'));
-      locked.appendChild(el('p','hint','The soccer kit adds field markings, two goals, and a goal-kicking activity. Save 4 tokens to build it.'));
-      const b=el('button','mid-btn','Save for the soccer kit');b.onclick=()=>{this.setGoal(p,'soccer-field');App.showShop();};locked.appendChild(b);box.appendChild(locked);return;
-    }
-    if(d.pitch!=='soccer'){box.appendChild(el('p','fine','Choose Soccer field above whenever you want to play.'));return;}
-    const card=el('div','soccer-game');card.appendChild(el('span','eyebrow','Your camp activity'));card.appendChild(el('h3',null,'Goal kick!'));
-    card.appendChild(el('p','hint','Aim at the golden cone. Pick left, center, or right. Three kicks per round; play whenever you like.'));
-    if(!this.soccer){const start=el('button','big-btn','Play goal kick');start.onclick=()=>{this.soccer={shots:0,goals:0};this.renderSoccer(p);};card.appendChild(start);}
-    else{
-      const s=this.soccer,target=s.shots<3?['center','left','right'][s.shots]:null;
-      const goal=el('div','kick-goal');
-      for(const aim of ['left','center','right'])goal.appendChild(el('span','goal-zone'+(target===aim?' target-zone':''),target===aim?'<span aria-hidden="true">▲</span><small>Golden cone</small>':''));
-      const ball=el('span','kick-ball'+(s.lastAim?' kicked':''),'⚽');ball.style.setProperty?.('--kick-x',({left:'-90px',center:'0px',right:'90px'})[s.lastAim]||'0px');goal.appendChild(ball);card.appendChild(goal);
-      const msg=s.shots===3?'Round complete! '+s.goals+' of 3 goals.':(s.shots?(s.lastGoal?'Goal! ':'Wide of the cone. '):'')+'Kick '+(s.shots+1)+' of 3: aim '+target+'.';
-      const status=el('p','kick-status',esc(msg));status.setAttribute('role','status');status.setAttribute('aria-live','polite');card.appendChild(status);
-      if(s.shots<3){const row=el('div','row kick-controls');for(const aim of ['left','center','right']){const b=el('button','mid-btn','Kick '+aim);b.onclick=()=>{if(this.kick(p,aim))this.renderSoccer(p);};row.appendChild(b);}card.appendChild(row);}
-      else{const b=el('button','mid-btn','Play another round');b.onclick=()=>{this.soccer={shots:0,goals:0};this.renderSoccer(p);};card.appendChild(b);}
-    }
-    card.appendChild(el('p','fine','Personal best: '+d.best+' / 3 · Total goals: '+d.goals+'. Camp play does not spend or earn tokens.'));
-    box.appendChild(card);
-  },
+  renderSoccer(p){if(typeof CampPlay!=='undefined')CampPlay.renderSoccer(document.getElementById('soccer-activity'),p);},
   /* Chapter-completion activities: the working Trading Post and the picnic sharing board. */
   renderActivities(p){
     const box=document.getElementById('chapter-activities');if(!box)return;box.innerHTML='';

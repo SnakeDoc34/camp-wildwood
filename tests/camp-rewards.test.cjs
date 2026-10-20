@@ -53,17 +53,17 @@ test('each full replay earns one token; duplicate completion and unfinished repl
   a.Engine.start(id);a.Engine.renderDone(a.doc.createElement('div'));assert.equal(a.profile.tokens,3);
   complete(a,id);assert.equal(a.profile.tokens,4);assert.match(a.doc.getElementById('mission-body').textContent,/Build my camp/);
 });
-test('goal kick keeps scores within three shots and never changes the token balance',()=>{
+test('shootout keeps scores within five shots and never changes the token balance',()=>{
   const a=load(),p=a.profile;p.shop=['soccer-field'];a.Yard.ensure(p);a.Yard.install(p,'soccer-field');p.tokens=11;
-  a.Yard.soccer={shots:0,goals:0};assert.ok(a.Yard.kick(p,'center'));assert.ok(a.Yard.kick(p,'right'));assert.ok(a.Yard.kick(p,'right'));
-  assert.equal(a.Yard.kick(p,'left'),false);assert.equal(a.Yard.soccer.goals,2);assert.equal(p.camp.design.goals,2);assert.equal(p.camp.design.best,2);assert.equal(p.tokens,11);
-  const b=load(Object.fromEntries(a.data)),saved=b.Yard.ensure(b.Store.profile(p.id));assert.equal(saved.goals,2);assert.equal(saved.best,2);
-  p.camp.design.pitch='meadow';a.Yard.soccer={shots:0,goals:0};assert.equal(a.Yard.kick(p,'center'),false);
+  const s=a.CampPlay.newSoccer();for(let i=0;i<5;i++){s.phase='ready';s.aimX=.8;s.aimY=.85;s.power=.6;s.keeperX=-2;assert.ok(a.CampPlay.fire(p,s));assert.equal(a.CampPlay.fire(p,s),false);a.CampPlay.commit(p,s);assert.equal(a.CampPlay.commit(p,s),false);}
+  assert.equal(a.CampPlay.fire(p,s),false);assert.equal(s.goals,5);assert.equal(p.camp.design.goals,5);assert.equal(p.camp.design.soccer3D.bestGoals,5);assert.equal(p.tokens,11);
+  const b=load(Object.fromEntries(a.data)),saved=b.Yard.ensure(b.Store.profile(p.id));assert.equal(saved.goals,5);assert.equal(saved.soccer3D.bestGoals,5);
+  p.camp.design.pitch='meadow';assert.equal(a.CampPlay.fire(p,a.CampPlay.newSoccer()),false);
 });
 test('campers retain separate layouts, savings goals, soccer scores, and purchases',()=>{
   const a=load(),p=a.profile,other=a.newProfileState('Other','🦊');a.Store.saveProfile(other);
   p.shop=['soccer-field','flag-red'];a.Yard.ensure(p);a.Yard.install(p,'soccer-field');a.Yard.place(p,'flag-red','field-right');a.Yard.setGoal(p,'lanterns');
-  a.Yard.soccer={shots:0,goals:0};a.Yard.kick(p,'center');
+  const shot=a.CampPlay.newSoccer();shot.aimX=.8;shot.keeperX=-2;a.CampPlay.fire(p,shot);a.CampPlay.commit(p,shot);
   const d=a.Yard.ensure(other);assert.equal(d.pitch,'meadow');assert.equal(d.goals,0);assert.ok(!Object.values(d.slots).includes('flag-red'));assert.equal(a.Yard.goal(other).id,'soccer-field');
   a.Yard.place(other,'sapling','lodge-left');assert.equal(p.camp.design.slots['field-right'],'flag-red');assert.equal(p.camp.design.goal,'lanterns');
   a.doc.getElementById('shop-message').textContent='Your soccer field is built!';a.App.profile=other;a.App.showShop();

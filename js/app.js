@@ -6,11 +6,13 @@ const AVATARS=['🦝','🦊','🐻','🦉','🐸','🐢','🦌','🐿️'];
 const App = {
   profile:null,
   show(id){
+    if(id!=='screen-design'){document.documentElement?.classList.remove('playing-camp-game');if(typeof CampPlay!=='undefined')CampPlay.stop();}
     if(id!=='screen-mission')Engine.suspend();
     document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     document.getElementById('topbar').classList.toggle('hidden', id==='screen-title'||id==='screen-profiles');
     mascotSay(id!=='screen-title'&&id!=='screen-profiles');
+    if(typeof Camp3D!=='undefined')Camp3D.sweep();
     window.scrollTo(0,0);
   },
   syncTop(){
@@ -22,9 +24,9 @@ const App = {
   showTargets(chId){ this.show('screen-targets'); Camp.renderTargets(chId); },
   showShop(){ Audio2.click();document.getElementById('shop-message').textContent='';this.show('screen-shop');Camp.renderShop(this.profile); },
   showDesign(itemId){
-    Audio2.click();this.show('screen-design');Yard.selected=itemId&&Yard.owns(this.profile,itemId)&&itemId!=='soccer-field'?itemId:null;
+    Audio2.click();this.show('screen-design');Yard.selected=itemId&&Yard.owns(this.profile,itemId)&&Yard.isPlaceable(itemId)?itemId:null;
     if(itemId==='soccer-field'&&Yard.owns(this.profile,itemId)){Yard.ensure(this.profile).pitch='soccer';Store.persist();}
-    Yard.soccer=null;Yard.message=Yard.selected?'Choose a place for '+Yard.item(Yard.selected).name+'.':'Pick an item, then choose a place. Your camp saves as you build.';
+    Yard.soccer=null;if(typeof CampPlay!=='undefined'){CampPlay.soccer=null;CampPlay.canoe=null;}Yard.message=Yard.selected?'Choose a place for '+Yard.item(Yard.selected).name+'.':'Pick an item, then choose a place. Your camp saves as you build.';
     Yard.renderDesigner(this.profile);
   },
   init(){

@@ -58,10 +58,10 @@ test('a mission day progresses from completed practice, not mistakes or elapsed 
 });
 test('lighting is saved per camper and camp interactions do not spend or award tokens',()=>{
   const a=load(),p=a.profile,other=a.newProfileState('Other','🦊');a.Store.saveProfile(other);p.tokens=11;
-  const scene=a.Yard.scene(p,false),b=scene.querySelector('.daylight-switch');b.onclick();b.onclick();assert.equal(a.Yard.ensure(p).timeOfDay,'night');
+  const scene=a.Yard.scene(p,false),b=scene.querySelector('.world-light');b.onclick();b.onclick();assert.equal(a.Yard.ensure(p).timeOfDay,'night');
   assert.equal(a.Yard.ensure(other).timeOfDay,'morning');assert.equal(p.tokens,11);
   const reload=load(Object.fromEntries(a.data));assert.equal(reload.Yard.ensure(reload.Store.profile(p.id)).timeOfDay,'night');
-  const reward=a.doc.createElement('div');a.Yard.reward(reward,p,1);assert.equal(reward.querySelector('.camp-yard').getAttribute('data-daylight'),'night');
+  const reward=a.doc.createElement('div');a.Yard.reward(reward,p,1);assert.equal(reward.querySelector('.camp-stage').getAttribute('data-daylight'),'night');
 });
 test('calm mode preserves teacher settings, saves, and suppresses decorative confetti',()=>{
   const a=load({'campWildwood.settings':JSON.stringify({unlockAll:true})});assert.equal(a.Settings.calmVisuals,false);

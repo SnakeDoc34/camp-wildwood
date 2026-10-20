@@ -1,99 +1,80 @@
 # Camp Wildwood
 
-A 2nd-grade math learning game (Dimensions Math 2B) set at an outdoor camp that players restore.
-Built for classroom use — share the site URL; each player keeps their own camp on their own device.
+A shareable Dimensions Math 2B learning game with a customizable 3D woodland camp.
+Open the GitHub Pages link without an account. Each nickname has its own camp,
+math progress, purchases, and sports scores in that device's browser storage.
 
-## Living campsite update (living-camp1c)
+## Learn, practice, build, play
 
-- Local SVG scenery adds mountains, swaying pines, a rippling creek, drifting clouds, and night fireflies. Tap the lighting button to choose morning, golden hour, or night; each camper keeps their own choice.
-- A fox helper responds to correct work and encourages retries. A mission day advances with completed practice, not a timer; mathematical diagrams remain still.
-- Three additional shop rewards: cozy campfire (4 tokens), woodland fairy lights (6), and creek canoe (7). Existing purchases and camp layouts remain compatible.
-- The optional Camp Backpack supports whole-number place-value exchanges and equal-group multiplication/division. Guided division retains its existing interactive model without a duplicate mat. Opening the backpack marks the question as supported practice without reducing rewards. Work mats resume with the mission.
-- Calm visuals in My Report pauses decorations and celebrations. The device Reduce Motion setting also applies. No graphics libraries or external assets are added.
-- All chapters 8–15 and the optional Trailhead are present in the current source; the older milestone notes below document earlier releases.
+- All Chapters 8–15 are present (37 core missions), plus four optional Trailhead
+  foundations missions. Lesson order and chapter locks remain in place, with a
+  teacher override in My Report.
+- Each mission teaches the strategy with recorded narration and worked models,
+  then introduces the controls, guided practice, independent work, and an
+  optional Adventure. Harder skills include another worked demonstration.
+- Hints and the optional mathematical work mats count as supported practice;
+  students still complete the mission and receive the same token rewards.
+  Unfinished math missions resume with the same questions and entered work.
+- A completed mission or full practice replay earns one token; each skill's
+  first Adventure earns one extra token. Sports never spend or award math tokens.
 
-## How it works
+## 3D camp and rewards (wildwood-3d1)
 
-- **Players** pick a nickname (nicknames only) and get their own camp, tokens, and progress.
-  All saves live in the browser's localStorage — per device, per browser.
-- **Milestone 1** includes the camp shell plus Chapter 8 (Mental Calculation) and
-  Chapter 9 (Equal Groups: multiplication and division of 3 and 4).
-- Every skill follows **teach → controls → guided → independent → adventure**:
-  mathematical diagrams and narration, controls instructions, scaffolded practice,
-  independent missions, and an optional challenge. Correct answers include a worked
-  explanation that stays visible until the player chooses Continue.
-- **Varied practice**: generators avoid recent variants where possible. Finite fact
-  pools eventually repeat for review. Challenges introduce only the current skill
-  or a different skill already completed by that camper.
-- **Learning evidence**: hints and retries preserve mission rewards. New skill
-  badges require four of the last five unassisted first attempts across two visits.
-- Unfinished missions resume with the same numbers and entered work. The existing
-  save key and target IDs are retained, with a local backup for recovery.
-- **Session Report** (📋) gives teachers a printable summary of work done.
-- The illustrated camp shows two playable trails with progress. Planned chapters
-  are grouped under Future trails. Select the camper name to switch profiles;
-  unfinished missions remain with the original camper.
-- Lessons separate the question from answer controls, show the current phase,
-  and include optional strategy notes where the curriculum offers another method.
-- **Build my camp** opens a saved, six-place camp designer. Two welcome gifts
-  provide something to arrange immediately. Owned shop items can be placed,
-  moved, swapped, or put away without another charge. Old purchases are placed
-  automatically when their save first opens in the builder.
-- The **soccer field kit** costs four earned tokens, adds field markings and two
-  goals, and opens a three-kick aiming activity. Players can switch between the
-  soccer field and open meadow. Soccer best scores and total goals are saved;
-  camp play neither spends nor awards tokens.
-- Choose a **savings goal** in the shop. Mission completion shows the actual camp,
-  earned tokens, and progress toward that item. Each fully completed practice
-  replay earns one token; the Adventure bonus remains once per skill. Hints never
-  reduce these rewards. Returning to a completion screen cannot pay twice.
+- A real perspective scene with an orbiting 360° camera, zoom buttons, and pinch
+  zoom. Local 3D geometry builds the lodge, creek, bridge, trees, field, goals,
+  tents, canoe, campfire, lanterns, and other owned objects.
+- Ten camp plots; choose an item and a plot, tap a plot in the 3D scene, move or
+  swap items, put them away, rotate in 45° steps, and choose three sizes.
+- Choose lodge roofing and tent fabric. The soccer club has a saved nickname,
+  two free team colors and two reward colors, plus optional striped turf, mint
+  goal frames, stadium lights, and grandstands from the shop.
+- Existing camps, tokens, six-plot layouts, purchases, badges, and mathematical
+  mission save IDs are retained. Older three-shot soccer bests are preserved;
+  the new five-shot shootout has its own personal-best records.
 
-## Files
+## Camp activities
 
-- `index.html`, `css/`, `js/` — the game (no build step, no external dependencies)
-- `assets/` — original camp scenery; decorative art never replaces math diagrams
-- `audio/` — recorded Melody narration clips for every demonstration,
-  including the second demonstrations added in `dm2b-qa3`. Clips are embedded
-  as data URIs in chunked `.js` files; the player resolves each clip by file
-  name and falls back to on-device speech if a clip cannot load.
-- `tests/` — deterministic mathematical and mission-flow regression checks
-- `QA_REPORT.md` — findings, curriculum sources, changes, and verification limits
-- `ROADMAP.md` — staged chapter and camp-activity plan, with acceptance checks
+**Wildwood Shootout:** five shots against a moving goalkeeper. Tap the goal or
+use six aiming buttons, watch the power meter, and kick. The ball follows a 3D
+arc and the keeper dives. The ring awards an accuracy bonus. Cozy and Ranger
+speeds are available, with optional steady power. Play uses an immersive overlay
+with an exit button so the arena stays visible beside its controls.
 
-## Verification
+**Creek Gate Rally:** owning the creek canoe opens an eight-gate run. Steer left,
+middle, or right through approaching gold gates. The first gates are slower;
+pause and resume at any time. Scores remain separate from math evidence.
 
-Run with Node.js (no dependencies):
+The chapter-completion Trading Post and fraction sharing activities retain their
+exact mathematical models.
+
+## Rendering and device support
+
+Three.js 0.180.0 and its SVGRenderer/Projector are bundled locally in `vendor/`
+under the included MIT license. No graphics CDN, models, or account is required
+at runtime. WebGL 2 enables hardware rendering, soft shadows, and materials.
+A software renderer projects the same 3D geometry into SVG when WebGL is absent.
+This path preserves camera movement and game animation with simpler lighting.
+
+Calm visuals and the system Reduce Motion preference suppress decorative motion.
+Essential sports motion remains, with steady power available. Scene resources
+are released when leaving a screen; hidden or offscreen scenes stop updating.
+The scene pixel ratio and animation rate are capped for tablet performance.
+
+Hardware-accelerated rendering and physical iPad Safari still need a device pass.
+Browser saves stay on that device/browser; clearing site data removes them.
+
+## Verify and run
 
 ```sh
 node --test tests/*.test.cjs
+python3 -m http.server 8000
 ```
 
-The suite checks 120,000 generated cases, explanation equations, exact diagram
-counts, both meanings of division, entry controls, hint-aware learning evidence,
-profile isolation, resumed work, rewards, legacy saves, narration cancellation,
-missing-factor division coaching, paused hints, playable trails, and camper switching.
+The dependency-free Node suite includes 335,000 generated math checks, mission
+sequencing, supported evidence, rewards, profile isolation, save migration,
+place-value conservation, sports rules and transactions, customization, and
+construction checks against the actual Three.js scene geometry.
 
-All 32 automated tests pass in camp-build1 (the original 23 math checks plus nine
-camp-building and reward checks). Desktop Chrome checks in qa2 cover all 12
-demonstrations and four complete missions, both division keypads, hint/retry
-scoring, refresh recovery, camper switching, and rewards. Physical iPad Safari
-and narrow-screen device checks remain pending; see QA_REPORT.md for evidence.
-
-The camp-building live pass also covers four mission completions (28 questions),
-the one-token replay, savings goals, two purchases, keyboard placement, swapping,
-putting items away, soccer scoring, refresh, and separate camper camps.
-
-This release implements Chapters 8 and 9 only. It supplements the textbook and
-does not certify mastery of the entire Dimensions Math 2B curriculum.
-
-## Hosting
-
-Designed for any static host (GitHub Pages, Netlify, Cloudflare Pages).
-Deploy the whole folder; keep `index.html` at the root.
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md). Chapters 8–9 are playable. The camp-building release
-adds useful rewards; the next curriculum stage is Chapters 10–11 (Money and
-Fractions), followed by Chapters 12–15 and a Camp Festival finale. Planned
-chapters remain clearly marked and cannot be launched.
+Deploy the complete folder to GitHub Pages or another static host. Keep
+`index.html` at the root and include `audio/`, `assets/`, `css/`, `js/`, and
+`vendor/`. See `QA_REPORT.md` for findings, curriculum sources, and test limits.

@@ -2,7 +2,7 @@
 'use strict';
 const Camp3D={
   T:null,SVG:null,noWebGL:false,loading:null,views:new Set(),raf:0,last:0,
-  load(){return this.loading||(this.loading=Promise.all([import('../../vendor/three.module.min.js'),import('../../vendor/addons/SVGRenderer.js')]).then(([t,svg])=>{this.SVG=svg.SVGRenderer;return this.T=t;}));},
+  load(){return this.loading||(this.loading=Promise.all([import('../vendor/three.module.min.js'),import('../vendor/addons/SVGRenderer.js')]).then(([t,svg])=>{this.SVG=svg.SVGRenderer;return this.T=t;}));},
   mount(host,kind,p,options={}){
     if(!window.requestAnimationFrame)return; // Node mechanics adapter / no graphics surface.
     window.requestAnimationFrame(async()=>{
