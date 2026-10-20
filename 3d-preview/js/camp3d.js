@@ -125,7 +125,9 @@ class WildView{
     return g;
   }
   canoeMesh(parent){
-    const T=this.T,g=this.group(0,0,0,parent);const hull=this.mesh(new T.SphereGeometry(1,24,12),'#bd7c4d',0,.35,0,g);hull.scale.set(.6,.35,1.65);const inside=this.mesh(new T.SphereGeometry(1,24,8),'#dfb57e',0,.5,0,g);inside.scale.set(.47,.12,1.4);for(const zz of [-.55,.55])this.box(.9,.08,.18,'#926344',0,.57,zz,g);const paddle=this.cylinder(.035,.035,2.1,'#755537',.5,.85,0,g);paddle.rotation.z=.8;this.box(.24,.55,.07,'#a37047',1.07,.25,0,g);return g;
+    const T=this.T,g=this.group(0,0,0,parent);const hull=this.mesh(new T.SphereGeometry(1,24,10,0,Math.PI*2,Math.PI/2,Math.PI/2),'#bd7c4d',0,.5,0,g,{side:T.DoubleSide});hull.scale.set(.6,.35,1.65);
+    const rim=[];for(let j=0;j<=32;j++)rim.push([Math.cos(j/32*Math.PI*2)*.6,.5,Math.sin(j/32*Math.PI*2)*1.65]);this.line(rim,'#e1b878',.035,g);
+    for(const zz of [-.55,.55])this.box(.9,.08,.18,'#926344',0,.57,zz,g);const paddle=this.cylinder(.035,.035,2.1,'#755537',.5,.85,0,g);paddle.rotation.z=.8;this.box(.24,.55,.07,'#a37047',1.07,.25,0,g);return g;
   }
   buildCamp(night){
     const T=this.T,d=Yard.ensure(this.p);this.target.set(0,.3,0);
@@ -154,7 +156,9 @@ class WildView{
     this.targetRing=this.mesh(new T.TorusGeometry(.38,.055,6,32),'#ffd76f',2.8,1.9,-8.35);this.camera.position.set(0,4.1,13.3);this.camera.lookAt(0,1,-5);this.options.onReady?.(this);
   }
   buildCanoe(){
-    const T=this.T;this.box(12,.3,65,'#6aaeb5',0,-.2,-13);for(const side of [-1,1]){this.box(9,.5,65,'#86a671',side*10,-.15,-13);for(let j=0;j<9;j++)this.tree(side*(7+j%3),10-j*6,.9+(j%3)*.2);}
+    const T=this.T;for(let j=0;j<17;j++){const z=13-j*4;this.box(12,.12,4,j%2?'#6ab0b5':'#74b9bb',0,-.08,z).renderOrder=-100;for(const side of [-1,1])this.box(9,.5,4,'#86a671',side*10,-.15,z).renderOrder=-90;}
+    for(const side of [-1,1])for(let j=0;j<9;j++)this.tree(side*(7+j%3),10-j*6,.9+(j%3)*.2);
+    for(let j=0;j<10;j++){const ripple=this.line([[-4+(j%3)*3,.02,0],[-2+(j%3)*3,.02,0]],'#b6e0d6',.014);ripple.renderOrder=-80;this.anim.push(t=>{if(!Living.isCalm())ripple.position.z=-32+(j*4+t*2)%44;});}
     this.boat=this.group(0,.05,5);this.canoeMesh(this.boat);this.boat.rotation.y=Math.PI;this.camera.position.set(0,5.5,13);this.camera.lookAt(0,.2,-10);this.gates=[];
     for(let j=0;j<6;j++){const gate=this.group(0,0,-j*8-5);for(const xx of [-1.2,1.2]){this.cylinder(.065,.065,2.2,'#f9dc8e',xx,1,0,gate);this.box(.35,.4,.03,'#e4a660',xx+.15,1.7,0,gate);}this.gates.push(gate);}
     this.options.onReady?.(this);
