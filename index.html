@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2e7d4f">
 <title>Camp Wildwood</title>
-<link rel="stylesheet" href="css/style.css?v=wildwood-3d1">
+<link rel="stylesheet" href="css/style.css?v=wildwood-intro1">
 </head>
-<body data-math-release="dm2b-m5b" data-camp-release="wildwood-3d1">
+<body data-math-release="dm2b-m5b" data-camp-release="wildwood-intro1">
 <div id="app">
   <header id="topbar" class="hidden">
     <button id="btn-home" class="icon-btn" aria-label="Back to camp map">🏕️</button>
@@ -22,15 +22,23 @@
     <!-- TITLE -->
     <section id="screen-title" class="screen">
       <div class="title-card">
-        <img class="title-scene" src="assets/camp-landscape.webp" alt="A sunny woodland camp with a cozy lodge, tents, a creek, and a playing field" fetchpriority="high">
-        <div class="title-content">
-          <p class="eyebrow">A little practice. A big adventure.</p>
-          <h1>Camp <br>Wildwood</h1>
-          <p class="subtitle">Learn the math.<br>Restore your woodland camp.</p>
-          <button id="btn-start" class="big-btn">Start adventure <span aria-hidden="true">→</span></button>
-          <p class="fine">Dimensions Math 2B · A whole woodland of learning</p>
-          <div class="learning-path"><span>Learn</span><span>Practice</span><span>Explore</span></div>
+        <img class="title-scene" src="assets/camp-landscape.webp" alt="" fetchpriority="high" aria-hidden="true">
+        <div class="intro-sun" aria-hidden="true"></div>
+        <div id="intro-world" class="intro-stage" aria-hidden="true" data-daylight="golden"></div>
+        <div class="intro-shade" aria-hidden="true"></div>
+        <div class="intro-masthead">
+          <span class="intro-brand"><svg viewBox="0 0 40 40" width="36" height="36" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m20 7 5 18-5-3-5 3Z" fill="currentColor"/><path d="M20 28v5M7 20h5m16 0h5" stroke="currentColor" stroke-width="1.5"/></svg> WILDWOOD ADVENTURES</span>
+          <button id="btn-intro-motion" class="intro-control" type="button" aria-pressed="false">Pause scenery</button>
         </div>
+        <div class="title-content">
+          <p class="eyebrow"><span class="intro-live-dot" aria-hidden="true"></span> Your next adventure is out here.</p>
+          <h1><span class="title-camp">Camp</span><br>Wildwood<span class="title-period">.</span></h1>
+          <p class="subtitle">Big discoveries. Little victories.<br>A whole camp to make your own.</p>
+          <button id="btn-start" class="big-btn">Start adventure <span aria-hidden="true">→</span></button>
+          <p class="fine">A math adventure · Dimensions Math 2B</p>
+          <div class="learning-path"><span>Learn new skills</span><span>Earn camp rewards</span><span>Play outdoors</span></div>
+        </div>
+        <div class="intro-scene-caption" aria-hidden="true"><span class="intro-caption-line"></span><span>WELCOME TO YOUR HAPPY PLACE<small>The creek. The trails. The next great goal.</small></span></div>
       </div>
     </section>
 
@@ -231,7 +239,7 @@
 <script src="js/yard.js?v=wildwood-3d1"></script>
 <script src="js/living.js?v=wildwood-3d1"></script>
 <script src="js/camp-play.js?v=wildwood-3d1"></script>
-<script src="js/camp3d.js?v=wildwood-3d1"></script>
+<script src="js/camp3d.js?v=wildwood-intro1"></script>
 <script src="js/camp.js?v=wildwood-3d1"></script>
 <script src="js/engine.js?v=wildwood-3d1"></script>
 <script src="js/chapters.js?v=dm2b-m5b"></script>
@@ -239,6 +247,6 @@
 <script src="js/chapters-m3.js?v=dm2b-m5b"></script>
 <script src="js/chapters-trail.js?v=dm2b-m5b"></script>
 <script src="js/strategies.js?v=dm2b-m5b"></script>
-<script src="js/app.js?v=wildwood-3d1"></script>
+<script src="js/app.js?v=wildwood-intro1"></script>
 </body>
 </html>

@@ -15,6 +15,7 @@ class Element{
   querySelectorAll(sel){return this.children.flatMap(c=>[...(c.matches(sel)?[c]:[]),...c.querySelectorAll(sel)]);}
   querySelector(sel){let c=this.querySelectorAll(sel)[0];if(!c&&sel==='button'&&this._html.includes('<button')){c=this.doc.createElement('button');this.appendChild(c);}return c||null;}
   matches(sel){return sel.startsWith('.')?this.classList.contains(sel.slice(1)):this.tagName.toLowerCase()===sel;}
+  closest(sel){for(let e=this;e;e=e.parentNode)if(e.matches(sel))return e;return null;}
 }
 function load(saved){
   const doc={ids:new Map(),onkeydown:null,createElement(tag){return new Element(tag,this);},getElementById(id){return this.ids.get(id)||null;},addEventListener(){},querySelectorAll(sel){return [...this.ids.values()].filter(e=>sel==='.screen'&&e.classList.contains('screen'));}};

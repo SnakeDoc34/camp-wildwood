@@ -11,8 +11,9 @@ const App = {
     document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     document.getElementById('topbar').classList.toggle('hidden', id==='screen-title'||id==='screen-profiles');
+    document.documentElement?.classList.toggle('at-title',id==='screen-title');
     mascotSay(id!=='screen-title'&&id!=='screen-profiles');
-    if(typeof Camp3D!=='undefined')Camp3D.sweep();
+    if(typeof Camp3D!=='undefined'){Camp3D.sweep();if(id==='screen-title')Camp3D.intro();}
     window.scrollTo(0,0);
   },
   syncTop(){

@@ -213,5 +213,49 @@ body{background:radial-gradient(ellipse at top,#dce9e0,#f2eee3 75%);}
 
 .world-canvas{display:block;width:100%;height:100%;}.camp-stage>.world-canvas{touch-action:none;cursor:grab;}.camp-stage>.world-canvas:active{cursor:grabbing;}
 
+/* Cinematic title: a live, gently orbiting toy woodland, with an instant start. */
+.at-title body{background:#183f36;}.at-title #app{max-width:none;padding:0;}.at-title #screen-title{animation:none;}
+#screen-title .title-card{position:relative;display:block;min-height:760px;min-height:max(760px,100svh);margin:0;border:0;border-radius:0;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 72% 15%,#e3d4a8 0%,#aec4aa 27%,#6e9988 57%,#244f43 100%);box-shadow:none;}
+#screen-title .title-scene{position:absolute;inset:0;width:100%;height:100%;min-height:0;object-position:center;opacity:.38;transition:opacity 1.3s;}
+#screen-title .intro-ready .title-scene{opacity:0;}
+.intro-stage{position:absolute;top:0;right:-6%;width:84%;height:100%;min-width:0;opacity:0;transition:opacity 1.5s;pointer-events:none;}
+.intro-ready .intro-stage{opacity:1;}.intro-stage>.world-canvas{width:100%;height:100%;display:block;background:transparent!important;}
+.intro-sun{position:absolute;top:8%;right:23%;width:120px;height:120px;border-radius:50%;background:#fff4c2;box-shadow:0 0 95px 65px #fff0b966;opacity:.7;}
+.intro-shade{position:absolute;inset:0;background:linear-gradient(90deg,#143a33f5 0%,#173e35ed 23%,#193f3699 39%,#20463905 64%),linear-gradient(0deg,#173c35d9 0%,#173c3500 29%);pointer-events:none;}
+.intro-masthead{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:18px;padding:28px clamp(24px,5vw,80px);padding-top:max(28px,env(safe-area-inset-top));}
+.intro-brand{display:flex;gap:11px;align-items:center;color:#fcf0cf;font-size:.7rem;font-weight:800;letter-spacing:.19em;}.intro-brand svg{flex-shrink:0;}
+.intro-control{min-height:44px;min-width:125px;padding:10px 16px;border:1px solid #ffedbf66;border-radius:99px;background:#1d433955;color:#fff2ce;backdrop-filter:blur(10px);font:inherit;font-size:.8rem;font-weight:700;}.intro-control:hover:not(:disabled){background:#244a3ee0;}.intro-control:disabled{opacity:.75;}
+#screen-title .title-content{position:relative;z-index:4;min-height:760px;min-height:max(760px,100svh);width:min(48%,670px);padding:112px 0 115px clamp(28px,6vw,100px);align-items:flex-start;justify-content:center;text-align:left;}
+#screen-title .title-content .eyebrow{color:#e7ce8c;font-size:.67rem;letter-spacing:.13em;display:flex;align-items:center;gap:9px;margin:0 0 20px;}
+.intro-live-dot{width:7px;height:7px;border-radius:50%;background:#c9e9a1;box-shadow:0 0 0 5px #c9e9a114;flex-shrink:0;}
+#screen-title .title-content h1{font-size:clamp(4.6rem,7.5vw,8rem);line-height:.97;letter-spacing:-.045em;font-weight:400;color:#fff3d7;margin:0 0 25px;text-shadow:0 5px 35px #163c3555;}
+.title-camp{font-size:.64em;letter-spacing:-.025em;}.title-period{color:#ecc26d;}
+#screen-title .title-content .subtitle{font-size:clamp(1rem,1.3vw,1.2rem);color:#d9e4cc;line-height:1.7;margin:0 0 24px;}
+#screen-title .title-content .big-btn{width:min(100%,320px);min-height:65px;padding:19px 25px;gap:30px;border:1px solid #fbe1a4;border-radius:16px;background:linear-gradient(135deg,#f5d58e,#e9b860);color:#234634;box-shadow:0 5px 0 #a9793e,0 12px 35px #102f2a44;transition:transform .18s,box-shadow .18s;margin:0 0 14px;font-size:1.1rem;}
+#screen-title .title-content .big-btn:hover{transform:translateY(-3px);box-shadow:0 7px 0 #a9793e,0 18px 35px #102f2a55;}
+#screen-title .title-content .big-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #a9793e;}
+#screen-title .title-content .fine{color:#bad0b9;font-size:.72rem;margin:8px 0 20px;}
+#screen-title .learning-path{gap:8px;margin-top:5px;max-width:360px;color:#e0e6c9;font-size:.67rem;line-height:1.4;}
+#screen-title .learning-path span{padding:7px 10px;background:#d7e7bf0b;border:1px solid #d7e7bf33;border-radius:99px;}
+.intro-scene-caption{position:absolute;bottom:43px;right:clamp(28px,6vw,100px);z-index:3;color:#f1e6bd;display:flex;align-items:center;gap:15px;font-size:.65rem;font-weight:800;letter-spacing:.15em;}.intro-scene-caption small{display:block;font-size:.75rem;font-weight:400;letter-spacing:0;color:#cadbc4;margin-top:8px;}.intro-caption-line{height:1px;width:42px;background:#e9c889;}
+#screen-title .title-content>*{animation:intro-arrive .8s ease-out both;}#screen-title .title-content h1{animation-delay:.08s;}#screen-title .title-content .subtitle{animation-delay:.16s;}#screen-title .title-content .big-btn{animation-delay:.24s;}#screen-title .title-content .fine,#screen-title .learning-path{animation-delay:.3s;}
+@keyframes intro-arrive{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@media(min-width:761px) and (max-height:760px){#screen-title .title-card,#screen-title .title-content{min-height:100svh;}#screen-title .title-content{padding-top:108px;padding-bottom:80px;}#screen-title .title-content h1{font-size:clamp(4rem,6.4vw,6.3rem);}.intro-scene-caption{bottom:25px;}}
+@media(max-width:1000px) and (min-width:761px){#screen-title .title-content{width:52%;padding-left:36px;}#screen-title .title-content h1{font-size:5.6rem;}.intro-stage{right:-18%;width:100%;}.intro-shade{background:linear-gradient(90deg,#143a33f5 0%,#173e35de 27%,#193f3670 47%,#20463900 75%),linear-gradient(0deg,#173c35d9,transparent 30%);}.intro-scene-caption{max-width:275px;line-height:1.5;}}
+@media(max-width:760px){
+  #screen-title .title-card{display:flex;flex-direction:column;min-height:100svh;background:radial-gradient(ellipse at 70% 8%,#dbd4a9,#90ad95 30%,#1b4539 65%);}
+  .intro-masthead{padding:20px;gap:10px;}.intro-brand{font-size:.55rem;letter-spacing:.12em;gap:6px;}.intro-brand svg{width:29px;height:29px;}.intro-control{font-size:.72rem;min-width:112px;padding:10px 12px;}
+  .intro-stage{position:relative;inset:auto;flex:0 0 auto;width:100%;height:440px;margin-top:35px;}.intro-sun{top:9%;right:20%;width:65px;height:65px;box-shadow:0 0 55px 45px #fff0b944;}
+  .intro-shade{background:linear-gradient(0deg,#193f36 0%,#193f36 28%,#193f3600 62%);}
+  #screen-title .title-content{width:100%;min-height:0;padding:0 28px 36px;margin-top:-42px;align-items:center;text-align:center;}
+  #screen-title .title-content .eyebrow{font-size:.58rem;letter-spacing:.1em;margin-bottom:12px;}
+  #screen-title .title-content h1{font-size:clamp(3.7rem,10.7vw,5rem);margin-bottom:16px;}#screen-title .title-content h1 br{display:block;}.title-camp{font-size:.64em;}
+  #screen-title .title-content .subtitle{font-size:1rem;margin-bottom:22px;}#screen-title .title-content .big-btn{max-width:340px;margin-bottom:12px;min-height:60px;}
+  #screen-title .title-content .fine{font-size:.68rem;margin-bottom:12px;}#screen-title .learning-path{justify-content:center;font-size:.61rem;gap:6px;}
+  .intro-scene-caption{display:none;}
+}
+@media(max-width:480px){.intro-stage{height:355px;margin-top:62px;}#screen-title .title-content{margin-top:-25px;padding-bottom:max(28px,env(safe-area-inset-bottom));}#screen-title .title-content h1{font-size:3.6rem;}#screen-title .title-content .eyebrow{font-size:.54rem;}}
+@media(prefers-reduced-motion:reduce){#screen-title .title-content>*{animation:none;}.intro-stage,#screen-title .title-scene{transition:none;}}
+
 .shootout-layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:20px;min-height:0;}.shootout-console{min-width:0;}.shootout-layout .soccer-stage{height:460px;}.shootout-layout .aim-grid{gap:8px;}.shootout-layout .aim-btn{font-size:.8rem;}.game-exit{position:absolute;right:20px;top:17px;z-index:5;background:#ffffff13;color:#f5edcf;border:1px solid #9bb79c;padding:12px 15px;border-radius:12px;min-height:44px;font-weight:800;}.arcade-playing{position:fixed;inset:10px;z-index:150;margin:0;display:flex;flex-direction:column;border-radius:22px;padding:20px 24px;}.arcade-playing>.eyebrow{display:none;}.arcade-playing>h3{font-size:1.7rem;line-height:1.1;margin:0 230px 10px 0;}.arcade-playing>.hint{font-size:.82rem;margin:4px 0 14px;max-width:100%;}.arcade-playing .shootout-layout{flex:1;min-height:0;}.arcade-playing .soccer-stage{height:100%;min-height:180px;}.arcade-playing .shootout-console{overflow:auto;padding:4px;}.arcade-playing>.fine{font-size:.7rem;margin:10px 0 0;}.playing-camp-game{overflow:hidden;}.canoe-playing>.canoe-stage{flex:1;height:auto;min-height:180px;}.canoe-playing>.row{margin:8px 0;}.canoe-playing>.hint-btn{align-self:center;}.canoe-playing>.arcade-status{margin:8px 0;}.arcade-playing .arcade-hud{font-size:.75rem;}.arcade-playing .shot-buttons{margin:10px 0;}.arcade-playing .power-meter{margin:18px auto;}
 @media(max-width:850px){.shootout-layout{grid-template-columns:1fr;}.arcade-playing{inset:5px;padding:14px;}.arcade-playing>h3{font-size:1.3rem;margin:4px 150px 8px 0;}.game-exit{top:10px;right:10px;padding:10px;font-size:.75rem;}.arcade-playing .shootout-layout{grid-template-rows:minmax(160px,1fr) auto;gap:8px;}.arcade-playing .shootout-console{overflow:visible;}.arcade-playing .arcade-hud{padding:7px 0;font-size:.65rem;}.arcade-playing .arcade-status{font-size:.85rem;min-height:20px;margin:5px 0;}.arcade-playing .aim-grid{margin:6px auto;gap:6px;}.arcade-playing .aim-btn{min-height:39px;}.arcade-playing .power-meter{height:18px;margin:12px auto;}.arcade-playing .power-marker{height:28px;top:-7px;}.arcade-playing .shot-buttons>.big-btn{padding:10px;min-height:44px;margin:4px;}.arcade-playing .shot-buttons>.hint-btn{min-height:42px;}.arcade-playing>.hint{font-size:.72rem;margin:3px 0 8px;}.arcade-playing>.fine{font-size:.58rem;margin-top:7px;}}

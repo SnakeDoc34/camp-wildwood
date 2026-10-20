@@ -368,3 +368,22 @@ settles once on its own timer, and canoe progression/pausing has an independent
 clock. The browser pass also caught a stale canoe launch after soccer; the fixed
 handoff is covered by a regression test. Temporary preview files and their
 sample-camp setup button are removed from the published main game.
+
+## Cinematic opening — wildwood-intro1
+
+The opening now renders a demonstration camp with a looping camera sweep,
+drifting clouds, swaying pines, creek ripples, birds and chimney smoke. The title,
+warm Start adventure button and pause control are native HTML over the scene.
+The entrance is immediately usable; no video download, autoplay sound or timed
+splash gates the camper chooser. A still illustration remains available while
+graphics load or if they fail. The demonstration uses a separate in-memory camp
+and cannot grant purchases or replace a student save.
+
+All 90 automated checks pass, including the existing 335,000 generated-question
+checks. New coverage verifies save isolation, bounded camera motion, full scenery
+pause, system reduced motion, resuming without a time jump, and leaving during
+asynchronous graphics loading. Actual Three.js geometry checks now also build
+and animate the opening scenery. The renderer is released when the title screen
+is left; the established lesson and reward rules are unchanged.
+
+Physical iPad Safari and hardware WebGL performance still require a device pass.

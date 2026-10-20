@@ -12,5 +12,8 @@ test('real Three.js geometry builds camp, soccer and canoe scenes with valid mes
     assert.ok(meshes>40,kind);if(kind==='camp'){assert.equal(v.pickables.length,10);assert.equal(new Set(v.pickables.map(o=>o.userData.plot)).size,10);}
     if(kind==='soccer'){assert.ok(v.ball);assert.ok(v.keeper);assert.ok(v.targetRing);}if(kind==='canoe')assert.equal(v.gates.length,6);
   }
+  v.kind='camp';v.p=a.Camp3D.introProfile();v.options={cinematic:true,editable:false};v.rebuild();v.scene.updateMatrixWorld(true);
+  assert.equal(v.pickables.length,0);assert.equal(v.scene.background,null);assert.ok(v.anim.length>30);
+  for(const t of [0,3,15,60]){for(const fn of v.anim)fn(t);v.scene.updateMatrixWorld(true);v.root.traverse(o=>{for(const n of o.matrixWorld.elements)assert.ok(Number.isFinite(n));});}
   v.clear();assert.equal(v.materials.size,0);
 });
