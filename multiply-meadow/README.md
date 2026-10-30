@@ -1,4 +1,4 @@
-# Rivendell Trailblazers · version 2
+# Rivendell Trailblazers · version 2.1
 
 A complete revamp of Multiply Meadow, hosted in the existing `multiply-meadow/` GitHub Pages directory. Blue-and-gold Rivendell Academy branding uses the user-supplied crest. This is a static browser game with no external runtime dependencies, accounts, analytics, backend, or real-money purchases.
 
@@ -22,9 +22,9 @@ A complete revamp of Multiply Meadow, hosted in the existing `multiply-meadow/` 
 
 Hints and errors reset the current streak without removing earned possessions. Each streak threshold triggers once in that streak. Standard seven-second trail segments occur at six-card checkpoints if no special ride was earned at that checkpoint. Children can skip a burst.
 
-Optional speed bonuses unlock with 6 established (stage 2+) facts: +25 points for an independent correct recall within five seconds, only on an established fact, once per family per run. The timer counts upward, with no deadline. Hidden-tab time is excluded. Speed never advances memory stages or bypasses top-ride gates.
+A visible ten-second answer timer is on from the first run. Correct, unhinted responses within 3 / 5 / 8 seconds earn 40 / 25 / 10 points, once per fact family per run. Late answers remain accepted. Quick bonuses can be disabled. Hidden-tab time is excluded. Established facts (stage 2+) recalled within five seconds alone count toward the fluency alternative for bonus tickets. Speed never advances memory stages or bypasses top-ride gates. Score boards are versioned to avoid comparing incompatible scoring rules.
 
-An independent recall earns 100 points plus a capped streak bonus; other attempts earn 15 effort points. Correct streaks also earn more gold through the original engine. Vehicles add score/distance and flag collections add game points, without adding mastery credit. Personal bests require a full 18-card run and are separated by course, mode, table selection and speed setting. A new best receives a results celebration.
+An independent recall earns 100 points plus a capped streak bonus; other attempts earn 15 effort points. Correct streaks also earn more gold through the original engine. Every correct answer, including hinted correct answers, triggers an exact seven-meter running animation before continuing. Wrong answers do not move the runner. Ride distance now reflects actual movement during the burst, rather than being granted in advance; flag collections add game points, without adding mastery credit. Personal bests require a full 18-card run and are separated by course, mode, table selection and speed setting. A new best receives a results celebration.
 
 Daily: 18 attempts grant 15 gold once per local calendar date. Attendance requires a full run. Three different practice dates within a rolling seven days grant 40 gold at most once in seven days. Daily streaks are displayed; missing a date never removes possessions.
 
@@ -47,3 +47,9 @@ Evidence informs brief fluency practice after strategy knowledge, systematic rev
 Browser QA: complete 18-card run (16 independent answers, 1 incorrect, 1 hinted), dog/ATV/bike reward triggers, burst entry/exit, results and personal-best record, gear purchase/equip and persistence after reload, phone-width home/practice layout. All five ride models were inspected through a preview-only QA route; that route is excluded from deployment. This test browser had no WebGL, so the software renderer was exercised; GPU WebGL performance and physical iOS/Android device behavior require real-device testing.
 
 Deployment contains index.html, engine.js, trails-engine.js, trail-scene.js, trail-app.js, trail-style.css, trail-icon.svg and assets/crest.png. No build required. `dist/` is the local source of deployable files. Old unreferenced files are retained in the existing repository.
+
+## Version 2.1 play flow
+
+Each trail opens with child-friendly instructions over a replayable ten-second 3D course flyover. A ready button skips or ends the tour and starts the first timed question. Correct answers animate a short run before the continue control unlocks. A corner route map tracks the 18 learning checkpoints and animates its marker with these steps. It is a schematic checkpoint map, not a GPS map. Captions explain each helper and ride, both before earning it and during its burst. Reduced-motion and no-graphics fallbacks are handled.
+
+New verification: 14 Trailblazers engine checks, including quick-answer tiers, late answers, hinted forward movement and repeat-bonus caps. Browser checks cover the intro/tour, countdown, late correct answer, 7m step completion, map percentage, quick bonus and dog unlock. Phone-width checks confirm that the intro and question card fit horizontally, with the timer and map visible.
