@@ -65,3 +65,13 @@ New verification: 14 Trailblazers engine checks, including quick-answer tiers, l
 - Animation time uses elapsed frame time on slower renderers, and reduced motion shortens setbacks.
 
 Validation: `node test-engine.cjs`, `node test-trails.cjs`, and `node test-adversity.cjs` cover review scheduling, streak rewards, setback thresholds, recovery, distance floors, failed completions, retry state, every ride's projected steering, and animation cleanup. Browser QA covers the desktop trail, bee setback, a 390-pixel phone layout, ankle ending, and retry with retained gold.
+
+## v2.3.0 · Comic action and crest chases
+
+The Comet jetpack unfolds into exposed twin tanks with three-layer rear-facing exhaust. The fish now follows a pond-to-face arc, hits face height, and bounces away; its impact triggers a retro `SMACK!` burst. Bee arrival triggers `BEES!`. Speech bursts sit in the caption area outside the trail viewport; squirrel and ankle events also get comic reactions.
+
+Correct answers automatically advance when their running animation ends, including entry into earned rides. Misses get a 4.5-second review; strategy-assisted correct answers get extra reading time. Optional Pause Review holds the next checkpoint. Review time excludes hidden-tab time, and ending a run cancels pending transitions. The manual Next button is gone.
+
+During every ride and bonus round, collect gold academy crest rings for 25 points and jump through elevated blue sky crests for 75 points. Consecutive catches add 5 extra points per catch, capped at 25 extra. Missing a ring resets the catch combo. Collision checks use the runner's actual interpolated position and jump height, so last-moment lane commands do not collect from another lane. Ring spacing scales with ride speed to leave at least one second to react. Burst points and catch combos appear beside the controls; math mastery rules and the bonus-round gold cap stay unchanged. Revised scoring uses v4 board keys.
+
+Validation adds `node test-action.cjs`: ring collisions and scoring, reaction spacing, flying jumps, visible jetpack parts, exact fish impact position, one-time comic cues, automatic advancement, review pause/resume, hidden-tab timing, cancellation, and stale callbacks. Browser QA verifies visible jetpack/exhaust, bonus crest points, automatic arrival at the next math checkpoint, optional review pause/resume, and the live BEES cue.
