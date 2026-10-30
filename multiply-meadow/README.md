@@ -53,3 +53,15 @@ Deployment contains index.html, engine.js, trails-engine.js, trail-scene.js, tra
 Each trail opens with child-friendly instructions over a replayable ten-second 3D course flyover. A ready button skips or ends the tour and starts the first timed question. Correct answers animate a short run before the continue control unlocks. A corner route map tracks the 18 learning checkpoints and animates its marker with these steps. It is a schematic checkpoint map, not a GPS map. Captions explain each helper and ride, both before earning it and during its burst. Reduced-motion and no-graphics fallbacks are handled.
 
 New verification: 14 Trailblazers engine checks, including quick-answer tiers, late answers, hinted forward movement and repeat-bonus caps. Browser checks cover the intro/tour, countdown, late correct answer, 7m step completion, map percentage, quick bonus and dog unlock. Phone-width checks confirm that the intro and question card fit horizontally, with the timer and map visible.
+
+
+## v2.2.0 · Trail trouble and clear views
+
+- Two consecutive wrong answers trigger one of three 3D scenes: a squirrel chase, a bee swarm, or a flying fish. Each removes up to six earned meters, with a zero floor. Recovered setbacks rotate through the animals.
+- Three misses show a warning. Four consecutive misses trigger an ankle twist and end the run. Any correct answer resets this count; hints and expired quick bonuses do not count as misses.
+- The ending screen reviews the final fact and offers a fresh attempt on the same course. Facts, gold, and equipment stay saved. An ankle ending cannot record a completed-trail best, practice day, or mastery bonus ticket, even on card 18. New scores use v3 board keys.
+- Steering is screen-relative for buttons, keyboard, and swipes on all rides. The follow camera looks along +Z, so screen-left corresponds to positive world X.
+- Math, rides, and setbacks render inside a dedicated canvas viewport. Maps, reward descriptions, setback captions, and controls sit outside the trail at desktop and phone widths.
+- Animation time uses elapsed frame time on slower renderers, and reduced motion shortens setbacks.
+
+Validation: `node test-engine.cjs`, `node test-trails.cjs`, and `node test-adversity.cjs` cover review scheduling, streak rewards, setback thresholds, recovery, distance floors, failed completions, retry state, every ride's projected steering, and animation cleanup. Browser QA covers the desktop trail, bee setback, a 390-pixel phone layout, ankle ending, and retry with retained gold.
