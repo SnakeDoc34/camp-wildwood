@@ -83,7 +83,7 @@ function chime(correct=true){if(!p.sound)return;try{audioContext=audioContext||n
 function burst(n){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const colors=['#b095e3','#e9a8c2','#f4ce7e','#9ecab0'];for(let i=0;i<n;i++){const d=document.createElement('i');d.className='confetto';d.style.left=Math.random()*100+'%';d.style.background=colors[i%4];d.style.animationDelay=Math.random()*.25+'s';d.style.borderRadius=i%2?'50%':'2px';$('#confetti').append(d);setTimeout(()=>d.remove(),2400);}}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{if(session){toast('Use “Finish for now” to save your place before leaving practice.');return;}view=b.dataset.view;render();});
 $('.brand').onclick=e=>{e.preventDefault();if(session){toast('Use “Finish for now” to leave practice.');return;}view='home';render();};
-$('#profile').onchange=e=>{data.active=Number(e.target.value);p=data.profiles[data.active];save();render();};
+$('#profile').onchange=e=>{data.active=Number(e.target.value);p=data.profiles[data.active];if(view==='play'&&!session)view='home';save();render();};
 $('#sound').onclick=()=>{p.sound=!p.sound;save();updateNav();if(p.sound)chime();toast(p.sound?'Gentle sounds on':'Sounds off');};
 $('#share').onclick=async()=>{const url=location.href.split('#')[0];try{if(navigator.share){await navigator.share({title:'Multiply Meadow',text:'A little multiplication practice. A meadow of rewards.',url});}else{await navigator.clipboard.writeText(url);toast('Game link copied. Share it with another explorer!');}}catch(e){if(e.name!=='AbortError')prompt('Copy this game link to share:',url);}};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else if(view==='home'||view==='guide')render();});
