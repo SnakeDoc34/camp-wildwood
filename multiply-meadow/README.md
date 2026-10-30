@@ -1,38 +1,49 @@
-# Multiply Meadow
+# Rivendell Trailblazers · version 2
 
-A responsive, static multiplication game for ages 8–9. Hosted as a self-contained game at `multiply-meadow/` in the Camp Wildwood GitHub Pages repository. All game code and assets are local; no accounts, analytics, ads, purchases, server or external runtime dependencies.
+A complete revamp of Multiply Meadow, hosted in the existing `multiply-meadow/` GitHub Pages directory. Blue-and-gold Rivendell Academy branding uses the user-supplied crest. This is a static browser game with no external runtime dependencies, accounts, analytics, backend, or real-money purchases.
 
-## Play
+## Experience
 
-Select tables 0–12. Each 18-card round practices eight canonical fact families with delayed revisits, helpful feedback, and array/strategy hints. Familiar facts and their reversals share a schedule. Choose one of three browser-local explorer profiles. Effort earns sunstones, independent correct answers earn more, and an 18-attempt daily goal earns one 15-sunstone bonus per local calendar day. Eight finite decorations can be bought once each and placed/stored in the meadow.
+- Original 3D renderer with perspective projection, directional lighting, fog, animated jointed runner, dog, ATV, dirt bike, jetpack and mini jet. Uses WebGL when available and a reduced-detail software 3D renderer when unavailable.
+- Three themed courses: Founders Forest, Copper Canyon (6 blooming facts + 180 gold), Summit Skyline (15 blooming facts + 400 gold). Original geometry includes hills, trees or canyon formations, rocks, flowers, creek crossings, wooden bridges, and checkpoint arches.
+- Eighteen-card multiplication trail, paced with short playable bursts: keyboard/touch steering and jumping, collectible flags, ground obstacles and flying rewards.
+- Gear locker: five kit colors, goggles, cape, golden shoes, two finish effects, skin tones and short/ponytail hair. Equipment appears on the runner.
+- Three independent local profiles. Original Multiply Meadow fact history, daily counts and coins carry over. New progress uses the existing `multiply-meadow-v1` localStorage key. Export/import is available; no automatic device sync.
 
-Parents can view a 13×13 fact garden, change tables, export/import a profile, and read teaching guidance. Progress stays in localStorage, with no automatic device sync. Exported JSON is validated on import. Reset affects only the selected profile and requires confirmation.
+## Incentive rules
 
-## Learning rules
+| Correct-answer streak | Ride | Gate |
+| --- | --- | --- |
+| 3 | Dog, 5 seconds | 3 distinct fact families |
+| 6 | ATV, 6 seconds | 5 distinct families |
+| 9 | Dirt bike, 7 seconds | 7 distinct families |
+| 12 | Jetpack, 8 seconds | 8 distinct families and 8 growing families |
+| 15 | Mini jet, 10 seconds | Summit mode, 12 blooming families, 8 established challenge families recalled, at least 90% session accuracy |
 
-- Typed recall rather than multiple-choice recognition; no speed timer or speed-based scoring.
-- Minimum three intervening fact-family attempts, including reversed-factor equivalents.
-- Incorrect/hinted cards are eligible at turn +4. Correct cards are scheduled for turn +6 and, after further successes, +9. Familiar filler cards may appear sooner when needed, always respecting the minimum gap.
-- At most three new families are selected per session when enough learned families exist. A cold start fills eight slots with new families to make spacing possible. Due reviews are prioritized, with five slots normally reserved for them.
-- An independent correct answer can advance a fact once per local calendar date, only when due. Review intervals are 1, 3, 7, 14, and 30 days. Lapses lower the stage and make the fact due today. Hints never count as independent mastery.
-- A fact is marked blooming at stage 3, requiring scheduled successful recall across at least three different dates. Blooming is a progress label, not a guarantee of permanent retention. There is no penalty for missing a day.
-- A fixed session can end with a missed fact awaiting another attempt. It remains due for the next session. Larger backlogs may require multiple sessions.
+Hints and errors reset the current streak without removing earned possessions. Each streak threshold triggers once in that streak. Standard seven-second trail segments occur at six-card checkpoints if no special ride was earned at that checkpoint. Children can skip a burst.
 
-The gaps and goal length are practical defaults, not experimentally established optimal parameters. This game has not been evaluated as an intervention.
+Optional speed bonuses unlock with 6 established (stage 2+) facts: +25 points for an independent correct recall within five seconds, only on an established fact, once per family per run. The timer counts upward, with no deadline. Hidden-tab time is excluded. Speed never advances memory stages or bypasses top-ride gates.
 
-## Teaching
+An independent recall earns 100 points plus a capped streak bonus; other attempts earn 15 effort points. Correct streaks also earn more gold through the original engine. Vehicles add score/distance and flag collections add game points, without adding mastery credit. Personal bests require a full 18-card run and are separated by course, mode, table selection and speed setting. A new best receives a results celebration.
 
-Use real equal groups and arrays first. Begin with 0/1/2/5/10 and add tables as confidence grows. Use doubles, five-groups-plus-more and ten-groups-minus-one strategies. Practice four to six relaxed minutes most days. Rotate arrays to demonstrate commutativity. Let children explain their thinking, then gradually encourage direct recall without removing access to hints.
+Daily: 18 attempts grant 15 gold once per local calendar date. Attendance requires a full run. Three different practice dates within a rolling seven days grant 40 gold at most once in seven days. Daily streaks are displayed; missing a date never removes possessions.
 
-Alternative themes could reuse the same learning engine: building a spacecraft one part at a time, or furnishing a pet habitat. The meadow version uses visual growth and finite collectibles so rewards remain connected to learning.
+Mastery bonus: finish 16/18 independently correct with at least 8 established families, plus either a 12-answer streak or 5 fluent recalls. Earn at most one ticket per date. A ticket grants a 20-second jetpack flag run, with at most 15 bonus gold and no mastery changes.
 
-## Evidence
+## Learning and evidence
 
-- IES, *Organizing Instruction and Study to Improve Student Learning*: https://ies.ed.gov/ncee/wwc/PracticeGuide/1 — spacing, retrieval, and connecting concrete/abstract representations.
-- Ophuis-Cox, Catrysse & Camp (2023), *The effect of retrieval practice on fluently retrieving multiplication facts in an authentic elementary school setting*: https://doi.org/10.1002/acp.4141 — flashcard retrieval outperformed restudy in 48 second-grade pupils, including the one-week test.
+The original spaced deck is retained: canonical reversed-factor families; at least three intervening families; errors/hints return sooner; independent due recalls advance at most once per date toward intervals of 1/3/7/14/30 days. New working sets usually contain at most three fresh families; cold starts fill eight to permit delays. Blooming requires three scheduled successful review dates. Summit removes 0/1/2 factor shortcuts and uses factors 3–12 anchored in tables 6/7/8/9/11/12.
 
-## Development and checks
+- IES elementary mathematics intervention guide summary: https://ies.ed.gov/ncee/WWC/Docs/PracticeGuide/WWC-PraxGuide-Elementary-Math-Summary-508c.pdf
+- Li, Hew & Du (2024), gamification motivation meta-analysis: https://link.springer.com/article/10.1007/s11423-023-10337-7
+- IES spacing/retrieval guide: https://ies.ed.gov/ncee/wwc/PracticeGuide/1
 
-`dist/` is the deployable static content; the Pages copy places its contents under `multiply-meadow/`. No build is required. Open through a static HTTP server. Run `node test-engine.cjs` to check scheduling, scoring, daily behavior and persistence serialization.
+Evidence informs brief fluency practice after strategy knowledge, systematic review, personal improvement and learner choice. Exact thresholds, values and timing are design defaults, not an empirically optimized formula. This game has not undergone a learning-outcome study.
 
-Browser QA completed: an entire 18-card round with one incorrect and one hinted answer, spacing inspection, daily bonus/results, purchase, persistence after reload, 169-cell fact map, nickname, independent second profile, and 390px embedded viewport checks. Engine suite: 11 checks including 300 randomized rounds with mixed outcomes. App supports keyboard use, accessible labels, and reduced-motion preferences. Real iOS/Android device testing was not performed.
+## Verification
+
+`node test-engine.cjs` covers the original memory engine (11 checks, including 300 randomized mixed-answer rounds). `node test-trails.cjs` covers rides and mastery gates, Summit facts, speed eligibility, partial/full records, idempotent completion, ticket caps, weekly attendance and migration (11 checks).
+
+Browser QA: complete 18-card run (16 independent answers, 1 incorrect, 1 hinted), dog/ATV/bike reward triggers, burst entry/exit, results and personal-best record, gear purchase/equip and persistence after reload, phone-width home/practice layout. All five ride models were inspected through a preview-only QA route; that route is excluded from deployment. This test browser had no WebGL, so the software renderer was exercised; GPU WebGL performance and physical iOS/Android device behavior require real-device testing.
+
+Deployment contains index.html, engine.js, trails-engine.js, trail-scene.js, trail-app.js, trail-style.css, trail-icon.svg and assets/crest.png. No build required. `dist/` is the local source of deployable files. Old unreferenced files are retained in the existing repository.
