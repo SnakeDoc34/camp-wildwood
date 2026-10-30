@@ -75,3 +75,14 @@ Correct answers automatically advance when their running animation ends, includi
 During every ride and bonus round, collect gold academy crest rings for 25 points and jump through elevated blue sky crests for 75 points. Consecutive catches add 5 extra points per catch, capped at 25 extra. Missing a ring resets the catch combo. Collision checks use the runner's actual interpolated position and jump height, so last-moment lane commands do not collect from another lane. Ring spacing scales with ride speed to leave at least one second to react. Burst points and catch combos appear beside the controls; math mastery rules and the bonus-round gold cap stay unchanged. Revised scoring uses v4 board keys.
 
 Validation adds `node test-action.cjs`: ring collisions and scoring, reaction spacing, flying jumps, visible jetpack parts, exact fish impact position, one-time comic cues, automatic advancement, review pause/resume, hidden-tab timing, cancellation, and stale callbacks. Browser QA verifies visible jetpack/exhaust, bonus crest points, automatic arrival at the next math checkpoint, optional review pause/resume, and the live BEES cue.
+
+
+## v2.4.0 — pocket clubhouse
+
+- 13 new cosmetic items (350–2,200 gold): propeller, traffic cone, wizard, duck, crown and UFO hats; dragon wings, snail shell and balloons; flippers and moon boots; rainbow and tuxedo kits. All are actual animated scene geometry. Gold remains the shop currency; score remains the record currency.
+- Filtered locker with free live try-on, back-item camera angle, finish previews, and savings shortfall. Preview does not purchase or persist equipment.
+- Dirt bike rebuilt with large wheels, fenders, exhaust, rear lamp and wider handlebars; slightly offset camera exposes its silhouette. ATV enlarged. Ordinary checkpoint sprints are explicitly labeled on-foot, with an explanation when a mastery gate prevents a ride.
+- Grown-ups → Reset selected runner: named profile, typed RESET confirmation, cancel/Escape, replacement of only that profile. Export backup remains available. No progress reset during rollout.
+- Mobile bottom navigation, safe-area spacing, larger ride controls, pause/resume rides, fitting-room preview and home-screen standalone manifest. No offline support is claimed.
+- Fixed graphics quality persistence across scene mounts, resumed-tab animation jumps, gestures triggering outside the trail canvas, and phone scrolling back to the next question.
+- QA: all 61 checks across five Node test files pass. Browser tested desktop and a 390px phone iframe; no horizontal overflow in the locker. Reset cancel/disabled confirmation reviewed in browser; actual reset and profile isolation tested with independent dummy profiles. Physical-device performance remains to be assessed on the target phone.
